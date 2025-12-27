@@ -1,0 +1,69 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>StanceOverhaul</AssemblyName>
+    <Description></Description>
+    <Version>1.0.0</Version>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>latest</LangVersion>
+    <OutDir>F:\SP EFT\SPT-406\BepInEx\plugins\</OutDir>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <CopyProjectReferencesToOutputDirectory>false</CopyProjectReferencesToOutputDirectory>
+  </PropertyGroup>
+
+  <Target Name="Build Cleanup" AfterTargets="Build">
+    <Delete Files="$(OutDir)$(AssemblyName).pdb" />
+    <Delete Files="$(OutDir)$(AssemblyName).deps.json" />
+  </Target>
+
+  <ItemGroup>
+    <Reference Include="SPTarkov.Reflection">
+      <HintPath>F:\SP EFT\SPT-406\BepInEx\plugins\spt\spt-reflection.dll</HintPath>
+    </Reference>
+    <Reference Include="SPTarkov.Common">
+      <HintPath>F:\SP EFT\SPT-406\BepInEx\plugins\spt\spt-common.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AudioModule">
+      <HintPath>F:\SP EFT\SPT-406\EscapeFromTarkov_Data\Managed\UnityEngine.AudioModule.dll</HintPath>
+    </Reference>
+    <Reference Include="ItemComponent.Types">
+      <HintPath>F:\SP EFT\SPT-406\EscapeFromTarkov_Data\Managed\ItemComponent.Types.dll</HintPath>
+    </Reference>
+    <Reference Include="Comfort">
+      <HintPath>F:\SP EFT\SPT-406\EscapeFromTarkov_Data\Managed\Comfort.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>F:\SP EFT\SPT-406\EscapeFromTarkov_Data\Managed\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="AnimationSystem.Types">
+      <HintPath>F:\SP EFT\SPT-406\EscapeFromTarkov_Data\Managed\AnimationSystem.Types.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>F:\SP EFT\SPT-406\EscapeFromTarkov_Data\Managed\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>F:\SP EFT\SPT-406\EscapeFromTarkov_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>F:\SP EFT\SPT-406\EscapeFromTarkov_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>F:\SP EFT\SPT-406\EscapeFromTarkov_Data\Managed\UnityEngine.UIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>F:\SP EFT\SPT-406\EscapeFromTarkov_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>F:\SP EFT\SPT-406\EscapeFromTarkov_Data\Managed\UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
+    <PackageReference Include="BepInEx.Core" Version="5.*" />
+    <PackageReference Include="BepInEx.PluginInfoProps" Version="1.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RealismCommonLib\RealismCommonLib.csproj" />
+  </ItemGroup>
+
+</Project>

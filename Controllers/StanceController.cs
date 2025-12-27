@@ -3,15 +3,15 @@ using EFT;
 using EFT.Animations;
 using EFT.Animations.NewRecoil;
 using EFT.InventoryLogic;
-using RealismCommonLib.Utils;
 using HarmonyLib;
+using RealismCommonLib.Events;
+using RealismCommonLib.Utils;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
 using static EFT.Player;
 using static RealismCommonLib.Plugin;
-using System.Reflection;
-using RealismCommonLib.Events;
 
 namespace StanceOverhaul
 {

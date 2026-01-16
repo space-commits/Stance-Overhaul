@@ -5,6 +5,7 @@ using EFT.Animations.NewRecoil;
 using EFT.InventoryLogic;
 using HarmonyLib;
 using RealismCommonLib.Events;
+using RealismCommonLib.ModifierHandlers;
 using RealismCommonLib.Utils;
 using System.Collections.Generic;
 using System.Linq;
@@ -539,6 +540,18 @@ namespace StanceOverhaul
         void onDestroy()
         {
             UnsubscribeFromEvents();
+        }
+
+        private void AssignReloadHandlers()
+        {
+            var mag = StatModifiers.MagReloadSpeed.Add(1f);
+            var quick = StatModifiers.QuickMagReloadSpeed.Add(1f);
+            var checkAmmo = StatModifiers.CheckAmmoSpeed.Add(1f);
+            var checkChamber = StatModifiers.CheckChamberSpeed.Add(1f);
+            var pump = StatModifiers.PumpBoltSpeed.Add(1f);
+            var malf = StatModifiers.MalfFixSpeed.Add(1f);
+            var rechamber = StatModifiers.RechamberSpeed.Add(1f);
+            var noMag = StatModifiers.NoMagReloadSpeed.Add(1f);
         }
 
         private void SubscribeToEvents()

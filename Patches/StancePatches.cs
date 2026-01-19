@@ -1219,9 +1219,8 @@ namespace StanceOverhaul.Patches
                         Plugin.StanceControllerInstance.CurrentStance == EStance.Melee;
                     bool cancelBecauseShooting = !(PluginConfig.RememberStanceFiring.Value && isAiming) && FiringStateInstance.IsFiringFromStance && !isInShootableStance;
                     bool doStanceRotation = (isInStance || !Plugin.StanceControllerInstance.AllStancesReset || Plugin.StanceControllerInstance.CurrentStance == EStance.PistolCompressed) && !cancelBecauseShooting;
-                    bool allowActiveAimReload = PluginConfig.ActiveAimReload.Value && ReloadStateInstance.ReloadAnimationSupportsActiveAim;
                     bool cancelStance =
-                        (Plugin.StanceControllerInstance.CancelActiveAim && Plugin.StanceControllerInstance.CurrentStance == EStance.ActiveAiming && !allowActiveAimReload) ||
+                        (Plugin.StanceControllerInstance.CancelActiveAim && Plugin.StanceControllerInstance.CurrentStance == EStance.ActiveAiming) ||
                         (Plugin.StanceControllerInstance.CancelHighReady && Plugin.StanceControllerInstance.CurrentStance == EStance.HighReady) ||
                         (Plugin.StanceControllerInstance.CancelLowReady && Plugin.StanceControllerInstance.CurrentStance == EStance.LowReady) ||
                         (Plugin.StanceControllerInstance.CancelShortStock && Plugin.StanceControllerInstance.CurrentStance == EStance.ShortStock); //|| (Plugin.StanceControllerInstance.CancelPistolStance && Plugin.StanceControllerInstance.PistolIsCompressed)

@@ -28,7 +28,7 @@ namespace StanceOverhaul
 
         public static ConfigEntry<bool> EnableMountUI { get; set; }
         public static ConfigEntry<bool> ToggleActiveAim { get; set; }
-        public static ConfigEntry<bool> ActiveAimReload { get; set; }
+        public static ConfigEntry<bool> AllowActiveAimReload { get; set; }
         public static ConfigEntry<bool> EnableAltPistol { get; set; }
         public static ConfigEntry<bool> EnableAltRifle { get; set; }
         public static ConfigEntry<bool> EnableAltRifleRecoil { get; set; }
@@ -132,7 +132,7 @@ namespace StanceOverhaul
             EnableIdleStamDrain = config.Bind<bool>(weapAimAndPos, "Enable Idle Arm Stamina Drain",true, new ConfigDescription("Arm Stamina Will Drain When Not In A Stance (High And Low Ready, Short-Stocking).", null, new ConfigurationManagerAttributes { Order = 210, Browsable =true }));
             IdleStamDrainModi = config.Bind<float>(weapAimAndPos, "Idle Stam Drain Modifer", 1f, new ConfigDescription("", new AcceptableValueRange<float>(0.1f, 5f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 200, Browsable =true }));
             EnableStanceStamChanges = config.Bind<bool>(weapAimAndPos, "Enable Stance Stamina And Movement Effects",true, new ConfigDescription("Enabled Stances And Mounting To Affect Stamina And Movement Speed. Stamina Drain May Not Work Correctly If Disabled. High + Low Ready, Short-Stocking And Pistol Idle Will Regenerate Stamina Faster And Optionally Idle With Rifles Drains Stamina. High Ready Has Faster Sprint Speed And Sprint Accel, Low Ready Has Faster Sprint Accel. Arm Stamina Won't Drain Regular Stamina If It Reaches 0.", null, new ConfigurationManagerAttributes { Order = 183, Browsable =true }));
-            ActiveAimReload = config.Bind<bool>(weapAimAndPos, "Allow Reload From Active Aim", false, new ConfigDescription("Allows Reload From Magazine While In Active Aim With Speed Bonus.", null, new ConfigurationManagerAttributes { Order = 190, Browsable =true }));
+            AllowActiveAimReload = config.Bind<bool>(weapAimAndPos, "Allow Reload From Active Aim", false, new ConfigDescription("Allows Reload From Magazine While In Active Aim With Speed Bonus.", null, new ConfigurationManagerAttributes { Order = 190, Browsable =true }));
             EnableMountUI = config.Bind<bool>(weapAimAndPos, "Enable Mounting UI",true, new ConfigDescription("If Enabled, An Icon On Screen Will Indicate If Player Is Bracing, Mounting And What Side Of Cover They Are On.", null, new ConfigurationManagerAttributes { Order = 179, Browsable =true }));
             LeftShoulderOffset = config.Bind<float>(weapAimAndPos, "Left Shoulder Offset", -0.13f, new ConfigDescription("", new AcceptableValueRange<float>(-0.2f, 0.1f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 153, Browsable =true }));
             WeapOffset = config.Bind<Vector3>(weapAimAndPos, "Rifle Position Offset", new Vector3(-0.04f, -0.015f, 0f), new ConfigDescription("Config option 'alt rife' is required. Adjusts The Starting Position Of Rifle On Screen.", null, new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 152, IsAdvanced = true, Browsable =true }));
@@ -140,9 +140,8 @@ namespace StanceOverhaul
             StanceTransitionSpeedMulti = config.Bind<float>(weapAimAndPos, "Stance Transition Speed.", 15.0f, new ConfigDescription("Adjusts The Position Change Speed Between Stances", new AcceptableValueRange<float>(1f, 35f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 145, IsAdvanced = true, Browsable =true }));
             StanceSfxModifier = config.Bind<float>(weapAimAndPos, "Stance Sfx Volume Modifier", 2f, new ConfigDescription("Gear rattle volume modifer when doing stance related things", new AcceptableValueRange<float>(0.1f, 20f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 153, Browsable =true }));
 
-
-            EnableFSPatch = config.Bind<bool>(weapAimAndPos, "Enable Faceshield Patch", Plugin.ServerConfig.enable_stances, new ConfigDescription("Faceshields Block ADS Unless The Specfic Stock/Weapon/Faceshield Allows It.", null, new ConfigurationManagerAttributes { Order = 4, Browsable = true }));
-            EnableNVGPatch = config.Bind<bool>(weapAimAndPos, "Enable NVG/Thermal ADS Patch", Plugin.ServerConfig.enable_stances, new ConfigDescription("Magnified Optics Block ADS When Using NVGs. Can't Aim With Sights When Using Thermal Goggles.", null, new ConfigurationManagerAttributes { Order = 5, Browsable = true }));
+            EnableFSPatch = config.Bind<bool>(weapAimAndPos, "Enable Faceshield Patch", true, new ConfigDescription("Faceshields Block ADS Unless The Specfic Stock/Weapon/Faceshield Allows It.", null, new ConfigurationManagerAttributes { Order = 4, Browsable = true }));
+            EnableNVGPatch = config.Bind<bool>(weapAimAndPos, "Enable NVG/Thermal ADS Patch", true, new ConfigDescription("Magnified Optics Block ADS When Using NVGs. Can't Aim With Sights When Using Thermal Goggles.", null, new ConfigurationManagerAttributes { Order = 5, Browsable = true }));
 
             CycleStancesKeybind = config.Bind(stanceBinds, "Cycle Stances Keybind", new KeyboardShortcut(KeyCode.None), new ConfigDescription("Cycles Between High, Low Ready and Short-Stocking. Double Click Returns To Idle.", null, new ConfigurationManagerAttributes { Order = 80, Browsable =true }));
             ActiveAimKeybind = config.Bind(stanceBinds, "Active Aim Keybind", new KeyboardShortcut(KeyCode.Mouse4), new ConfigDescription("Cants The Weapon Sideways, Improving Hipfire Accuracy.", null, new ConfigurationManagerAttributes { Order = 90, Browsable =true }));

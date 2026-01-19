@@ -167,11 +167,12 @@ namespace StanceOverhaul
         public bool MeleeIsToggleable = true;
         public bool CanDoMeleeDetection = false;
         public bool MeleeHitSomething = false;
-        private float _meleeTimer = 0.0f;
+        private float _meleeTimer = 0f;
         private bool _isHoldingBackMelee = false;
 
-        private float _manipTime = 0.0f;
-        public float ManipTimer = 0.25f;
+        public const float MANIP_TIMER = 0.25f;
+        private float _manipTime = 0f;
+        private float _manipTimerTarget = MANIP_TIMER;
 
         private float _dampingTimer = 0.0f;
         private bool _didAimWiggle = false;
@@ -436,7 +437,7 @@ namespace StanceOverhaul
         {
             get
             {
-                return CurrentStance == EStance.ActiveAiming && PluginConfig.ActiveAimReload.Value ? 1.15f : 1f;
+                return CurrentStance == EStance.ActiveAiming && ShouldAllowActiveOnReload ? 1.16f : 1f;
             }
         }
         public float LowReadyManipBuff
@@ -552,6 +553,9 @@ namespace StanceOverhaul
             var malf = StatModifiers.MalfFixSpeed.Add(1f);
             var rechamber = StatModifiers.RechamberSpeed.Add(1f);
             var noMag = StatModifiers.NoMagReloadSpeed.Add(1f);
+            var currentMag = StatModifiers.CurrentMagRemoveSpeed.Add(1f); //current
+            var newMag = StatModifiers.NewMagReloadSpeed.Add(1f); //new
+            var internalMag = StatModifiers.InternalReloadModifier.Add(1f); //internal
         }
 
         private void SubscribeToEvents()
@@ -561,7 +565,8 @@ namespace StanceOverhaul
             ReloadEvents.ChamberCheck += OnCheckChamber;
             ReloadEvents.Rechamber += OnRechamber;
             ReloadEvents.MagReload += OnMagReload;
-            ReloadEvents.QuickMagReload += OnMagReload;
+            ReloadEvents.QuickMagReload += OnQuickMagReload;
+            ReloadEvents.InternalMagReload += OnInternalMagReload;
         }
 
         private void UnsubscribeFromEvents()
@@ -571,7 +576,8 @@ namespace StanceOverhaul
             ReloadEvents.ChamberCheck -= OnCheckChamber;
             ReloadEvents.Rechamber -= OnRechamber;
             ReloadEvents.MagReload -= OnMagReload;
-            ReloadEvents.QuickMagReload -= OnMagReload;
+            ReloadEvents.QuickMagReload -= OnQuickMagReload;
+            ReloadEvents.InternalMagReload -= OnInternalMagReload;
         }
 
         private void AssignFieldRefs() 
@@ -636,9 +642,9 @@ namespace StanceOverhaul
                     CurrentStance == EStance.Melee;
                 bool cancelBecauseShooting = PluginConfig.RememberStanceFiring.Value && !isAiming && FiringStateInstance.IsFiringFromStance && !isInShootableStance;
                 bool doStanceRotation = (isInStance || !AllStancesReset || CurrentStance == EStance.PistolCompressed) && !cancelBecauseShooting;
-                bool allowActiveAimReload = PluginConfig.ActiveAimReload.Value && ReloadStateInstance.ReloadAnimationSupportsActiveAim;
+               
                 bool cancelStance =
-                    (CancelActiveAim && CurrentStance == EStance.ActiveAiming && !allowActiveAimReload) ||
+                    (CancelActiveAim && CurrentStance == EStance.ActiveAiming) ||
                     (CancelHighReady && CurrentStance == EStance.HighReady) ||
                     (CancelLowReady && CurrentStance == EStance.LowReady) ||
                     (CancelShortStock && CurrentStance == EStance.ShortStock); // || (CancelPistolStance && PistolIsCompressed)
@@ -703,33 +709,53 @@ namespace StanceOverhaul
             }
         }
 
-        public void ReloadUpdate()
+        public void ApplyReloadSpeedBonuses() 
         {
+            implement
+        }
+
+        public void CheckIfReloadCancelsStance()
+        {
+            //check might be unnecessary
             if (ReloadStateInstance.IsInReloadOpertation)
             {
-                if (CurrentStance == EStance.PatrolStance)
-                {
-                    CurrentStance = EStance.None;
-                }
+                //cancel
+                if (CurrentStance == EStance.PatrolStance) CurrentStance = EStance.None;
 
-                ModifyHighReady = true;
                 CancelShortStock = true;
-                CancelActiveAim = true;
                 CancelLeftShoulder = true;
+                if (ShouldAllowActiveOnReload) CancelActiveAim = true;
 
                 if (ReloadStateInstance.IsAttemptingToReloadInternalMag)
                 {
                     bool isShotgun = WeaponStateInstance.IsShotgun;
-                    CancelHighReady = !isShotgun ? true : false;
-                    CancelLowReady = isShotgun || WeaponStateInstance.TreatAsPistol ? true : false;
+
+                    CancelHighReady = !isShotgun;
+                    CancelLowReady = isShotgun || WeaponStateInstance.TreatAsPistol;
                 }
+                else 
+                {
+                    CancelLowReady = true;
+
+                    //modify
+                    ModifyHighReady = true;
+                }      
             }
+        }
+
+        public void OnInternalMagReload()
+        {
+            CheckIfReloadCancelsStance();
         }
 
         public void OnMagReload() 
         {
-            CancelLowReady = true;
-            CancelLeftShoulder = true;
+            CheckIfReloadCancelsStance();
+        }
+
+        public void OnQuickMagReload()
+        {
+            OnMagReload();
         }
 
         public void OnWeaponStateReset()
@@ -756,9 +782,17 @@ namespace StanceOverhaul
             CancelLeftShoulder = true;
             CancelLowReady = true;
             CancelShortStock = true;
-            CancelActiveAim = true;
+            if (ShouldAllowActiveOnReload) CancelActiveAim = true;
             ModifyHighReady = true;
-            ManipTimer = 0f;
+            _manipTimerTarget = 0f;
+        }
+
+        public bool ShouldAllowActiveOnReload
+        {
+            get
+            {
+                return PluginConfig.AllowActiveAimReload.Value && ReloadStateInstance.ReloadAnimationSupportsActiveAim;
+            }
         }
 
         public bool IsCantedAiming(ProceduralWeaponAnimation pwa, bool checkifAiming)
@@ -973,13 +1007,12 @@ namespace StanceOverhaul
             IsLeftShoulder = false;
         }
 
-        //Should be replaced with coroutine or time gate
-        //Timer value should use constant
+        //Should be replaced with some sort of event based system.
         private void StanceManipCancelTimer()
         {
             _manipTime += Time.deltaTime;
 
-            if (_manipTime >= ManipTimer)
+            if (_manipTime >= _manipTimerTarget)
             {
                 CancelHighReady = false;
                 ModifyHighReady = false;
@@ -987,9 +1020,10 @@ namespace StanceOverhaul
                 CancelShortStock = false;
                 CancelPistolStance = false;
                 CancelActiveAim = false;
-                ShouldResetStanceCancels = false;
                 CancelLeftShoulder = false;
-                ManipTimer = 0.25f;
+                ShouldResetStanceCancels = false;
+
+                _manipTimerTarget = MANIP_TIMER;
                 _manipTime = 0f;
             }
         }

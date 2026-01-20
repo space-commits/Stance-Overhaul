@@ -564,7 +564,6 @@ namespace StanceOverhaul.Patches
         }
     }
 
-
     //Used as entry point for melee hit and mounting
     //Should move logic to own classes
     //Could move some of this to gneric player update in monobehaviour

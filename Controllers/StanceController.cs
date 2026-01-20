@@ -58,6 +58,12 @@ namespace StanceOverhaul
         public const float LEFT_SHOULDER_ADS_MULTI = 0.85f;
         public const float PATROL_ADS_MULTI = 0.9f;
         public const float LEFT_SHOULDER_SWAY_MULTI = 1.3f;
+        public const float HIGH_READY_RELOAD_SPEED_BUFF = 1.18f;
+        public const float ACTIVE_AIM_RELOAD_SPEED_BUFF = 1.16f;
+        public const float LOW_READY_RELOAD_SPEED_BUFF = 1.21f;
+        public const float ACTIVE_AIM_RECHAMBER_SPEED_BUFF = 1.11f;
+        public const float HIGH_READY_RECHAMBER_SPEED_BUFF = 1.15f;
+        public const float HIGH_READY_CHECK_AMMO_SPEED_BUFF = 1.15f;
 
         private FieldInfo _aimSpeedField;
         private FieldInfo _compensatoryField;
@@ -67,6 +73,18 @@ namespace StanceOverhaul
         private FieldInfo _weapTempPositionField;
         private FieldInfo _isAimingField;
         private FieldInfo _vCameraTargetField;
+
+        private FloatMultiplierHandle _magReload;
+        private FloatMultiplierHandle _quickMagReload;
+        private FloatMultiplierHandle _checkAmmo;
+        private FloatMultiplierHandle _checkChamber;
+        private FloatMultiplierHandle _pumpBolt;
+        private FloatMultiplierHandle _malfFix;
+        private FloatMultiplierHandle _rechamber;
+        private FloatMultiplierHandle _noMagReload;
+        private FloatMultiplierHandle _currentMagRemove;
+        private FloatMultiplierHandle _newMagReload;
+        private FloatMultiplierHandle _internalMagReload;
 
         public Quaternion CurrentRotation = Quaternion.identity;
         public Quaternion StanceRotation = Quaternion.identity;
@@ -426,28 +444,6 @@ namespace StanceOverhaul
             }
         }
 
-        public float HighReadyManipBuff
-        {
-            get
-            {
-                return CurrentStance == EStance.HighReady ? 1.18f : 1f;
-            }
-        }
-        public float ActiveAimManipBuff
-        {
-            get
-            {
-                return CurrentStance == EStance.ActiveAiming && ShouldAllowActiveOnReload ? 1.16f : 1f;
-            }
-        }
-        public float LowReadyManipBuff
-        {
-            get
-            {
-                return CurrentStance == EStance.LowReady ? 1.21f : 1f;
-            }
-        }
-
         public EStance StoredStance
         {
             get { return _storedStance; }
@@ -525,6 +521,52 @@ namespace StanceOverhaul
             }
         }
 
+        public bool AimingInterrupted { get; set; }
+
+        public bool ShouldAllowActiveOnReload
+        {
+            get
+            {
+                return PluginConfig.AllowActiveAimReload.Value && ReloadStateInstance.ReloadAnimationSupportsActiveAim;
+            }
+        }
+
+        public float ChonkerFactorStanceRotationModifier
+        {
+            get
+            {
+                return IsChonker ? CHONKER_MODIFIER : 1f;
+            }
+        }
+
+        public bool IsChonker
+        {
+            get
+            {
+                return WeaponStateInstance.TotalWeaponWeight >= STANCE_WEIGHT_LIMIT_KG;
+            }
+        }
+
+        public Dictionary<string, Vector3> GetWeaponOffsets()
+        {
+            return new Dictionary<string, Vector3>{
+            { "5aafa857e5b5b00018480968", new Vector3(0f, 0f, -0.1f)}, //m1a
+            { "5b0bbe4e5acfc40dc528a72d", new Vector3(0f, 0f, -0.035f)}, //sa58
+            { "676176d362e0497044079f4c", new Vector3(0f, -0.0135f, 0.02f)}, //x17
+            { "6183afd850224f204c1da514", new Vector3(0f, -0.0135f, 0.02f)}, //mk17
+            { "6165ac306ef05c2ce828ef74", new Vector3(0f, -0.0135f, 0.02f)}, //mk17 fde
+            { "6184055050224f204c1da540", new Vector3(0f, -0.0135f, 0.02f)}, //mk16
+            { "618428466ef05c2ce828f218", new Vector3(0f, -0.0135f, 0.02f)}, //mk16 fde
+            { "5ae08f0a5acfc408fb1398a1", new Vector3(0f, 0f, -0.005f)}, //mosin 
+            { "5bfd297f0db834001a669119", new Vector3(0f, 0f, -0.005f)}, //mosin s
+            { "54491c4f4bdc2db1078b4568", new Vector3(0f, 0f, -0.01f)}, //mp133
+            { "56dee2bdd2720bc8328b4567", new Vector3(0f, 0f, -0.01f)}, //mp153
+            { "606dae0ab0e443224b421bb7", new Vector3(0f, 0f, -0.01f)}, //mp155
+            { "6259b864ebedf17603599e88", new Vector3(0f, 0f, -0.02f)}, //M3
+            { "6783ae5bb52da6ed912e3d01", new Vector3(0f, 0f, -0.02f)}, //M3 mechanic
+            };
+        }
+
         void Awake()
         {
             AssignFieldRefs();
@@ -545,17 +587,34 @@ namespace StanceOverhaul
 
         private void AssignReloadHandlers()
         {
-            var mag = StatModifiers.MagReloadSpeed.Add(1f);
-            var quick = StatModifiers.QuickMagReloadSpeed.Add(1f);
-            var checkAmmo = StatModifiers.CheckAmmoSpeed.Add(1f);
-            var checkChamber = StatModifiers.CheckChamberSpeed.Add(1f);
-            var pump = StatModifiers.PumpBoltSpeed.Add(1f);
-            var malf = StatModifiers.MalfFixSpeed.Add(1f);
-            var rechamber = StatModifiers.RechamberSpeed.Add(1f);
-            var noMag = StatModifiers.NoMagReloadSpeed.Add(1f);
-            var currentMag = StatModifiers.CurrentMagRemoveSpeed.Add(1f); //current
-            var newMag = StatModifiers.NewMagReloadSpeed.Add(1f); //new
-            var internalMag = StatModifiers.InternalReloadModifier.Add(1f); //internal
+            var reloadHandle = StatModifiers.MagReloadSpeed.Add(1.25f);
+
+            _magReload = StatModifiers.MagReloadSpeed.Add(1f);
+            _quickMagReload = StatModifiers.QuickMagReloadSpeed.Add(1f);
+            _checkAmmo = StatModifiers.CheckAmmoSpeed.Add(1f);
+            _checkChamber = StatModifiers.CheckChamberSpeed.Add(1f);
+            _pumpBolt = StatModifiers.PumpBoltSpeed.Add(1f);
+            _malfFix = StatModifiers.MalfFixSpeed.Add(1f);
+            _rechamber = StatModifiers.RechamberSpeed.Add(1f);
+            _noMagReload = StatModifiers.NoMagReloadSpeed.Add(1f);
+            _currentMagRemove = StatModifiers.CurrentMagRemoveSpeed.Add(1f);
+            _newMagReload = StatModifiers.NewMagReloadSpeed.Add(1f);
+            _internalMagReload = StatModifiers.InternalReloadModifier.Add(1f);
+        }
+
+        private void UnassignReloadHandlers()
+        {
+            StatModifiers.MagReloadSpeed.Remove(_magReload);
+            StatModifiers.QuickMagReloadSpeed.Remove(_quickMagReload);
+            StatModifiers.CheckAmmoSpeed.Remove(_checkAmmo);
+            StatModifiers.CheckChamberSpeed.Remove(_checkChamber);
+            StatModifiers.PumpBoltSpeed.Remove(_pumpBolt);
+            StatModifiers.MalfFixSpeed.Remove(_malfFix);
+            StatModifiers.RechamberSpeed.Remove(_rechamber);
+            StatModifiers.NoMagReloadSpeed.Remove(_noMagReload);
+            StatModifiers.CurrentMagRemoveSpeed.Remove(_currentMagRemove);
+            StatModifiers.NewMagReloadSpeed.Remove(_newMagReload);
+            StatModifiers.InternalReloadModifier.Remove(_internalMagReload);
         }
 
         private void SubscribeToEvents()
@@ -709,43 +768,78 @@ namespace StanceOverhaul
             }
         }
 
-        public void ApplyReloadSpeedBonuses() 
+        public void ApplyInternalReloadSpeedBonus()
         {
-            implement
+            float bonus = 1f;
+            if (!ReloadStateInstance.IsAttemptingRevolverReload) 
+            {
+                if (CurrentStance == EStance.LowReady == true && !WeaponStateInstance.IsShotgun) bonus = LOW_READY_RELOAD_SPEED_BUFF;
+                else if (CurrentStance == EStance.HighReady == true && WeaponStateInstance.IsShotgun) bonus = HIGH_READY_RELOAD_SPEED_BUFF;
+            }
+            _internalMagReload.Multiplier = bonus;
+        }
+
+        public void ApplyMagReloadSpeedBonuses() 
+        {
+            _magReload.Multiplier =
+               CurrentStance == EStance.ActiveAiming && ShouldAllowActiveOnReload ? ACTIVE_AIM_RECHAMBER_SPEED_BUFF :
+               CurrentStance == EStance.HighReady ? HIGH_READY_RELOAD_SPEED_BUFF :
+               1f;
+        }
+
+        public void ApplyCheckAmmoSpeedBonus() 
+        {
+            _internalMagReload.Multiplier = CurrentStance == EStance.HighReady == true ? HIGH_READY_CHECK_AMMO_SPEED_BUFF : 1f;
+        }
+
+        public void ApplyChamberSpeedBonus()
+        {
+            _rechamber.Multiplier = 
+                CurrentStance == EStance.ActiveAiming ? ACTIVE_AIM_RECHAMBER_SPEED_BUFF :
+                CurrentStance == EStance.HighReady ? HIGH_READY_RECHAMBER_SPEED_BUFF :
+                1f;
+        }
+
+        public void ApplyChamberCheckSpeedBonus()
+        {
+            _checkChamber.Multiplier =
+                CurrentStance == EStance.ActiveAiming ? ACTIVE_AIM_RECHAMBER_SPEED_BUFF :
+                CurrentStance == EStance.HighReady ? HIGH_READY_RECHAMBER_SPEED_BUFF :
+                1f;
         }
 
         public void CheckIfReloadCancelsStance()
         {
             //check might be unnecessary
-            if (ReloadStateInstance.IsInReloadOpertation)
-            {
-                //cancel
-                if (CurrentStance == EStance.PatrolStance) CurrentStance = EStance.None;
+            if (!ReloadStateInstance.IsInReloadOpertation) return;
 
-                CancelShortStock = true;
-                CancelLeftShoulder = true;
+            if (CurrentStance == EStance.PatrolStance) CurrentStance = EStance.None;
+
+            CancelShortStock = true;
+            CancelLeftShoulder = true;
+
+            if (ReloadStateInstance.IsAttemptingToReloadInternalMag)
+            {
+                CancelActiveAim = true;
+
+                bool isShotgun = WeaponStateInstance.IsShotgun;
+                CancelHighReady = !isShotgun;
+                CancelLowReady = isShotgun || WeaponStateInstance.TreatAsPistol;
+            }
+            else
+            {
+                CancelLowReady = true;
                 if (ShouldAllowActiveOnReload) CancelActiveAim = true;
 
-                if (ReloadStateInstance.IsAttemptingToReloadInternalMag)
-                {
-                    bool isShotgun = WeaponStateInstance.IsShotgun;
-
-                    CancelHighReady = !isShotgun;
-                    CancelLowReady = isShotgun || WeaponStateInstance.TreatAsPistol;
-                }
-                else 
-                {
-                    CancelLowReady = true;
-
-                    //modify
-                    ModifyHighReady = true;
-                }      
+                //modify stance rotation/position
+                ModifyHighReady = true;
             }
         }
 
         public void OnInternalMagReload()
         {
             CheckIfReloadCancelsStance();
+            ApplyInternalReloadSpeedBonus();
         }
 
         public void OnMagReload() 
@@ -767,6 +861,7 @@ namespace StanceOverhaul
         {
             CancelShortStock = true;
             CancelLeftShoulder = true;
+            ApplyChamberSpeedBonus();
         }
 
         public void OnCheckChamber() 
@@ -775,6 +870,7 @@ namespace StanceOverhaul
             CancelHighReady = true;
             CancelShortStock = true;
             CancelLeftShoulder = true;
+            ApplyChamberCheckSpeedBonus();
         }
 
         public void OnCheckAmmo()
@@ -785,14 +881,7 @@ namespace StanceOverhaul
             if (ShouldAllowActiveOnReload) CancelActiveAim = true;
             ModifyHighReady = true;
             _manipTimerTarget = 0f;
-        }
-
-        public bool ShouldAllowActiveOnReload
-        {
-            get
-            {
-                return PluginConfig.AllowActiveAimReload.Value && ReloadStateInstance.ReloadAnimationSupportsActiveAim;
-            }
+            ApplyCheckAmmoSpeedBonus();
         }
 
         public bool IsCantedAiming(ProceduralWeaponAnimation pwa, bool checkifAiming)
@@ -801,8 +890,6 @@ namespace StanceOverhaul
             bool isAimingOk = !checkifAiming || IsAiming;
             return isCanted && isAimingOk;
         }
-
-        public bool AimingInterrupted { get; set; }
 
         public void InterruptAim(FirearmController fc)
         {
@@ -820,42 +907,6 @@ namespace StanceOverhaul
                 fc.ToggleAim();
                 AimingInterrupted = false;
             }
-        }
-
-        public float ChonkerFactorStanceRotationModifier 
-        {
-            get 
-            {
-                return IsChonker ? CHONKER_MODIFIER : 1f;
-            }
-        }
-
-        public bool IsChonker
-        {
-            get
-            {
-                return WeaponStateInstance.TotalWeaponWeight >= STANCE_WEIGHT_LIMIT_KG;
-            }
-        }
-
-        public Dictionary<string, Vector3> GetWeaponOffsets()
-        {
-            return new Dictionary<string, Vector3>{
-            { "5aafa857e5b5b00018480968", new Vector3(0f, 0f, -0.1f)}, //m1a
-            { "5b0bbe4e5acfc40dc528a72d", new Vector3(0f, 0f, -0.035f)}, //sa58
-            { "676176d362e0497044079f4c", new Vector3(0f, -0.0135f, 0.02f)}, //x17
-            { "6183afd850224f204c1da514", new Vector3(0f, -0.0135f, 0.02f)}, //mk17
-            { "6165ac306ef05c2ce828ef74", new Vector3(0f, -0.0135f, 0.02f)}, //mk17 fde
-            { "6184055050224f204c1da540", new Vector3(0f, -0.0135f, 0.02f)}, //mk16
-            { "618428466ef05c2ce828f218", new Vector3(0f, -0.0135f, 0.02f)}, //mk16 fde
-            { "5ae08f0a5acfc408fb1398a1", new Vector3(0f, 0f, -0.005f)}, //mosin 
-            { "5bfd297f0db834001a669119", new Vector3(0f, 0f, -0.005f)}, //mosin s
-            { "54491c4f4bdc2db1078b4568", new Vector3(0f, 0f, -0.01f)}, //mp133
-            { "56dee2bdd2720bc8328b4567", new Vector3(0f, 0f, -0.01f)}, //mp153
-            { "606dae0ab0e443224b421bb7", new Vector3(0f, 0f, -0.01f)}, //mp155
-            { "6259b864ebedf17603599e88", new Vector3(0f, 0f, -0.02f)}, //M3
-            { "6783ae5bb52da6ed912e3d01", new Vector3(0f, 0f, -0.02f)}, //M3 mechanic
-            };
         }
 
         private float GetRestoreRate()

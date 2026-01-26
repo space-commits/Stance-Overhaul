@@ -2,10 +2,12 @@
 using EFT;
 using EFT.Animations;
 using EFT.Animations.NewRecoil;
+using EFT.InputSystem;
 using EFT.InventoryLogic;
 using HarmonyLib;
 using RealismCommonLib.Events;
 using RealismCommonLib.ModifierHandlers;
+using RealismCommonLib.PatchPipeline;
 using RealismCommonLib.Utils;
 using System.Collections.Generic;
 using System.Linq;
@@ -73,6 +75,8 @@ namespace StanceOverhaul
         private FieldInfo _weapTempPositionField;
         private FieldInfo _isAimingField;
         private FieldInfo _vCameraTargetField;
+
+        private ExecutionHandle<InputContext> _inputHandle;
 
         private FloatMultiplierHandle _magReload;
         private FloatMultiplierHandle _quickMagReload;
@@ -433,6 +437,7 @@ namespace StanceOverhaul
             }
         }
 
+        //use const for weight
         public bool ShouldForceLowReady
         {
             get
@@ -547,6 +552,7 @@ namespace StanceOverhaul
             }
         }
 
+        //this needs to move to FOV Fix and/or JSON file
         public Dictionary<string, Vector3> GetWeaponOffsets()
         {
             return new Dictionary<string, Vector3>{
@@ -571,6 +577,8 @@ namespace StanceOverhaul
         {
             AssignFieldRefs();
             SubscribeToEvents();
+            AssignReloadHandlers();
+            RegisterWithPatchPipeline();
         }
 
         void Update()
@@ -583,6 +591,130 @@ namespace StanceOverhaul
         void onDestroy()
         {
             UnsubscribeFromEvents();
+            UnassignReloadHandlers();
+            DeRegisterWithPatchPipeline();
+        }
+
+        private void RegisterWithPatchPipeline()
+        {
+            _inputHandle = Pipelines.InputPipeline.Register(OnInput);
+        }
+
+        private void DeRegisterWithPatchPipeline()
+        {
+            Pipelines.InputPipeline.Remove(_inputHandle);
+        }
+
+        //TODO: clean this up, put into own class input controller, break up into smaller methods
+        private EPatchResult OnInput(InputContext context)
+        {
+            bool didWeaponSwap = 
+                context.Command == ECommand.SelectFirstPrimaryWeapon || 
+                context.Command == ECommand.SelectSecondPrimaryWeapon ||
+                context.Command == ECommand.QuickSelectSecondaryWeapon;
+
+            bool didSmallMovement =
+                context.Command == ECommand.ToggleStepLeft ||
+                context.Command == ECommand.ToggleStepRight ||
+                context.Command == ECommand.ReturnFromRightStep ||
+                context.Command == ECommand.ReturnFromLeftStep;
+
+            bool changedHeightStance =
+                context.Command == ECommand.ToggleProne ||
+                context.Command == ECommand.ToggleDuck;
+
+            //needed to trigger stance cancel on weapon swap
+            if (CurrentStance != EStance.PistolCompressed && didWeaponSwap)
+            {
+                DidWeaponSwap = true;
+                return EPatchResult.Run;
+            }
+
+            //needed to cancel mounting
+            if (didSmallMovement || context.Command == ECommand.ToggleBipods || changedHeightStance)
+            {
+                //if (StanceController.CurrentStance != EStance.None) return false; //not sure why this is an issue?
+                IsMounting = false;
+                return EPatchResult.Run;
+            }
+
+            //allow BSG's left stance if enabled in config?
+            //needed to toggle my own left shoulder swap
+            if (context.Command == ECommand.LeftStanceToggle)
+            {
+                if (!IsInForcedLowReady && !ShouldBlockAllStances) ToggleLeftShoulder();
+                return EPatchResult.Block;
+            }
+
+            if (context.Command == ECommand.ToggleBreathing && IsAiming)
+            {
+                Player player = PlayerStateInstance.Player;
+                if (player.Physical.HoldingBreath) return EPatchResult.Run;
+
+                if (IsChonker) DoWiggleEffects(player, player.ProceduralWeaponAnimation, WeaponStateInstance.Weapon, new Vector3(0.25f, 0.25f, 0.5f), wiggleFactor: 0.5f);
+                return EPatchResult.Run;
+            }
+
+            //cancel stances if trying to fire from stance when block firing from stance is enabled
+            bool shouldBlockFiring = PluginConfig.BlockFiring.Value;
+            bool isInStanceThatBlocksFiring = 
+                CurrentStance != EStance.None && 
+                CurrentStance != EStance.ActiveAiming && 
+                CurrentStance != EStance.ShortStock && 
+                CurrentStance != EStance.PistolCompressed;
+
+            if (context.Command == ECommand.ToggleShooting && shouldBlockFiring && !ShouldForceLowReady && isInStanceThatBlocksFiring)
+            {
+                CurrentStance = EStance.None;
+                StoredStance = EStance.None;
+                StanceBlender.Target = 0f;
+                return EPatchResult.Run;
+            }
+
+            //disable EFT scoll input check if using scroll wheel to change stances
+            if ((context.Command == ECommand.ScrollNext || context.Command == ECommand.ScrollPrevious) && (Input.GetKey(PluginConfig.StanceWheelComboKeyBind.Value.MainKey) && PluginConfig.UseMouseWheelPlusKey.Value))
+            {
+                return EPatchResult.Block;
+            }
+
+            if (context.Command == ECommand.WeaponMounting && PluginConfig.OverrideMounting.Value)
+            {
+                Player player = PlayerStateInstance.Player;
+
+                if (IsBracing && !IsColliding)
+                {
+                    if (WeaponStateInstance.BipodIsDeployed && (BracingDirection != EBracingDirection.Top)) return EPatchResult.Block;
+
+                    IsMounting = !IsMounting;
+                    if (IsMounting) CancelAllStances();
+
+                    Vector3 wiggleDirection = IsMounting ? CoverWiggleDirection : CoverWiggleDirection * -1f;
+                    DoWiggleEffects(player, player.ProceduralWeaponAnimation, WeaponStateInstance.Weapon, wiggleDirection, true, 1f, useGearSound: true);
+                }
+                if (!IsBracing && IsMounting) IsMounting = false;
+        
+                if (IsMounting && WeaponStateInstance.BipodIsDeployed)
+                {
+                    ChangeScopeModeOnMount(player.ProceduralWeaponAnimation, PlayerStateInstance.FirearmController);
+
+                    //attempts to enable prone mounted animation
+                    /*
+                        MountPointData mountData = new MountPointData(StanceController.MountPos, StanceController.MountDir, EMountSideDirection.Forward);
+                        Quaternion targetBodyRotation = Quaternion.AngleAxis(player.MovementContext.Yaw, Vector3.up);
+                        player.MovementContext.PlayerMountingPointData.SetData(mountData, player.MovementContext.TransformPosition, player.MovementContext.PoseLevel, player.MovementContext.Yaw, PluginConfig.test10.Value, targetBodyRotation, new Vector2(0f, 0f), new Vector2(-3, 6), new Vector2(-10, 10));
+                        player.MovementContext.EnterMountedState();
+                        player.MovementContext.PlayerAnimator.SetProneBipodMount(true);*/
+
+                    /*       AccessTools.Field(typeof(MovementContext), "_inMountedState").SetValue(player.MovementContext, true);
+                             player.MovementContext.PlayerAnimator.SetProneBipodMount(true);
+                             fc.FirearmsAnimator.SetMounted(true);
+                             player.ProceduralWeaponAnimation.SetMountingData(true, true);*/
+                }
+
+                return EPatchResult.Block;
+            }
+
+            return EPatchResult.Run;
         }
 
         private void AssignReloadHandlers()
@@ -882,6 +1014,23 @@ namespace StanceOverhaul
             ModifyHighReady = true;
             _manipTimerTarget = 0f;
             ApplyCheckAmmoSpeedBonus();
+        }
+
+        //todo replace instance paramaters and use state instance
+        private void ChangeScopeModeOnMount(ProceduralWeaponAnimation pwa, FirearmController fc)
+        {
+            int aimIndex = pwa.AimIndex;
+            if (Mathf.Abs(pwa.ScopeAimTransforms[aimIndex].Rotation) >= EFTHardSettings.Instance.SCOPE_ROTATION_THRESHOLD)
+            {
+                for (int i = 0; i < pwa.ScopeAimTransforms.Count; i++)
+                {
+                    if (Mathf.Abs(pwa.ScopeAimTransforms[i].Rotation) < EFTHardSettings.Instance.SCOPE_ROTATION_THRESHOLD)
+                    {
+                        fc.ChangeAimingMode(i);
+                        break;
+                    }
+                }
+            }
         }
 
         public bool IsCantedAiming(ProceduralWeaponAnimation pwa, bool checkifAiming)
@@ -1440,6 +1589,8 @@ namespace StanceOverhaul
             }
         }
 
+        // TODO: replace values with consts and replace pwa reference with common lib only
+        //this is used for changing weapon motion, not sure if should live here
         private float GetStanceWeaponInertiaFactor(ProceduralWeaponAnimation pwa, bool forDisplacement = false)
         {
             if (forDisplacement)
@@ -1498,6 +1649,7 @@ namespace StanceOverhaul
         }
 
         //TODO: replace using recoil processes for wiggle effect, with bespoke procedural motion
+        //should use player, pwa and weapon instances from common lib only
         public void DoWiggleEffects(Player player, ProceduralWeaponAnimation pwa, Weapon weapon, Vector3 wiggleDirection, bool playSound = false, float volume = 4f, float wiggleFactor = 1f, bool isADS = false, bool useGearSound = false)
         {
             if (playSound)
@@ -1909,7 +2061,7 @@ namespace StanceOverhaul
 
         }
 
-        public void DoShortStock(Player player, Player.FirearmController fc, bool isThirdPerson, EFT.Animations.ProceduralWeaponAnimation pwa, float dt, bool useThirdPersonStance, float stanceMulti, float resetErgoMulti, bool pauseStance, float movementFactor)
+        public void DoShortStock(Player player, Player.FirearmController fc, bool isThirdPerson, EFT.Animations.ProceduralWeaponAnimation pwa, float dt, bool useThirdPersonStance, float stanceMulti, float resetErgoMulti, bool pauseStance, float movementFactor) 
         {
             float shortStockStanceMulti = Mathf.Clamp(stanceMulti, 0.65f, 1.5f);
 
@@ -1986,7 +2138,7 @@ namespace StanceOverhaul
                     DidStanceWiggle = true;
                 }
             }
-            else if (StanceBlender.Value > 0f && !HasResetShortStock && CurrentStance != EStance.LowReady && CurrentStance != EStance.ActiveAiming && CurrentStance != EStance.HighReady && !IsResettingActiveAim && !IsResettingHighReady && !IsResettingLowReady && !IsResettingMelee)
+            else if (StanceBlender.Value > 0f && !HasResetShortStock && CurrentStance == EStance.None && !IsLeftShoulder && !IsResettingActiveAim && !IsResettingHighReady && !IsResettingLowReady && !IsResettingMelee)
             {
                 _canResetDamping = false;
                 IsResettingShortStock = true;
@@ -2122,7 +2274,7 @@ namespace StanceOverhaul
                     DidStanceWiggle = true;
                 }
             }
-            else if (StanceBlender.Value > 0f && !HasResetHighReady && CurrentStance != EStance.LowReady && CurrentStance != EStance.ActiveAiming && CurrentStance != EStance.ShortStock && !IsResettingActiveAim && !IsResettingLowReady && !IsResettingShortStock && !IsResettingMelee)
+            else if (StanceBlender.Value > 0f && !HasResetHighReady && CurrentStance == EStance.None && !IsLeftShoulder && !IsResettingActiveAim && !IsResettingLowReady && !IsResettingShortStock && !IsResettingMelee)
             {
                 _canResetDamping = false;
                 IsResettingHighReady = true;
@@ -2228,7 +2380,7 @@ namespace StanceOverhaul
                 }
                 DidLowReadyResetStanceWiggle = false;
             }
-            else if (StanceBlender.Value > 0f && !HasResetLowReady && CurrentStance != EStance.ActiveAiming && CurrentStance != EStance.HighReady && CurrentStance != EStance.ShortStock && !IsResettingActiveAim && !IsResettingHighReady && !IsResettingShortStock && !IsResettingMelee)
+            else if (StanceBlender.Value > 0f && !HasResetLowReady && CurrentStance == EStance.None && !IsLeftShoulder && !IsResettingActiveAim && !IsResettingHighReady && !IsResettingShortStock && !IsResettingMelee)
             {
                 _canResetDamping = false;
 
@@ -2352,7 +2504,7 @@ namespace StanceOverhaul
                     DidStanceWiggle = true;
                 }
             }
-            else if (StanceBlender.Value > 0f && !HasResetActiveAim && CurrentStance != EStance.LowReady && CurrentStance != EStance.HighReady && CurrentStance != EStance.ShortStock && !IsResettingLowReady && !IsResettingHighReady && !IsResettingShortStock && !IsResettingMelee)
+            else if (StanceBlender.Value > 0f && !HasResetActiveAim && CurrentStance == EStance.None && !IsLeftShoulder && !IsResettingLowReady && !IsResettingHighReady && !IsResettingShortStock && !IsResettingMelee)
             {
                 _canResetDamping = false;
 

@@ -9,10 +9,12 @@ using RealismCommonLib.Events;
 using RealismCommonLib.ModifierHandlers;
 using RealismCommonLib.PatchPipeline;
 using RealismCommonLib.Utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using StanceOverhaul.Classes;
 using static EFT.Player;
 using static RealismCommonLib.Plugin;
 
@@ -75,8 +77,6 @@ namespace StanceOverhaul
         private FieldInfo _weapTempPositionField;
         private FieldInfo _isAimingField;
         private FieldInfo _vCameraTargetField;
-
-        private ExecutionHandle<InputContext> _inputHandle;
 
         private FloatMultiplierHandle _magReload;
         private FloatMultiplierHandle _quickMagReload;
@@ -495,6 +495,8 @@ namespace StanceOverhaul
             }
         }
 
+
+        //TODO: make logic support BSG mounting + realism mounting at the same time
         public bool IsMounting
         {
             get
@@ -573,12 +575,17 @@ namespace StanceOverhaul
             };
         }
 
+        private InputPipeline _inputPipeline;
+
         void Awake()
         {
+            _inputPipeline = new InputPipeline(this);
+            _inputPipeline.RunOnAwake();
+
             AssignFieldRefs();
-            SubscribeToEvents();
+            SubscribeToReloadEvents();
             AssignReloadHandlers();
-            RegisterWithPatchPipeline();
+            
         }
 
         void Update()
@@ -590,131 +597,9 @@ namespace StanceOverhaul
 
         void onDestroy()
         {
-            UnsubscribeFromEvents();
+            UnsubscribeFromReloadEvents();
             UnassignReloadHandlers();
-            DeRegisterWithPatchPipeline();
-        }
-
-        private void RegisterWithPatchPipeline()
-        {
-            _inputHandle = Pipelines.InputPipeline.Register(OnInput);
-        }
-
-        private void DeRegisterWithPatchPipeline()
-        {
-            Pipelines.InputPipeline.Remove(_inputHandle);
-        }
-
-        //TODO: clean this up, put into own class input controller, break up into smaller methods
-        private EPatchResult OnInput(InputContext context)
-        {
-            bool didWeaponSwap = 
-                context.Command == ECommand.SelectFirstPrimaryWeapon || 
-                context.Command == ECommand.SelectSecondPrimaryWeapon ||
-                context.Command == ECommand.QuickSelectSecondaryWeapon;
-
-            bool didSmallMovement =
-                context.Command == ECommand.ToggleStepLeft ||
-                context.Command == ECommand.ToggleStepRight ||
-                context.Command == ECommand.ReturnFromRightStep ||
-                context.Command == ECommand.ReturnFromLeftStep;
-
-            bool changedHeightStance =
-                context.Command == ECommand.ToggleProne ||
-                context.Command == ECommand.ToggleDuck;
-
-            //needed to trigger stance cancel on weapon swap
-            if (CurrentStance != EStance.PistolCompressed && didWeaponSwap)
-            {
-                DidWeaponSwap = true;
-                return EPatchResult.Run;
-            }
-
-            //needed to cancel mounting
-            if (didSmallMovement || context.Command == ECommand.ToggleBipods || changedHeightStance)
-            {
-                //if (StanceController.CurrentStance != EStance.None) return false; //not sure why this is an issue?
-                IsMounting = false;
-                return EPatchResult.Run;
-            }
-
-            //allow BSG's left stance if enabled in config?
-            //needed to toggle my own left shoulder swap
-            if (context.Command == ECommand.LeftStanceToggle)
-            {
-                if (!IsInForcedLowReady && !ShouldBlockAllStances) ToggleLeftShoulder();
-                return EPatchResult.Block;
-            }
-
-            if (context.Command == ECommand.ToggleBreathing && IsAiming)
-            {
-                Player player = PlayerStateInstance.Player;
-                if (player.Physical.HoldingBreath) return EPatchResult.Run;
-
-                if (IsChonker) DoWiggleEffects(player, player.ProceduralWeaponAnimation, WeaponStateInstance.Weapon, new Vector3(0.25f, 0.25f, 0.5f), wiggleFactor: 0.5f);
-                return EPatchResult.Run;
-            }
-
-            //cancel stances if trying to fire from stance when block firing from stance is enabled
-            bool shouldBlockFiring = PluginConfig.BlockFiring.Value;
-            bool isInStanceThatBlocksFiring = 
-                CurrentStance != EStance.None && 
-                CurrentStance != EStance.ActiveAiming && 
-                CurrentStance != EStance.ShortStock && 
-                CurrentStance != EStance.PistolCompressed;
-
-            if (context.Command == ECommand.ToggleShooting && shouldBlockFiring && !ShouldForceLowReady && isInStanceThatBlocksFiring)
-            {
-                CurrentStance = EStance.None;
-                StoredStance = EStance.None;
-                StanceBlender.Target = 0f;
-                return EPatchResult.Run;
-            }
-
-            //disable EFT scoll input check if using scroll wheel to change stances
-            if ((context.Command == ECommand.ScrollNext || context.Command == ECommand.ScrollPrevious) && (Input.GetKey(PluginConfig.StanceWheelComboKeyBind.Value.MainKey) && PluginConfig.UseMouseWheelPlusKey.Value))
-            {
-                return EPatchResult.Block;
-            }
-
-            if (context.Command == ECommand.WeaponMounting && PluginConfig.OverrideMounting.Value)
-            {
-                Player player = PlayerStateInstance.Player;
-
-                if (IsBracing && !IsColliding)
-                {
-                    if (WeaponStateInstance.BipodIsDeployed && (BracingDirection != EBracingDirection.Top)) return EPatchResult.Block;
-
-                    IsMounting = !IsMounting;
-                    if (IsMounting) CancelAllStances();
-
-                    Vector3 wiggleDirection = IsMounting ? CoverWiggleDirection : CoverWiggleDirection * -1f;
-                    DoWiggleEffects(player, player.ProceduralWeaponAnimation, WeaponStateInstance.Weapon, wiggleDirection, true, 1f, useGearSound: true);
-                }
-                if (!IsBracing && IsMounting) IsMounting = false;
-        
-                if (IsMounting && WeaponStateInstance.BipodIsDeployed)
-                {
-                    ChangeScopeModeOnMount(player.ProceduralWeaponAnimation, PlayerStateInstance.FirearmController);
-
-                    //attempts to enable prone mounted animation
-                    /*
-                        MountPointData mountData = new MountPointData(StanceController.MountPos, StanceController.MountDir, EMountSideDirection.Forward);
-                        Quaternion targetBodyRotation = Quaternion.AngleAxis(player.MovementContext.Yaw, Vector3.up);
-                        player.MovementContext.PlayerMountingPointData.SetData(mountData, player.MovementContext.TransformPosition, player.MovementContext.PoseLevel, player.MovementContext.Yaw, PluginConfig.test10.Value, targetBodyRotation, new Vector2(0f, 0f), new Vector2(-3, 6), new Vector2(-10, 10));
-                        player.MovementContext.EnterMountedState();
-                        player.MovementContext.PlayerAnimator.SetProneBipodMount(true);*/
-
-                    /*       AccessTools.Field(typeof(MovementContext), "_inMountedState").SetValue(player.MovementContext, true);
-                             player.MovementContext.PlayerAnimator.SetProneBipodMount(true);
-                             fc.FirearmsAnimator.SetMounted(true);
-                             player.ProceduralWeaponAnimation.SetMountingData(true, true);*/
-                }
-
-                return EPatchResult.Block;
-            }
-
-            return EPatchResult.Run;
+            _inputPipeline.RunOnDestroy();
         }
 
         private void AssignReloadHandlers()
@@ -749,7 +634,25 @@ namespace StanceOverhaul
             StatModifiers.InternalReloadModifier.Remove(_internalMagReload);
         }
 
-        private void SubscribeToEvents()
+        private void SubscribeToInputEvents()
+        {
+            InputEvents.WeaponSwapInput += OnWeaponSwap;
+            InputEvents.ToggleStepOutInput += OnToggleStepOut;
+            InputEvents.ChangeStanceInput += OnChangeStance;
+            InputEvents.ToggleBipodInput += OnToggleBipod;
+            InputEvents.ToggleBreathingInput += OnToggleBreathing;
+        }
+
+        private void UnsubscribeFromInputEvents()
+        {
+            InputEvents.WeaponSwapInput -= OnWeaponSwap;
+            InputEvents.ToggleStepOutInput -= OnToggleStepOut;
+            InputEvents.ChangeStanceInput -= OnChangeStance;
+            InputEvents.ToggleBipodInput -= OnToggleBipod;
+            InputEvents.ToggleBreathingInput -= OnToggleBreathing;
+        }
+
+        private void SubscribeToReloadEvents()
         {
             ReloadEvents.WeaponStateReset += OnWeaponStateReset;
             ReloadEvents.CheckAmmo += OnCheckAmmo;
@@ -760,7 +663,7 @@ namespace StanceOverhaul
             ReloadEvents.InternalMagReload += OnInternalMagReload;
         }
 
-        private void UnsubscribeFromEvents()
+        private void UnsubscribeFromReloadEvents()
         {
             ReloadEvents.WeaponStateReset -= OnWeaponStateReset;
             ReloadEvents.CheckAmmo -= OnCheckAmmo;
@@ -783,7 +686,7 @@ namespace StanceOverhaul
             _vCameraTargetField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_vCameraTarget");
         }
 
-        public bool DoUpdate() 
+        private bool DoUpdate() 
         {
             Player player = PlayerStateInstance.Player;
             if (player != null && player.IsYourPlayer && PlayerStateInstance.FirearmController != null)
@@ -793,7 +696,7 @@ namespace StanceOverhaul
             return false;
         }
 
-        public void ProceduralAnimationsUpdate()
+        private void ProceduralAnimationsUpdate()
         {
             Player player = PlayerStateInstance.Player;
             if (player != null && player.IsYourPlayer && player.MovementContext.CurrentState.Name != EPlayerState.Stationary)
@@ -900,7 +803,7 @@ namespace StanceOverhaul
             }
         }
 
-        public void ApplyInternalReloadSpeedBonus()
+        private void ApplyInternalReloadSpeedBonus()
         {
             float bonus = 1f;
             if (!ReloadStateInstance.IsAttemptingRevolverReload) 
@@ -911,7 +814,7 @@ namespace StanceOverhaul
             _internalMagReload.Multiplier = bonus;
         }
 
-        public void ApplyMagReloadSpeedBonuses() 
+        private void ApplyMagReloadSpeedBonuses() 
         {
             _magReload.Multiplier =
                CurrentStance == EStance.ActiveAiming && ShouldAllowActiveOnReload ? ACTIVE_AIM_RECHAMBER_SPEED_BUFF :
@@ -919,12 +822,12 @@ namespace StanceOverhaul
                1f;
         }
 
-        public void ApplyCheckAmmoSpeedBonus() 
+        private void ApplyCheckAmmoSpeedBonus() 
         {
             _internalMagReload.Multiplier = CurrentStance == EStance.HighReady == true ? HIGH_READY_CHECK_AMMO_SPEED_BUFF : 1f;
         }
 
-        public void ApplyChamberSpeedBonus()
+        private void ApplyChamberSpeedBonus()
         {
             _rechamber.Multiplier = 
                 CurrentStance == EStance.ActiveAiming ? ACTIVE_AIM_RECHAMBER_SPEED_BUFF :
@@ -932,7 +835,7 @@ namespace StanceOverhaul
                 1f;
         }
 
-        public void ApplyChamberCheckSpeedBonus()
+        private void ApplyChamberCheckSpeedBonus()
         {
             _checkChamber.Multiplier =
                 CurrentStance == EStance.ActiveAiming ? ACTIVE_AIM_RECHAMBER_SPEED_BUFF :
@@ -940,7 +843,7 @@ namespace StanceOverhaul
                 1f;
         }
 
-        public void CheckIfReloadCancelsStance()
+        private void CheckIfReloadCancelsStance()
         {
             //check might be unnecessary
             if (!ReloadStateInstance.IsInReloadOpertation) return;
@@ -968,35 +871,69 @@ namespace StanceOverhaul
             }
         }
 
-        public void OnInternalMagReload()
+        //TODO: replace all usages of DidWeaponSwap with a method call
+        private void OnWeaponSwap()
+        {
+            if (CurrentStance != EStance.PistolCompressed) DidWeaponSwap = true;
+        }
+
+        private void OnToggleStepOut()
+        {
+            IsMounting = false;
+        }
+
+        private void OnChangeStance()
+        {
+            IsMounting = false;
+        }
+
+        private void OnToggleBipod()
+        {
+            IsMounting = false;
+        }
+
+        //TODO: move IsAiming to common lib
+        private void OnToggleBreathing()
+        {
+            if (IsAiming)
+            {
+                Player player = PlayerStateInstance.Player;
+                if (player.Physical.HoldingBreath) return;
+
+                //TODO: replace with animation bringing gun closer into shoulder
+                if (IsChonker) DoWiggleEffects(player, player.ProceduralWeaponAnimation, WeaponStateInstance.Weapon, new Vector3(0.25f, 0.25f, 0.5f), wiggleFactor: 0.5f);
+            }
+        }
+
+        private void OnInternalMagReload()
         {
             CheckIfReloadCancelsStance();
             ApplyInternalReloadSpeedBonus();
         }
 
-        public void OnMagReload() 
+        private void OnMagReload() 
         {
             CheckIfReloadCancelsStance();
         }
 
-        public void OnQuickMagReload()
+        private void OnQuickMagReload()
         {
             OnMagReload();
         }
 
-        public void OnWeaponStateReset()
+        private void OnWeaponStateReset()
         {
             ShouldResetStanceCancels = true;
         }
 
-        public void OnRechamber()
+        private void OnRechamber()
         {
             CancelShortStock = true;
             CancelLeftShoulder = true;
             ApplyChamberSpeedBonus();
         }
 
-        public void OnCheckChamber() 
+        private void OnCheckChamber() 
         {
             CancelLowReady = true;
             CancelHighReady = true;
@@ -1005,7 +942,7 @@ namespace StanceOverhaul
             ApplyChamberCheckSpeedBonus();
         }
 
-        public void OnCheckAmmo()
+        private void OnCheckAmmo()
         {
             CancelLeftShoulder = true;
             CancelLowReady = true;
@@ -1016,31 +953,14 @@ namespace StanceOverhaul
             ApplyCheckAmmoSpeedBonus();
         }
 
-        //todo replace instance paramaters and use state instance
-        private void ChangeScopeModeOnMount(ProceduralWeaponAnimation pwa, FirearmController fc)
-        {
-            int aimIndex = pwa.AimIndex;
-            if (Mathf.Abs(pwa.ScopeAimTransforms[aimIndex].Rotation) >= EFTHardSettings.Instance.SCOPE_ROTATION_THRESHOLD)
-            {
-                for (int i = 0; i < pwa.ScopeAimTransforms.Count; i++)
-                {
-                    if (Mathf.Abs(pwa.ScopeAimTransforms[i].Rotation) < EFTHardSettings.Instance.SCOPE_ROTATION_THRESHOLD)
-                    {
-                        fc.ChangeAimingMode(i);
-                        break;
-                    }
-                }
-            }
-        }
-
-        public bool IsCantedAiming(ProceduralWeaponAnimation pwa, bool checkifAiming)
+        private bool IsCantedAiming(ProceduralWeaponAnimation pwa, bool checkifAiming)
         {
             bool isCanted = Mathf.Abs(pwa.CurrentScope.Rotation) >= EFTHardSettings.Instance.SCOPE_ROTATION_THRESHOLD;
             bool isAimingOk = !checkifAiming || IsAiming;
             return isCanted && isAimingOk;
         }
 
-        public void InterruptAim(FirearmController fc)
+        private void InterruptAim(FirearmController fc)
         {
             if (fc.IsAiming && !AimingInterrupted)
             {
@@ -1049,7 +969,7 @@ namespace StanceOverhaul
             }
         }
 
-        public void UnInterruptAim(FirearmController fc) 
+        private void UnInterruptAim(FirearmController fc) 
         {
             if (!fc.IsAiming && AimingInterrupted)
             {
@@ -1120,6 +1040,8 @@ namespace StanceOverhaul
             return WeaponStateInstance.ErgoFactor * formfactor * baseDrainRate * ((1f - HealthStateInstance.HealthStamRegenFactor) + 1f) * (1f - (SkillStateInstance.StrengthSkillAimBuff)) * PluginConfig.IdleStamDrainModi.Value;
         }
 
+        //TODO: replace all this with events and similar
+        //Related events should trigger an update
         //this method makes baby Jesus cry
         public void SetStanceStamina(Player player)
         {
@@ -1548,6 +1470,8 @@ namespace StanceOverhaul
                 StanceManipCancelTimer();
             }
 
+
+            //TODO: replace with a method call
             if (DidWeaponSwap || (!PluginConfig.RememberStanceItem.Value && !GameStateInstance.WeaponIsReady) || !GameStateInstance.PlayerIsReady)
             {
                 IsLeftShoulder = false;

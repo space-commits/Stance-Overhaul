@@ -23,8 +23,9 @@ namespace StanceOverhaul
         public static ConfigEntry<bool> UseMouseWheelStance { get; set; }
         public static ConfigEntry<bool> UseMouseWheelPlusKey { get; set; }
 
-        public static ConfigEntry<bool> EnableFSPatch { get; set; }
-        public static ConfigEntry<bool> EnableNVGPatch { get; set; }
+        public static ConfigEntry<bool> EnableFSAimBlock { get; set; }
+        public static ConfigEntry<bool> EnableNVGAimBlock { get; set; }
+        public static ConfigEntry<bool> EnableThermalAimBlock { get; set; }
 
         public static ConfigEntry<bool> EnableMountUI { get; set; }
         public static ConfigEntry<bool> ToggleActiveAim { get; set; }
@@ -140,8 +141,9 @@ namespace StanceOverhaul
             StanceTransitionSpeedMulti = config.Bind<float>(weapAimAndPos, "Stance Transition Speed.", 15.0f, new ConfigDescription("Adjusts The Position Change Speed Between Stances", new AcceptableValueRange<float>(1f, 35f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 145, IsAdvanced = true, Browsable =true }));
             StanceSfxModifier = config.Bind<float>(weapAimAndPos, "Stance Sfx Volume Modifier", 2f, new ConfigDescription("Gear rattle volume modifer when doing stance related things", new AcceptableValueRange<float>(0.1f, 20f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 153, Browsable =true }));
 
-            EnableFSPatch = config.Bind<bool>(weapAimAndPos, "Enable Faceshield Patch", true, new ConfigDescription("Faceshields Block ADS Unless The Specfic Stock/Weapon/Faceshield Allows It.", null, new ConfigurationManagerAttributes { Order = 4, Browsable = true }));
-            EnableNVGPatch = config.Bind<bool>(weapAimAndPos, "Enable NVG/Thermal ADS Patch", true, new ConfigDescription("Magnified Optics Block ADS When Using NVGs. Can't Aim With Sights When Using Thermal Goggles.", null, new ConfigurationManagerAttributes { Order = 5, Browsable = true }));
+            EnableFSAimBlock = config.Bind<bool>(weapAimAndPos, "Enable Faceshield Aim Block", true, new ConfigDescription("Faceshields Block ADS Unless The Specfic Stock/Weapon/Faceshield Allows It.", null, new ConfigurationManagerAttributes { Order = 4, Browsable = true }));
+            EnableNVGAimBlock = config.Bind<bool>(weapAimAndPos, "Enable NVG Aim Block", true, new ConfigDescription("Magnified Optics Block ADS When Using NVGs.", null, new ConfigurationManagerAttributes { Order = 5, Browsable = true }));
+            EnableThermalAimBlock = config.Bind<bool>(weapAimAndPos, "Enable Thermal Aim Block", true, new ConfigDescription("Can't Aim With Sights When Using Thermal Goggles.", null, new ConfigurationManagerAttributes { Order = 5, Browsable = true }));
 
             CycleStancesKeybind = config.Bind(stanceBinds, "Cycle Stances Keybind", new KeyboardShortcut(KeyCode.None), new ConfigDescription("Cycles Between High, Low Ready and Short-Stocking. Double Click Returns To Idle.", null, new ConfigurationManagerAttributes { Order = 80, Browsable =true }));
             ActiveAimKeybind = config.Bind(stanceBinds, "Active Aim Keybind", new KeyboardShortcut(KeyCode.Mouse4), new ConfigDescription("Cants The Weapon Sideways, Improving Hipfire Accuracy.", null, new ConfigurationManagerAttributes { Order = 90, Browsable =true }));

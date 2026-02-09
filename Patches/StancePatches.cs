@@ -557,7 +557,6 @@ namespace StanceOverhaul.Patches
             if (__instance.IsYourPlayer)
             {
                 Plugin.StanceControllerInstance.CancelAllStances();
-                Plugin.StanceControllerInstance.StanceBlender.Target = 0f;
                 Plugin.StanceControllerInstance.StanceTargetPosition = Vector3.zero;
 
             }

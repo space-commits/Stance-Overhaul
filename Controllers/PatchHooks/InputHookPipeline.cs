@@ -1,44 +1,35 @@
-﻿using Comfort.Common;
-using EFT;
+﻿using EFT;
 using EFT.Animations;
-using EFT.Animations.NewRecoil;
 using EFT.InputSystem;
-using EFT.InventoryLogic;
-using HarmonyLib;
-using RealismCommonLib.Events;
-using RealismCommonLib.ModifierHandlers;
 using RealismCommonLib.PatchPipeline;
-using RealismCommonLib.Utils;
+using StanceOverhaul.Enums;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using UnityEngine;
 using static EFT.Player;
 using static RealismCommonLib.Plugin;
 
-namespace StanceOverhaul.Classes
+namespace StanceOverhaul.Controllers.PatchHooks
 {
-    internal class InputPipeline
+    internal class InputHookPipeline: IStateController
     {
-        private readonly StanceController _stanceController;
+        private StanceController _stanceController;
 
         private IDisposable _inputVeto;
         private IDisposable _inputOverride;
         private IDisposable _inputOverrideHandler;
 
-        public InputPipeline(StanceController stanceController)
+        public InputHookPipeline(StanceController stanceController)
         {
             _stanceController = stanceController;
         }
 
-        public void RunOnAwake() 
+        public void RunOnAwake()
         {
             RegisterWithPipelines();
         }
 
         public void RunOnDestroy()
-        {         
+        {
             DeRegisterWithPipelines();
         }
 
@@ -140,7 +131,7 @@ namespace StanceOverhaul.Classes
 
             if (_stanceController.IsBracing && !_stanceController.IsColliding)
             {
-                if (WeaponStateInstance.BipodIsDeployed && (_stanceController.BracingDirection != EBracingDirection.Top)) return;
+                if (WeaponStateInstance.BipodIsDeployed && _stanceController.BracingDirection != EBracingDirection.Top) return;
 
                 _stanceController.IsMounting = !_stanceController.IsMounting;
                 if (_stanceController.IsMounting) _stanceController.CancelAllStances();
@@ -189,6 +180,10 @@ namespace StanceOverhaul.Classes
                     }
                 }
             }
+        }
+
+        public void RunOnUpdate()
+        {
         }
     }
 }

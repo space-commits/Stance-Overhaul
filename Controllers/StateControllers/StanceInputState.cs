@@ -62,7 +62,7 @@ namespace StanceOverhaul.Controllers.StateControllers
 
         public void StanceStateUpdate()
         {
-            if (GameStateInstance.WeaponIsReady && PlayerStateInstance.IsUsingStationaryWeapon)
+            if (PlayerStateInstance.WeaponIsReady && PlayerStateInstance.IsUsingStationaryWeapon)
             {
                 _stanceController.StanceDampingTimer();
 

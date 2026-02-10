@@ -20,7 +20,7 @@ using StanceOverhaul.Controllers.PatchHooks;
 
 namespace StanceOverhaul.Controllers
 {
-    public class StanceController: MonoBehaviour
+    public class StanceController : MonoBehaviour
     {
         public const float STANCE_WEIGHT_LIMIT_KG = 8f;
         public const float CHONKER_MODIFIER = 0.7f;
@@ -320,8 +320,8 @@ namespace StanceOverhaul.Controllers
             get
             {
                 return
-                    WeaponStateInstance.BaseAimSpeed * 
-                    (1f + (SkillStateInstance.AimSkillADSBuff * BASE_AIM_SPEED_SKILL_FACTOR)) * 
+                    WeaponStateInstance.BaseAimSpeed *
+                    (1f + (SkillStateInstance.AimSkillADSBuff * BASE_AIM_SPEED_SKILL_FACTOR)) *
                     (WeaponStateInstance.TreatAsPistol ? BASE_AIM_SPEED_PISTOL_FACTOR : 1f);
             }
         }
@@ -358,7 +358,7 @@ namespace StanceOverhaul.Controllers
             }
         }
 
-        public bool HealthStateAffectsStance 
+        public bool HealthStateAffectsStance
         {
             get
             {
@@ -399,10 +399,10 @@ namespace StanceOverhaul.Controllers
         {
             get
             {
-                return PluginConfig.EnableTacSprint.Value 
-                    && PlayerStateInstance.IsSprinting 
+                return PluginConfig.EnableTacSprint.Value
+                    && PlayerStateInstance.IsSprinting
                     && CurrentStance != EStance.ActiveAiming
-                    && (CurrentStance == EStance.HighReady || StoredStance == EStance.HighReady) 
+                    && (CurrentStance == EStance.HighReady || StoredStance == EStance.HighReady)
                     && WeaponStateInstance.TotalWeaponWeight <= (WeaponStateInstance.IsBullpup ? TAC_SPRINT_WEIGHT_BULLPUP : TAC_SPRINT_WEIGHT_LIMIT)
                     && WeaponStateInstance.WeaponLength <= TAC_SPRINT_LENGTH_LIMIT && !PlayerStateInstance.IsScav
                     && !HealthConditionPreventsTacSprint
@@ -416,32 +416,32 @@ namespace StanceOverhaul.Controllers
             get
             {
                 return (HealthConditionForcesLowReady || (WeaponStateInstance.TotalWeaponWeight >= 10f && !IsMounting))
-                    && !AimStateInstance.IsAiming 
-                    && !FiringStateInstance.IsFiringFromStance 
+                    && !AimStateInstance.IsAiming
+                    && !FiringStateInstance.IsFiringFromStance
                     && CurrentStance != EStance.PistolCompressed
                     && CurrentStance != EStance.PatrolStance
                     && CurrentStance != EStance.ShortStock
                     && CurrentStance != EStance.ActiveAiming
-                    && MeleeIsToggleable 
+                    && MeleeIsToggleable
                     && !IsBracing;
             }
         }
 
 
 
-        public bool IsLeftStanceResetState 
+        public bool IsLeftStanceResetState
         {
             get { return _isLeftStanceResetState; }
-            private set  { _isLeftStanceResetState = value; }
+            private set { _isLeftStanceResetState = value; }
         }
 
 
 
         public bool IsDoingLeftShoulderNotBlocked
         {
-            get 
+            get
             {
-                return CurrentStance == EStance.LeftShoulder && !IsBlindFiring && !CancelLeftShoulder; 
+                return CurrentStance == EStance.LeftShoulder && !IsBlindFiring && !CancelLeftShoulder;
             }
         }
 
@@ -478,6 +478,16 @@ namespace StanceOverhaul.Controllers
         }
 
         public bool AimingInterrupted { get; set; }
+
+        public bool DidWeaponSwap { get; set; }
+
+        public bool WeaponIsReady 
+        {
+            get
+            {
+                return PlayerStateInstance.FirearmController != null;
+            }
+        }
 
         public bool ShouldAllowActiveOnReload
         {
@@ -541,7 +551,7 @@ namespace StanceOverhaul.Controllers
 
         void Update()
         {
-            if (!DoUpdate()) return;
+            if (!CanDoUpdate()) return;
 
             RunStateControllerUpdate();
             ProceduralAnimationsUpdate();
@@ -677,7 +687,9 @@ namespace StanceOverhaul.Controllers
             _vCameraTargetField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_vCameraTarget");
         }
 
-        private bool DoUpdate() 
+        //TODO: check if GameStateInstance.WeaponIsReady is essentially the same thing,
+        //would make check in StanceStateUpdate redundant
+        private bool CanDoUpdate() 
         {
             Player player = PlayerStateInstance.Player;
             if (player != null && player.IsYourPlayer && PlayerStateInstance.FirearmController != null)
@@ -1392,7 +1404,7 @@ namespace StanceOverhaul.Controllers
             pwa.HandsContainer.WeaponRoot.localRotation *= newRot;
         }
 
-        private void CheckLeftShoulder(Player player, Player.FirearmController fc, ProceduralWeaponAnimation pwa, float stanceMulti, float dt, Vector3 posTarget, Vector3 rotTarget, float rotSpeed, float curveModifier = 1f)
+        private void DoLeftShoulder(Player player, Player.FirearmController fc, ProceduralWeaponAnimation pwa, float stanceMulti, float dt, Vector3 posTarget, Vector3 rotTarget, float rotSpeed, float curveModifier = 1f)
         {
             float baseSpeed = Mathf.Clamp((1f - stanceMulti) + 1f, 0.05f, 1.5f);
             float speed = AimStateInstance.IsAiming ? baseSpeed * 0.22f : baseSpeed * 0.22f;
@@ -1472,7 +1484,7 @@ namespace StanceOverhaul.Controllers
                 _gunZTarget =  0f;
             }
 
-            CheckLeftShoulder(player, fc, pwa, _pistolPosSpeed, dt, _leftStancePistolPositionTarget, _leftStancePistolRotaitonTarget, stanceMulti * 2.5f, 0.05f);
+            DoLeftShoulder(player, fc, pwa, _pistolPosSpeed, dt, _leftStancePistolPositionTarget, _leftStancePistolRotaitonTarget, stanceMulti * 2.5f, 0.05f);
 
             if (RealismCommonLib.Plugin.FOVFixEnabled) 
             {
@@ -1514,7 +1526,7 @@ namespace StanceOverhaul.Controllers
                 _gunZTarget = BaseWeaponOffsetPosition.z + PluginConfig.WeapOffset.Value.z;
             }
 
-            CheckLeftShoulder(player, fc, pwa, stanceMulti, dt, _leftStanceRiflePositionTarget, _leftStanceRifleRotaitonTarget, stanceMulti * 4.5f);
+            DoLeftShoulder(player, fc, pwa, stanceMulti, dt, _leftStanceRiflePositionTarget, _leftStanceRifleRotaitonTarget, stanceMulti * 4.5f);
 
             if (PluginConfig.EnableAltRifle.Value && RealismCommonLib.Plugin.FOVFixEnabled)
             {

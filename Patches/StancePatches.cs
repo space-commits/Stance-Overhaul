@@ -4,19 +4,22 @@ using EFT.Animations;
 using EFT.Ballistics;
 using EFT.InventoryLogic;
 using HarmonyLib;
+using RealismCommonLib.Utils;
 using SPT.Reflection.Patching;
 using System;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using StanceOverhaul.Enums;
 using static EFT.Player;
+using static RealismCommonLib.Plugin;
 using CollisionLayerClass = LayerMasksDataAbstractClass;
 using ReloadClass = EFT.Player.FirearmController.GClass2037;
-using static RealismCommonLib.Plugin;
-using RealismCommonLib.Utils;
 
 namespace StanceOverhaul.Patches
 {
+
+    //TODO: move to common lib to allow other modules to patch this
     public class TacticalReloadPatch : ModulePatch
     {
         private static FieldInfo _playerField;
@@ -47,7 +50,7 @@ namespace StanceOverhaul.Patches
         }
     }
 
-    //used to block sprint animation when doing bayonet charge
+    //Needed to block sprint animation when doing bayonet charge
     class SprintPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -66,6 +69,7 @@ namespace StanceOverhaul.Patches
         }
     }
 
+    //TODO: move to common lib to allow other modules to patch this
     //Allow reoading while aiming if mounting
     public class DisableAimOnReloadPatch : ModulePatch
     {
@@ -88,6 +92,7 @@ namespace StanceOverhaul.Patches
         }
     }
 
+    //TODO: condier simplification or moving to common lib
     //force scope swtich and block when using canted sight while mounting
     public class ChangeScopePatch : ModulePatch
     {
@@ -136,6 +141,7 @@ namespace StanceOverhaul.Patches
         }
     }
 
+    //TODO: move logic to own class
     //Entry point for moutning and collision overrides 
     public class MountingAndCollisionPatch : ModulePatch
     {
@@ -955,6 +961,7 @@ namespace StanceOverhaul.Patches
         }
     }
 
+    //TODO: possibly move to common lib to allow multiple modules to modify it
     //Adjust initial weapon position when initializing PWA
     public class InitTransformsPatch : ModulePatch
     {
@@ -996,7 +1003,7 @@ namespace StanceOverhaul.Patches
         private static FieldInfo firearmControllerField;
         private static FieldInfo playerField;
 
-        private static Vector3 targetPosition = Vector3.zero;
+        private static Vector3 _targetPosition = Vector3.zero;
 
         protected override MethodBase GetTargetMethod()
         {
@@ -1047,17 +1054,17 @@ namespace StanceOverhaul.Patches
                 {
                     float strength = ((Mathf.Abs(__instance.Pitch) < 45f) ? 1f : ((90f - Mathf.Abs(__instance.Pitch)) / 45f));
                     blindfireStrengthField.SetValue(__instance, strength);
-                    targetPosition = Plugin.StanceControllerInstance.StanceTargetPosition * stanceBlendValue;
-                    __instance.HandsContainer.HandsPosition.Zero = __instance.PositionZeroSum + (float)blindfireStrengthField.GetValue(__instance) * targetPosition;
+                    _targetPosition = Plugin.StanceControllerInstance.StanceTargetPosition * stanceBlendValue;
+                    __instance.HandsContainer.HandsPosition.Zero = __instance.PositionZeroSum + (float)blindfireStrengthField.GetValue(__instance) * _targetPosition;
                     __instance.HandsContainer.HandsRotation.Zero = __instance.RotationZeroSum;
                     return false;
                 }
                 else
                 {
-                    targetPosition = Vector3.zero;
+                    _targetPosition = Vector3.zero;
                 }
 
-                __instance.HandsContainer.HandsPosition.Zero = __instance.PositionZeroSum + targetPosition + (Vector3)blindfirePositionField.GetValue(__instance) * (float)blindfireStrengthField.GetValue(__instance) * collidingModifier;
+                __instance.HandsContainer.HandsPosition.Zero = __instance.PositionZeroSum + _targetPosition + (Vector3)blindfirePositionField.GetValue(__instance) * (float)blindfireStrengthField.GetValue(__instance) * collidingModifier;
                 __instance.HandsContainer.HandsRotation.Zero = __instance.RotationZeroSum;
                 return false;
             }
@@ -1065,6 +1072,7 @@ namespace StanceOverhaul.Patches
         }
     }
 
+    //TODO: move to common lib
     //entry point for pose changes
     //move to common lib + use event
     public class ChangePosePatch : ModulePatch
@@ -1093,8 +1101,8 @@ namespace StanceOverhaul.Patches
         }
     }
 
+    //TODO: move to common lib and make event driven
     //used to determine threshold for cancelling mounting
-    //should move to common lib and be event driven
     public class SetTiltPatch : ModulePatch
     {
         private static FieldInfo movementContextField;
@@ -1130,6 +1138,7 @@ namespace StanceOverhaul.Patches
         }
     }
 
+    //TODO move 3rd person logic to controller, and own class. It's likely not needed at all, since I am now doing it all in component update. If so, just adjust stances if third person.
     //used for applying player and bot third person proc animations
     //bot portion should move to component added to bots
     //player third person portion should be standardized and integrated with first persn stance controller
@@ -1269,7 +1278,7 @@ namespace StanceOverhaul.Patches
                         Plugin.StanceControllerInstance.DoRifleStances(player, firearmController, true, __instance, dt, Vector3.zero);
                     }
                 }
-                else if (player.IsAI && !player.AIData.UseZombieSimpleAnimator)
+       /*         else if (player.IsAI && !player.AIData.UseZombieSimpleAnimator)
                 {
                     Quaternion targetRotation = Quaternion.identity;
                     Quaternion currentRotation = (Quaternion)currentRotationField.GetValue(__instance);
@@ -1367,7 +1376,7 @@ namespace StanceOverhaul.Patches
                     currentRotation = Quaternion.Slerp(currentRotation, __instance.IsAiming && !isInStance ? scopeRotation : isInStance ? targetRotation : Quaternion.identity, isInStance ? stanceSpeed : 8f * dt);
                     __instance.HandsContainer.WeaponRootAnim.SetPositionAndRotation(weaponPosition, weapRotation * currentRotation);
                     currentRotationField.SetValue(__instance, currentRotation);
-                }
+                }*/
             }
         }
     }

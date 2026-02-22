@@ -56,7 +56,7 @@ namespace StanceOverhaul.Controllers.StateControllers
 
         private void UpdateWalkSpeed()
         {
-            float stanceFactor = GetStanceWalkSpeedFactor(_stanceController.CurrentStance);
+            float stanceFactor = GetStanceWalkSpeedFactor(_stanceController.TargetStance);
             _walkSpeed.Multiplier = stanceFactor;
         }
 
@@ -84,7 +84,7 @@ namespace StanceOverhaul.Controllers.StateControllers
                 : 1f;
             _sprintSpeed.Multiplier = stanceSpeedBonus;
 
-            float stanceAccelBonus = GetStanceSprintAccelBonus(_stanceController.CurrentStance, _stanceController.IsDoingTacSprint);
+            float stanceAccelBonus = GetStanceSprintAccelBonus(_stanceController.TargetStance, _stanceController.IsDoingTacSprint);
             _preSprintAccelSpeed.Multiplier = stanceAccelBonus;
             _sprintAccelSpeed.Multiplier = stanceAccelBonus;
         }

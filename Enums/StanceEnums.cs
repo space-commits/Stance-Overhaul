@@ -22,6 +22,8 @@ namespace StanceOverhaul.Enums
         PatrolStance,
         LeftShoulder,
         Melee,
-        PistolCompressed
+        PistolCompressed,
+        Mounting,
+        Aiming
     }
 }

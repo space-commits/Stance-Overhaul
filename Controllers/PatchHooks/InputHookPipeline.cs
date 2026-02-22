@@ -105,10 +105,10 @@ namespace StanceOverhaul.Controllers.PatchHooks
         private bool ShouldVetoFiring()
         {
             bool isInStanceThatCanBlockFiring =
-                _stanceController.CurrentStance != EStance.None &&
-                _stanceController.CurrentStance != EStance.ActiveAiming &&
-                _stanceController.CurrentStance != EStance.ShortStock &&
-                _stanceController.CurrentStance != EStance.PistolCompressed;
+                _stanceController.TargetStance != EStance.None &&
+                _stanceController.TargetStance != EStance.ActiveAiming &&
+                _stanceController.TargetStance != EStance.ShortStock &&
+                _stanceController.TargetStance != EStance.PistolCompressed;
 
             bool shouldVeto =
                 PluginConfig.BlockFiring.Value &&
@@ -117,7 +117,7 @@ namespace StanceOverhaul.Controllers.PatchHooks
 
             if (shouldVeto)
             {
-                _stanceController.CurrentStance = EStance.None;
+                _stanceController.TargetStance = EStance.None;
                 _stanceController.StoredStance = EStance.None;
                 _stanceController.StanceBlender.Target = 0f;
             }

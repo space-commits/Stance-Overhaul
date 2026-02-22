@@ -50,6 +50,7 @@ namespace StanceOverhaul.Patches
         }
     }
 
+    //TODO: move to common lib to allow other modules to patch this
     //Needed to block sprint animation when doing bayonet charge
     class SprintPatch : ModulePatch
     {
@@ -266,31 +267,31 @@ namespace StanceOverhaul.Patches
                 _stanceInverseFactor = 1f;
                 Plugin.StanceControllerInstance.CameraMovmentForCollisionSpeed = 0.06f;
             }
-            else if (Plugin.StanceControllerInstance.CurrentStance == EStance.ShortStock || Plugin.StanceControllerInstance.StoredStance == EStance.ShortStock)
+            else if (Plugin.StanceControllerInstance.TargetStance == EStance.ShortStock || Plugin.StanceControllerInstance.StoredStance == EStance.ShortStock)
             {
                 _stanceFactor = 1.15f;
                 _stanceInverseFactor = 0.85f;
                 Plugin.StanceControllerInstance.CameraMovmentForCollisionSpeed = 0.1f;
             }
-            else if (Plugin.StanceControllerInstance.CurrentStance == EStance.HighReady || Plugin.StanceControllerInstance.StoredStance == EStance.HighReady)
+            else if (Plugin.StanceControllerInstance.TargetStance == EStance.HighReady || Plugin.StanceControllerInstance.StoredStance == EStance.HighReady)
             {
                 _stanceFactor = 1.1f;
                 _stanceInverseFactor = 0.89f;
                 Plugin.StanceControllerInstance.CameraMovmentForCollisionSpeed = 0.2f;
             }
-            else if (Plugin.StanceControllerInstance.CurrentStance == EStance.LowReady || Plugin.StanceControllerInstance.StoredStance == EStance.LowReady)
+            else if (Plugin.StanceControllerInstance.TargetStance == EStance.LowReady || Plugin.StanceControllerInstance.StoredStance == EStance.LowReady)
             {
                 _stanceFactor = 1.07f;
                 _stanceInverseFactor = 0.92f;
                 Plugin.StanceControllerInstance.CameraMovmentForCollisionSpeed = 0.16f;
             }
-            else if (Plugin.StanceControllerInstance.CurrentStance == EStance.ActiveAiming || Plugin.StanceControllerInstance.StoredStance == EStance.ActiveAiming)
+            else if (Plugin.StanceControllerInstance.TargetStance == EStance.ActiveAiming || Plugin.StanceControllerInstance.StoredStance == EStance.ActiveAiming)
             {
                 _stanceFactor = 1.03f;
                 _stanceInverseFactor = 0.95f;
                 Plugin.StanceControllerInstance.CameraMovmentForCollisionSpeed = 0.08f;
             }
-            else if (Plugin.StanceControllerInstance.CurrentStance == EStance.PatrolStance)
+            else if (Plugin.StanceControllerInstance.TargetStance == EStance.PatrolStance)
             {
                 _stanceFactor = 1f;
                 _stanceInverseFactor = 1f;
@@ -311,30 +312,30 @@ namespace StanceOverhaul.Patches
                 _finalPos = new Vector3(0.15f, -0.6f, 0.1f);
                 _finalRot = new Vector3(-0.9f, -0.01f, -0.01f);
             }
-            else if (Plugin.StanceControllerInstance.CurrentStance == EStance.ShortStock || Plugin.StanceControllerInstance.StoredStance == EStance.ShortStock)
+            else if (Plugin.StanceControllerInstance.TargetStance == EStance.ShortStock || Plugin.StanceControllerInstance.StoredStance == EStance.ShortStock)
             {
                 _finalPos = new Vector3(0f, 0f, -0.5f);
                 _finalRot = new Vector3(0.01f, 0.1f, -0.05f);
 
             }
-            else if (Plugin.StanceControllerInstance.CurrentStance == EStance.HighReady || Plugin.StanceControllerInstance.StoredStance == EStance.HighReady)
+            else if (Plugin.StanceControllerInstance.TargetStance == EStance.HighReady || Plugin.StanceControllerInstance.StoredStance == EStance.HighReady)
             {
                 _finalPos = new Vector3(0.08f, -0.34f, -0.4f);
                 _finalRot = new Vector3(-0.25f, -0.05f, -0.025f);
             }
-            else if (Plugin.StanceControllerInstance.CurrentStance == EStance.LowReady || Plugin.StanceControllerInstance.StoredStance == EStance.LowReady)
+            else if (Plugin.StanceControllerInstance.TargetStance == EStance.LowReady || Plugin.StanceControllerInstance.StoredStance == EStance.LowReady)
             {
                 _finalPos = new Vector3(0f, 0f, -0.15f);
                 _finalRot = new Vector3(0.15f, -0.4f, 0f);
             }
-            else if (Plugin.StanceControllerInstance.CurrentStance == EStance.ActiveAiming || Plugin.StanceControllerInstance.StoredStance == EStance.ActiveAiming)
+            else if (Plugin.StanceControllerInstance.TargetStance == EStance.ActiveAiming || Plugin.StanceControllerInstance.StoredStance == EStance.ActiveAiming)
             {
                 /*                _finalPos = new Vector3(0.35f, 0.0f, 0.2f);
                                 _finalRot = new Vector3(0f, 0f, -0.9f);*/
                 _finalPos = new Vector3(0.05f, -0.2f, 0.1f);
                 _finalRot = new Vector3(-0.5f, -0.5f, -0.5f);
             }
-            else if (Plugin.StanceControllerInstance.CurrentStance == EStance.PatrolStance)
+            else if (Plugin.StanceControllerInstance.TargetStance == EStance.PatrolStance)
             {
                 _finalPos = Vector3.zero;
                 _finalRot = Vector3.zero;
@@ -506,25 +507,6 @@ namespace StanceOverhaul.Patches
         }
     }
 
-    //trigger weapon swap, need to swap this to an event or coroutine
-    //maybe move to common lib
-    public class OnWeaponDrawPatch : ModulePatch
-    {
-        protected override MethodBase GetTargetMethod()
-        {
-            return typeof(SkillManager).GetMethod("OnWeaponDraw", BindingFlags.Instance | BindingFlags.Public);
-        }
-
-        [PatchPostfix]
-        private static void PatchPostfix(SkillManager __instance, Item item)
-        {
-            if (item?.Owner?.ID != null && item.Owner.ID == Singleton<GameWorld>.Instance.MainPlayer.ProfileId && Plugin.StanceControllerInstance.CurrentStance == EStance.PistolCompressed)
-            {
-                Plugin.StanceControllerInstance.DidWeaponSwap = true;
-            }
-        }
-    }
-
     //Block firemode change animation when in high ready and sprinting
     //This still allows mode to change, and fire selector animtates. This should be blocked too.
     public class SetFireModePatch : ModulePatch
@@ -538,7 +520,7 @@ namespace StanceOverhaul.Patches
         private static bool Prefix(FirearmsAnimator __instance, Weapon.EFireMode fireMode, bool skipAnimation = false)
         {
             __instance.ResetLeftHand();
-            skipAnimation = Plugin.StanceControllerInstance.CurrentStance == EStance.HighReady && PlayerStateInstance.IsSprinting ? true : skipAnimation;
+            skipAnimation = Plugin.StanceControllerInstance.TargetStance == EStance.HighReady && PlayerStateInstance.IsSprinting ? true : skipAnimation;
             WeaponAnimationSpeedControllerClass.SetFireMode(__instance.Animator, (float)fireMode);
             if (!skipAnimation)
             {
@@ -563,7 +545,7 @@ namespace StanceOverhaul.Patches
             if (__instance.IsYourPlayer)
             {
                 Plugin.StanceControllerInstance.CancelAllStances();
-                Plugin.StanceControllerInstance.StanceTargetPosition = Vector3.zero;
+                Plugin.StanceControllerInstance.StanceCurrentPosition = Vector3.zero;
 
             }
         }
@@ -684,16 +666,6 @@ namespace StanceOverhaul.Patches
                 Vector3 leftDirection = startLeft - linecastDirection * ln;
                 Vector3 rightDirection = startRight - linecastDirection * ln;
 
-                if (RealismCommonLib.PluginConfig.EnableGeneralLogging.Value)
-                {
-                    DebugGizmos.SingleObjects.Line(startDown, forwardDirection, Color.red, 0.02f, true, 0.3f, true);
-                    DebugGizmos.SingleObjects.Sphere(sphereDown, 0.1f, Color.red, true, 0.3f);
-                    DebugGizmos.SingleObjects.Line(startLeft, leftDirection, Color.green, 0.02f, true, 0.3f, true);
-                    DebugGizmos.SingleObjects.Sphere(sphereLeft, 0.1f, Color.green, true, 0.3f);
-                    DebugGizmos.SingleObjects.Line(startRight, rightDirection, Color.yellow, 0.02f, true, 0.3f, true);
-                    DebugGizmos.SingleObjects.Sphere(sphereRight, 0.1f, Color.yellow, true, 0.3f);
-                }
-
                 if (PluginConfig.OverrideMounting.Value)
                 {
                     if (IsBracingProne(player) ||
@@ -730,18 +702,13 @@ namespace StanceOverhaul.Patches
 
         private static void DoMelee(FirearmController fc, Player player, float ln)
         {
-            if (Plugin.StanceControllerInstance.CurrentStance == EStance.Melee && Plugin.StanceControllerInstance.CanDoMeleeDetection && !Plugin.StanceControllerInstance.MeleeHitSomething)
+            if (Plugin.StanceControllerInstance.TargetStance == EStance.Melee && Plugin.StanceControllerInstance.CanDoMeleeDetection && !Plugin.StanceControllerInstance.MeleeHitSomething)
             {
                 Transform weapTransform = player.ProceduralWeaponAnimation.HandsContainer.WeaponRootAnim;
                 Vector3 linecastDirection = weapTransform.TransformDirection(Vector3.up);
                 Vector3 startMeleeDir = new Vector3(0, -0.5f, -0.025f);
                 Vector3 meleeStart = weapTransform.position + weapTransform.TransformDirection(startMeleeDir);
                 Vector3 meleeDir = meleeStart - linecastDirection * (ln - (WeaponStateInstance.HasBayonet ? 0.1f : 0.25f));
-
-                if (RealismCommonLib.PluginConfig.EnablePWALogging.Value)
-                {
-                    DebugGizmos.SingleObjects.Line(meleeStart, meleeDir, Color.red, 0.02f, true, 0.3f, true);
-                }
 
                 BallisticCollider hitBalls = null;
                 RaycastHit raycastHit;
@@ -895,7 +862,7 @@ namespace StanceOverhaul.Patches
             Player player = (Player)playerField.GetValue(__instance);
             if (player.IsYourPlayer)
             {
-                if (Plugin.StanceControllerInstance.CurrentStance == EStance.PatrolStance)
+                if (Plugin.StanceControllerInstance.TargetStance == EStance.PatrolStance)
                 {
                     weaponLnField.SetValue(__instance, Plugin.StanceControllerInstance.StanceModifiedWeaponLength * 0.75f);
                     return;
@@ -912,17 +879,17 @@ namespace StanceOverhaul.Patches
                         weaponLnField.SetValue(__instance, Plugin.StanceControllerInstance.StanceModifiedWeaponLength * 0.8f);
                         return;
                     }
-                    if (Plugin.StanceControllerInstance.CurrentStance == EStance.ShortStock)
+                    if (Plugin.StanceControllerInstance.TargetStance == EStance.ShortStock)
                     {
                         weaponLnField.SetValue(__instance, Plugin.StanceControllerInstance.StanceModifiedWeaponLength * 0.9f);
                         return;
                     }
-                    if (Plugin.StanceControllerInstance.CurrentStance == EStance.HighReady)
+                    if (Plugin.StanceControllerInstance.TargetStance == EStance.HighReady)
                     {
                         weaponLnField.SetValue(__instance, Plugin.StanceControllerInstance.StanceModifiedWeaponLength * 0.95f);
                         return;
                     }
-                    if (Plugin.StanceControllerInstance.CurrentStance == EStance.LowReady)
+                    if (Plugin.StanceControllerInstance.TargetStance == EStance.LowReady)
                     {
                         weaponLnField.SetValue(__instance, Plugin.StanceControllerInstance.StanceModifiedWeaponLength * 0.98f);
                         return;
@@ -988,87 +955,6 @@ namespace StanceOverhaul.Patches
 
                 //if (!Plugin.FOVFixPresent) __instance.HandsContainer.CameraOffset = new Vector3(0.04f, 0.04f, 0.025f);
             }
-        }
-    }
-
-    //Without this patch, blindfire used to get overriden, probably not the case since it moved to dedicated animations
-    //It also was used to prevent stuttering during stance changes, but unsure if still needed
-    //Unsure if needed when doing secondary weapon pos and rot changes, left stance or patrol
-    public class ZeroAdjustmentsPatch : ModulePatch
-    {
-        private static FieldInfo blindfireStrengthField;
-        private static FieldInfo blindfireRotationField;
-        private static PropertyInfo overlappingBlindfireField;
-        private static FieldInfo blindfirePositionField;
-        private static FieldInfo firearmControllerField;
-        private static FieldInfo playerField;
-
-        private static Vector3 _targetPosition = Vector3.zero;
-
-        protected override MethodBase GetTargetMethod()
-        {
-            blindfireStrengthField = AccessTools.Field(typeof(EFT.Animations.ProceduralWeaponAnimation), "_blindfireStrength");
-            blindfireRotationField = AccessTools.Field(typeof(EFT.Animations.ProceduralWeaponAnimation), "_blindFireRotation");
-            overlappingBlindfireField = AccessTools.Property(typeof(EFT.Animations.ProceduralWeaponAnimation), "Single_3");
-            blindfirePositionField = AccessTools.Field(typeof(EFT.Animations.ProceduralWeaponAnimation), "_blindFirePosition");
-            firearmControllerField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_firearmController");
-            playerField = AccessTools.Field(typeof(FirearmController), "_player");
-
-            return typeof(EFT.Animations.ProceduralWeaponAnimation).GetMethod("ZeroAdjustments", BindingFlags.Instance | BindingFlags.Public);
-        }
-
-        [PatchPrefix]
-        private static bool PatchPrefix(EFT.Animations.ProceduralWeaponAnimation __instance)
-        {
-            FirearmController firearmController = (FirearmController)firearmControllerField.GetValue(__instance);
-            if (firearmController == null)
-            {
-                return true;
-            }
-            Player player = (Player)playerField.GetValue(firearmController);
-            if (player != null && player.IsYourPlayer) // player.MovementContext.CurrentState.Name != EPlayerState.Stationary && player.IsYourPlayer
-            {
-                float collidingModifier = (float)overlappingBlindfireField.GetValue(__instance);
-                Vector3 blindfirePosition = (Vector3)blindfirePositionField.GetValue(__instance);
-
-                __instance.PositionZeroSum.y = (__instance._shouldMoveWeaponCloser ? 0.05f : 0f);
-                __instance.RotationZeroSum.y = __instance.SmoothedTilt * __instance.PossibleTilt;
-                float stanceBlendValue = Plugin.StanceControllerInstance.StanceBlender.Value;
-                float blindFireBlendValue = __instance.BlindfireBlender.Value;
-                if (Mathf.Abs(blindFireBlendValue) > 0f)
-                {
-                    Plugin.StanceControllerInstance.IsBlindFiring = true;
-                    float strength = ((Mathf.Abs(__instance.Pitch) < 45f) ? 1f : ((90f - Mathf.Abs(__instance.Pitch)) / 45f));
-                    blindfireStrengthField.SetValue(__instance, strength);
-                    __instance.BlindFireEndPosition = ((blindFireBlendValue > 0f) ? __instance.BlindFireOffset : __instance.SideFireOffset);
-                    __instance.BlindFireEndPosition *= strength;
-                }
-                else
-                {
-                    Plugin.StanceControllerInstance.IsBlindFiring = false;
-                    blindfirePositionField.SetValue(__instance, Vector3.zero);
-                    blindfireRotationField.SetValue(__instance, Vector3.zero);
-                }
-
-                if (Mathf.Abs(stanceBlendValue) > 0f)
-                {
-                    float strength = ((Mathf.Abs(__instance.Pitch) < 45f) ? 1f : ((90f - Mathf.Abs(__instance.Pitch)) / 45f));
-                    blindfireStrengthField.SetValue(__instance, strength);
-                    _targetPosition = Plugin.StanceControllerInstance.StanceTargetPosition * stanceBlendValue;
-                    __instance.HandsContainer.HandsPosition.Zero = __instance.PositionZeroSum + (float)blindfireStrengthField.GetValue(__instance) * _targetPosition;
-                    __instance.HandsContainer.HandsRotation.Zero = __instance.RotationZeroSum;
-                    return false;
-                }
-                else
-                {
-                    _targetPosition = Vector3.zero;
-                }
-
-                __instance.HandsContainer.HandsPosition.Zero = __instance.PositionZeroSum + _targetPosition + (Vector3)blindfirePositionField.GetValue(__instance) * (float)blindfireStrengthField.GetValue(__instance) * collidingModifier;
-                __instance.HandsContainer.HandsRotation.Zero = __instance.RotationZeroSum;
-                return false;
-            }
-            return true;
         }
     }
 
@@ -1214,31 +1100,31 @@ namespace StanceOverhaul.Patches
                     bool isAiming = (bool)isAimingField.GetValue(__instance);
 
                     bool isInStance =
-                        Plugin.StanceControllerInstance.CurrentStance == EStance.HighReady ||
-                        Plugin.StanceControllerInstance.CurrentStance == EStance.LowReady ||
-                        Plugin.StanceControllerInstance.CurrentStance == EStance.ShortStock ||
-                        Plugin.StanceControllerInstance.CurrentStance == EStance.ActiveAiming ||
-                        Plugin.StanceControllerInstance.CurrentStance == EStance.Melee;
+                        Plugin.StanceControllerInstance.TargetStance == EStance.HighReady ||
+                        Plugin.StanceControllerInstance.TargetStance == EStance.LowReady ||
+                        Plugin.StanceControllerInstance.TargetStance == EStance.ShortStock ||
+                        Plugin.StanceControllerInstance.TargetStance == EStance.ActiveAiming ||
+                        Plugin.StanceControllerInstance.TargetStance == EStance.Melee;
                     bool isInShootableStance =
-                        Plugin.StanceControllerInstance.CurrentStance == EStance.ShortStock ||
-                        Plugin.StanceControllerInstance.CurrentStance == EStance.ActiveAiming ||
+                        Plugin.StanceControllerInstance.TargetStance == EStance.ShortStock ||
+                        Plugin.StanceControllerInstance.TargetStance == EStance.ActiveAiming ||
                         Plugin.StanceControllerInstance.TreatWeaponAsPistolStance ||
-                        Plugin.StanceControllerInstance.CurrentStance == EStance.Melee;
+                        Plugin.StanceControllerInstance.TargetStance == EStance.Melee;
                     bool cancelBecauseShooting = !(PluginConfig.RememberStanceFiring.Value && isAiming) && FiringStateInstance.IsFiringFromStance && !isInShootableStance;
-                    bool doStanceRotation = (isInStance || !Plugin.StanceControllerInstance.AllStancesReset || Plugin.StanceControllerInstance.CurrentStance == EStance.PistolCompressed) && !cancelBecauseShooting;
+                    bool doStanceRotation = (isInStance || !Plugin.StanceControllerInstance.AllStancesReset || Plugin.StanceControllerInstance.TargetStance == EStance.PistolCompressed) && !cancelBecauseShooting;
                     bool cancelStance =
-                        (Plugin.StanceControllerInstance.CancelActiveAim && Plugin.StanceControllerInstance.CurrentStance == EStance.ActiveAiming) ||
-                        (Plugin.StanceControllerInstance.CancelHighReady && Plugin.StanceControllerInstance.CurrentStance == EStance.HighReady) ||
-                        (Plugin.StanceControllerInstance.CancelLowReady && Plugin.StanceControllerInstance.CurrentStance == EStance.LowReady) ||
-                        (Plugin.StanceControllerInstance.CancelShortStock && Plugin.StanceControllerInstance.CurrentStance == EStance.ShortStock); //|| (Plugin.StanceControllerInstance.CancelPistolStance && Plugin.StanceControllerInstance.PistolIsCompressed)
+                        (Plugin.StanceControllerInstance.PauseActiveAim && Plugin.StanceControllerInstance.TargetStance == EStance.ActiveAiming) ||
+                        (Plugin.StanceControllerInstance.PauseHighReady && Plugin.StanceControllerInstance.TargetStance == EStance.HighReady) ||
+                        (Plugin.StanceControllerInstance.PauseLowReady && Plugin.StanceControllerInstance.TargetStance == EStance.LowReady) ||
+                        (Plugin.StanceControllerInstance.PauseShortStock && Plugin.StanceControllerInstance.TargetStance == EStance.ShortStock); //|| (Plugin.StanceControllerInstance.CancelPistolStance && Plugin.StanceControllerInstance.PistolIsCompressed)
 
-                    Plugin.StanceControllerInstance.CurrentRotation = Quaternion.Slerp(Plugin.StanceControllerInstance.CurrentRotation, __instance.IsAiming && Plugin.StanceControllerInstance.AllStancesReset ? scopeRotation : doStanceRotation ? Plugin.StanceControllerInstance.StanceRotation : Quaternion.identity, doStanceRotation ? Plugin.StanceControllerInstance.StanceRotationSpeed * PluginConfig.StanceRotationSpeedMulti.Value : __instance.IsAiming ? 8f * aimSpeed * dt : 8f * dt);
+                    Plugin.StanceControllerInstance.CurrentStanceRotation = Quaternion.Slerp(Plugin.StanceControllerInstance.CurrentStanceRotation, __instance.IsAiming && Plugin.StanceControllerInstance.AllStancesReset ? scopeRotation : doStanceRotation ? Plugin.StanceControllerInstance.StanceTargetRotation : Quaternion.identity, doStanceRotation ? Plugin.StanceControllerInstance.StanceRotationSpeed * PluginConfig.StanceRotationSpeedMulti.Value : __instance.IsAiming ? 8f * aimSpeed * dt : 8f * dt);
 
-                    __instance.HandsContainer.WeaponRootAnim.SetPositionAndRotation(weaponPosition, weapRotation * Plugin.StanceControllerInstance.CurrentRotation);
+                    __instance.HandsContainer.WeaponRootAnim.SetPositionAndRotation(weaponPosition, weapRotation * Plugin.StanceControllerInstance.CurrentStanceRotation);
 
                     if (Plugin.StanceControllerInstance.TreatWeaponAsPistolStance && PluginConfig.EnableAltPistol.Value) // && Plugin.StanceControllerInstance.CurrentStance != EStance.PatrolStance
                     {
-                        if (Plugin.StanceControllerInstance.CurrentStance == EStance.PistolCompressed && !Plugin.StanceControllerInstance.IsAiming && !Plugin.StanceControllerInstance.IsResettingPistol && !Plugin.StanceControllerInstance.IsBlindFiring)
+                        if (Plugin.StanceControllerInstance.TargetStance == EStance.PistolCompressed && !AimStateInstance.IsAiming && !Plugin.StanceControllerInstance.IsResettingPistol && !Plugin.StanceControllerInstance.IsBlindFiring)
                         {
                             Plugin.StanceControllerInstance.StanceBlender.Target = 1f;
                         }
@@ -1247,9 +1133,9 @@ namespace StanceOverhaul.Patches
                             Plugin.StanceControllerInstance.StanceBlender.Target = 0f;
                         }
 
-                        if ((Plugin.StanceControllerInstance.CurrentStance != EStance.PistolCompressed && !Plugin.StanceControllerInstance.IsAiming && !Plugin.StanceControllerInstance.IsResettingPistol) || (Plugin.StanceControllerInstance.IsBlindFiring))
+                        if ((Plugin.StanceControllerInstance.TargetStance != EStance.PistolCompressed && !AimStateInstance.IsAiming && !Plugin.StanceControllerInstance.IsResettingPistol) || (Plugin.StanceControllerInstance.IsBlindFiring))
                         {
-                            Plugin.StanceControllerInstance.StanceTargetPosition = Vector3.Lerp(Plugin.StanceControllerInstance.StanceTargetPosition, Vector3.zero, 5f * dt);
+                            Plugin.StanceControllerInstance.StanceCurrentPosition = Vector3.Lerp(Plugin.StanceControllerInstance.StanceCurrentPosition, Vector3.zero, 5f * dt);
                         }
 
                         Plugin.StanceControllerInstance.HasResetActiveAim = true;
@@ -1260,7 +1146,7 @@ namespace StanceOverhaul.Patches
                     }
                     else if (!Plugin.StanceControllerInstance.TreatWeaponAsPistolStance || WeaponStateInstance.HasShoulderContact)
                     {
-                        if ((!isInStance && Plugin.StanceControllerInstance.AllStancesReset) || (cancelBecauseShooting && !isInShootableStance) || Plugin.StanceControllerInstance.IsAiming || cancelStance || Plugin.StanceControllerInstance.IsBlindFiring)
+                        if ((!isInStance && Plugin.StanceControllerInstance.AllStancesReset) || (cancelBecauseShooting && !isInShootableStance) || AimStateInstance.IsAiming || cancelStance || Plugin.StanceControllerInstance.IsBlindFiring)
                         {
                             Plugin.StanceControllerInstance.StanceBlender.Target = 0f;
                         }
@@ -1269,9 +1155,9 @@ namespace StanceOverhaul.Patches
                             Plugin.StanceControllerInstance.StanceBlender.Target = 1f;
                         }
 
-                        if (((!isInStance && Plugin.StanceControllerInstance.AllStancesReset) && !cancelBecauseShooting && !Plugin.StanceControllerInstance.IsAiming) || (Plugin.StanceControllerInstance.IsBlindFiring))
+                        if (((!isInStance && Plugin.StanceControllerInstance.AllStancesReset) && !cancelBecauseShooting && !AimStateInstance.IsAiming) || (Plugin.StanceControllerInstance.IsBlindFiring))
                         {
-                            Plugin.StanceControllerInstance.StanceTargetPosition = Vector3.Lerp(Plugin.StanceControllerInstance.StanceTargetPosition, Vector3.zero, 5f * dt);
+                            Plugin.StanceControllerInstance.StanceCurrentPosition = Vector3.Lerp(Plugin.StanceControllerInstance.StanceCurrentPosition, Vector3.zero, 5f * dt);
                         }
 
                         Plugin.StanceControllerInstance.HasResetPistolPos = true;

@@ -99,9 +99,9 @@ namespace StanceOverhaul.Controllers.StateControllers
                 _stanceController.CancelAllStances();
                 _stanceController.IsMounting = false;
                 _stanceIndex = 0;
-                _stanceController.DidWeaponSwap = false;
                 _stanceController.AimingInterrupted = false;
                 _stanceController.ResetStanceStamina();
+                _stanceController.DidWeaponSwap = false;
             }
         }
 
@@ -110,7 +110,7 @@ namespace StanceOverhaul.Controllers.StateControllers
             if (_stanceController.ShouldForceLowReady)
             {
                 _stanceController.StanceBlender.Target = 1f;
-                _stanceController.CurrentStance = EStance.LowReady;
+                _stanceController.TargetStance = EStance.LowReady;
                 _stanceController.StoredStance = EStance.LowReady;
             }
         }
@@ -118,13 +118,13 @@ namespace StanceOverhaul.Controllers.StateControllers
         public void OnShotFired() 
         {
             bool rememberStance = PluginConfig.RememberStanceFiring.Value && AimStateInstance.IsAiming;
-            bool isActiveAim = _stanceController.CurrentStance == EStance.ActiveAiming && !AimStateInstance.IsAiming;
+            bool isActiveAim = _stanceController.TargetStance == EStance.ActiveAiming && !AimStateInstance.IsAiming;
             bool keepStance =
                 rememberStance
                 || isActiveAim
-                || _stanceController.CurrentStance == EStance.LeftShoulder
-                || _stanceController.CurrentStance == EStance.ShortStock
-                || _stanceController.CurrentStance == EStance.PistolCompressed;
+                || _stanceController.TargetStance == EStance.LeftShoulder
+                || _stanceController.TargetStance == EStance.ShortStock
+                || _stanceController.TargetStance == EStance.PistolCompressed;
 
             if (!keepStance)
             {
@@ -159,8 +159,8 @@ namespace StanceOverhaul.Controllers.StateControllers
                     _clickTriggered = true;
                     _stanceIndex++;
                     _stanceIndex = _stanceIndex > 3 ? 1 : _stanceIndex;
-                    _stanceController.CurrentStance = (EStance)_stanceIndex;
-                    _stanceController.StoredStance = _stanceController.CurrentStance;
+                    _stanceController.TargetStance = (EStance)_stanceIndex;
+                    _stanceController.StoredStance = _stanceController.TargetStance;
                 }
             }
         }
@@ -188,22 +188,22 @@ namespace StanceOverhaul.Controllers.StateControllers
         {
             if (scrollIncrement == -1)
             {
-                if (_stanceController.CurrentStance == EStance.HighReady)
+                if (_stanceController.TargetStance == EStance.HighReady)
                 {
                     ToggleHighReady();
                 }
-                else if (_stanceController.CurrentStance != EStance.LowReady && _stanceController.HasResetHighReady)
+                else if (_stanceController.TargetStance != EStance.LowReady && _stanceController.HasResetHighReady)
                 {
                     ToggleLowReady();
                 }
             }
-            if (scrollIncrement == 1 && _stanceController.CurrentStance != EStance.HighReady)
+            if (scrollIncrement == 1 && _stanceController.TargetStance != EStance.HighReady)
             {
-                if (_stanceController.CurrentStance == EStance.LowReady && !_stanceController.HealthConditionForcesLowReady)
+                if (_stanceController.TargetStance == EStance.LowReady && !_stanceController.HealthConditionForcesLowReady)
                 {
                     ToggleLowReady();
                 }
-                else if (_stanceController.CurrentStance != EStance.HighReady && _stanceController.HasResetLowReady)
+                else if (_stanceController.TargetStance != EStance.HighReady && _stanceController.HasResetLowReady)
                 {
                     ToggleHighReady();
                 }
@@ -222,7 +222,7 @@ namespace StanceOverhaul.Controllers.StateControllers
 
         public void CheckForLowReadyInput()
         {
-            bool isForcedLowReady = _stanceController.CurrentStance == EStance.LowReady && _stanceController.ShouldForceLowReady;
+            bool isForcedLowReady = _stanceController.TargetStance == EStance.LowReady && _stanceController.ShouldForceLowReady;
             if (StanceInputBlocked || isForcedLowReady) return;
 
             if (Input.GetKeyDown(PluginConfig.LowReadyKeybind.Value.MainKey) && PluginConfig.LowReadyKeybind.Value.Modifiers.All(Input.GetKey))
@@ -234,7 +234,7 @@ namespace StanceOverhaul.Controllers.StateControllers
         //TODO: in future raise event to trigger high ready attempt animation if low ready is forced due to injury
         public void CheckForHighReadyInput()
         {
-            bool isForcedLowReady = _stanceController.CurrentStance == EStance.HighReady && _stanceController.ShouldForceLowReady;
+            bool isForcedLowReady = _stanceController.TargetStance == EStance.HighReady && _stanceController.ShouldForceLowReady;
             if (StanceInputBlocked || isForcedLowReady) return;
 
             if (Input.GetKeyDown(PluginConfig.HighReadyKeybind.Value.MainKey) && PluginConfig.HighReadyKeybind.Value.Modifiers.All(Input.GetKey))
@@ -292,11 +292,11 @@ namespace StanceOverhaul.Controllers.StateControllers
         //TODO: call this from an aim event
         private void ToggleStance(EStance targetStance, bool setBlenderTarget = false, bool setStoredStanceAsCurrent = false)
         {        
-            if (_stanceController.CurrentStance == targetStance) _stanceController.CurrentStance = EStance.None;
-            else _stanceController.CurrentStance = targetStance;
+            if (_stanceController.TargetStance == targetStance) _stanceController.TargetStance = EStance.None;
+            else _stanceController.TargetStance = targetStance;
 
             if (setStoredStanceAsCurrent)
-                _stanceController.StoredStance = _stanceController.CurrentStance;
+                _stanceController.StoredStance = _stanceController.TargetStance;
 
             if (setBlenderTarget)
                 _stanceController.StanceBlender.Target = _stanceController.StanceBlender.Target == 0f ? 1f : 0f;
@@ -338,28 +338,28 @@ namespace StanceOverhaul.Controllers.StateControllers
         public void ToggleActiveAim()
         {
             ToggleStance(EStance.ActiveAiming);
-            if (_stanceController.CurrentStance != EStance.ActiveAiming)
+            if (_stanceController.TargetStance != EStance.ActiveAiming)
             {
-                _stanceController.CurrentStance = _stanceController.StoredStance;
+                _stanceController.TargetStance = _stanceController.StoredStance;
             }
         }
 
         public void OnActiveAimKeyDown()
         {
             _stanceController.StanceBlender.Target = 1f;
-            _stanceController.CurrentStance = EStance.ActiveAiming;
+            _stanceController.TargetStance = EStance.ActiveAiming;
         }
 
         public void OnActiveAimKeyUp()
         {
             _stanceController.StanceBlender.Target = 0f;
-            _stanceController.CurrentStance = _stanceController.StoredStance;
+            _stanceController.TargetStance = _stanceController.StoredStance;
         }
 
         public void ToggleMelee() 
         {
             _stanceController.IsMounting = false;
-            _stanceController.CurrentStance = EStance.Melee;
+            _stanceController.TargetStance = EStance.Melee;
             _stanceController.StoredStance = EStance.None;
             _stanceController.StanceBlender.Target = 1f;
             _stanceController.MeleeIsToggleable = false;
@@ -370,12 +370,12 @@ namespace StanceOverhaul.Controllers.StateControllers
         {
             if (AimStateInstance.IsAiming)
             {
-                _stanceController.StoredStance = _stanceController.CurrentStance;
-                _stanceController.CurrentStance = EStance.None;
+                _stanceController.StoredStance = _stanceController.TargetStance;
+                _stanceController.TargetStance = EStance.None;
             }
             else
             {
-                _stanceController.CurrentStance = _stanceController.StoredStance;
+                _stanceController.TargetStance = _stanceController.StoredStance;
             }
         }
     }

@@ -6,7 +6,7 @@ using static MineDirectional;
 
 namespace StanceOverhaul
 {
-    public static class PluginConfig
+    internal static class PluginConfig
     {
         public static ConfigEntry<KeyboardShortcut> ActiveAimKeybind { get; set; }
         public static ConfigEntry<KeyboardShortcut> LowReadyKeybind { get; set; }

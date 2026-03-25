@@ -12,7 +12,7 @@ using static StanceOverhaul.Plugin;
 
 namespace StanceOverhaul.Controllers.PatchHooks
 {
-    internal class InputHookPipeline: IStateController
+    internal class InputHookPipeline: IControllerHelper
     {
         private IDisposable _inputVeto;
         private IDisposable _inputOverride;

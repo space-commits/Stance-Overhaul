@@ -19,6 +19,15 @@ namespace StanceOverhaul.Stances
         float _progress;
         float _speed = 5f;
 
+        private bool _isHoldingBackMelee = false;
+
+        public bool IsReadyForBayonetCharge
+        {
+            get
+            {
+                return (_isHoldingBackMelee);
+            }
+        }
 
         public override void Enter()
         {

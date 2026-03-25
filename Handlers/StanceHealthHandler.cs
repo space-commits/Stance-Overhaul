@@ -4,7 +4,7 @@ using System.Text;
 
 namespace StanceOverhaul.Controllers.StateControllers
 {
-    internal class StanceHealthState
+    internal class StanceHealthHandler
     {
     }
 }

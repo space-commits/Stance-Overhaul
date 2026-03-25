@@ -76,10 +76,14 @@
     <ProjectReference Include="..\RealismCommonLib\RealismCommonLib.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="Stances\Melee.cs">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+
   <Target Name="PostBuildCopy" AfterTargets="Build">
-    <Copy
-      SourceFiles="$(TargetDir)$(TargetFileName)"
-      DestinationFolder="F:\SP EFT\SPT-406\BepInEx\plugins\" />
+    <Copy SourceFiles="$(TargetDir)$(TargetFileName)" DestinationFolder="F:\SP EFT\SPT-406\BepInEx\plugins\" />
   </Target>
 
 </Project>

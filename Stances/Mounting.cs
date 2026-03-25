@@ -7,7 +7,55 @@ namespace StanceOverhaul.Stances
     internal class Mounting
     {
         //thanks and credit to lualeet's deadzone mod for this code, 0 jank compared to Realism's previous mounting system
-        ///
+
+        /*   
+         *   
+         *           //TODO: make logic support BSG mounting + realism mounting at the same time
+              //Replace with Enum and treat as stance
+              public bool IsMountings
+              {
+                  get
+                  {
+                      return _isRealismMounting;
+                  }
+                  set
+                  {
+                      if (value != _isRealismMounting)
+                      {
+                          Player player = PlayerStateInstance.Player;
+                          FirearmController fc = player.HandsController as FirearmController;
+                          if (fc == null)
+                          {
+                              value = false;
+                              return;
+                          }
+                          _isRealismMounting = value;
+                          if (player.ProceduralWeaponAnimation != null) player.ProceduralWeaponAnimation.method_23();
+                          float accuracy = fc.Item.GetTotalCenterOfImpact(false); //forces accuracy to update
+                          AccessTools.Field(typeof(Player.FirearmController), "float_3").SetValue(fc, accuracy); //update weapon accuracy
+                          player.ProceduralWeaponAnimation.UpdateTacticalReload(); //gives better chamber animations
+                          //this causes camera to detatch from weapon, breaks pretty badly
+                          //it's needed to enable animation change (player grip changes), maybe there is a check for this anim state that caused the issue that can be disabled
+                          //player.MovementContext.PlayerAnimator.SetProneBipodMount(player.MovementContext.IsInPronePose && WeaponStateInstance.BipodIsDeployed && value);
+                          fc.FirearmsAnimator.SetMounted(value);
+                          //player.ProceduralWeaponAnimation.SetMountingData(value, BracingDirection != EBracingDirection.Top);
+                      }
+                  }
+              }
+         *   
+         *   private Quaternion _makeQuaternionDelta(Quaternion from, Quaternion to) => to * Quaternion.Inverse(from); //yeah I don't know what this is either
+              private float _mountAimSmoothed = 0f;
+              public float _cumulativeMountPitch = 0f;
+              public float _cumulativeMountYaw = 0f;
+              static Vector2 _lastMountYawPitch;
+              public EBracingDirection BracingDirection = EBracingDirection.None;
+              public bool IsBracing = false;
+              public bool _isRealismMounting = false;
+              public float BracingSwayBonus = 1f;
+              public float BracingRecoilBonus = 1f;
+      */
+
+
         /*        static void SetRotationWrapped(ref float yaw, ref float pitch)
                 {
                     // I prefer using (-180; 180) euler angle range over (0; 360)

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace StanceOverhaul.Controllers.StateControllers
 {
-    internal class IdleAnimationController
+    internal class IdleAnimationHandler
     {
         //TODO: plays idle animations using its own spring instance
         //tracks when player is considered idle, using its own timers

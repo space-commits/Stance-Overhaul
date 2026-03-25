@@ -7,7 +7,7 @@ using System.Text;
 
 namespace StanceOverhaul.Controllers.StateControllers;
 
-public class StanceStaminaState : IStateController
+public class StanceStaminaHandler : IControllerHelper
 {
     public void RunOnAwake()
     {
@@ -26,7 +26,10 @@ public class StanceStaminaState : IStateController
     //Related events should trigger an update
     //this method makes baby Jesus cry
 
-    /*    private bool _regenStam = false;
+    /*    
+     *            private EStance _lastRecordedStanceStamina = EStance.None; //used for stamina drate rate updates
+
+     *    private bool _regenStam = false;
         private bool _drainStamStam = false;
         private bool _neutralStam = false;
         private bool _wasBracingStam = false;
@@ -107,65 +110,65 @@ public class StanceStaminaState : IStateController
           ResetStanceStamina();
       }*/
 
-/*    private float GetRestoreRate()
-    {
-        float baseRestoreRate = 0f;
-        if (IsMounting && WeaponStateInstance.BipodIsDeployed)
+    /*    private float GetRestoreRate()
         {
-            baseRestoreRate = 5f;
+            float baseRestoreRate = 0f;
+            if (IsMounting && WeaponStateInstance.BipodIsDeployed)
+            {
+                baseRestoreRate = 5f;
+            }
+            if (TargetStance == EStance.PatrolStance || IsMounting)
+            {
+                baseRestoreRate = 4f;
+            }
+            else if (TargetStance == EStance.LowReady || TargetStance == EStance.PistolCompressed || IsBracing)
+            {
+                baseRestoreRate = 2.4f;
+            }
+            else if (TargetStance == EStance.HighReady)
+            {
+                baseRestoreRate = 1.85f;
+            }
+            else if (TargetStance == EStance.ShortStock)
+            {
+                baseRestoreRate = 1.3f;
+            }
+            else if (IsIdle() && !PluginConfig.EnableIdleStamDrain.Value)
+            {
+                baseRestoreRate = 1f;
+            }
+            else
+            {
+                baseRestoreRate = 1f;
+            }
+            float formfactor = WeaponStateInstance.IsBullpup ? 1.05f : 1f;
+            return (1f - ((WeaponStateInstance.ErgoFactor * formfactor) / 100f)) * baseRestoreRate * HealthStateInstance.HealthStamRegenFactor;
         }
-        if (TargetStance == EStance.PatrolStance || IsMounting)
-        {
-            baseRestoreRate = 4f;
-        }
-        else if (TargetStance == EStance.LowReady || TargetStance == EStance.PistolCompressed || IsBracing)
-        {
-            baseRestoreRate = 2.4f;
-        }
-        else if (TargetStance == EStance.HighReady)
-        {
-            baseRestoreRate = 1.85f;
-        }
-        else if (TargetStance == EStance.ShortStock)
-        {
-            baseRestoreRate = 1.3f;
-        }
-        else if (IsIdle() && !PluginConfig.EnableIdleStamDrain.Value)
-        {
-            baseRestoreRate = 1f;
-        }
-        else
-        {
-            baseRestoreRate = 1f;
-        }
-        float formfactor = WeaponStateInstance.IsBullpup ? 1.05f : 1f;
-        return (1f - ((WeaponStateInstance.ErgoFactor * formfactor) / 100f)) * baseRestoreRate * HealthStateInstance.HealthStamRegenFactor;
-    }
 
-    private float GetDrainRate(Player player)
-    {
-        float baseDrainRate = 0f;
-        if (player.Physical.HoldingBreath)
+        private float GetDrainRate(Player player)
         {
-            baseDrainRate = IsMounting && WeaponStateInstance.BipodIsDeployed ? 0.025f : IsMounting ? 0.05f : IsBracing ? 0.1f : 0.5f;
-        }
-        else if (AimStateInstance.IsAiming)
-        {
-            baseDrainRate = 0.15f;
-        }
-        else if (IsDoingTacSprint)
-        {
-            baseDrainRate = 0.15f;
-        }
-        else if (TargetStance == EStance.ActiveAiming)
-        {
-            baseDrainRate = 0.075f;
-        }
-        else
-        {
-            baseDrainRate = 0.1f;
-        }
-        float formfactor = WeaponStateInstance.IsBullpup ? 0.4f : 1f;
-        return WeaponStateInstance.ErgoFactor * formfactor * baseDrainRate * ((1f - HealthStateInstance.HealthStamRegenFactor) + 1f) * (1f - (SkillStateInstance.StrengthSkillAimBuff)) * PluginConfig.IdleStamDrainModi.Value;
-    }*/
+            float baseDrainRate = 0f;
+            if (player.Physical.HoldingBreath)
+            {
+                baseDrainRate = IsMounting && WeaponStateInstance.BipodIsDeployed ? 0.025f : IsMounting ? 0.05f : IsBracing ? 0.1f : 0.5f;
+            }
+            else if (AimStateInstance.IsAiming)
+            {
+                baseDrainRate = 0.15f;
+            }
+            else if (IsDoingTacSprint)
+            {
+                baseDrainRate = 0.15f;
+            }
+            else if (TargetStance == EStance.ActiveAiming)
+            {
+                baseDrainRate = 0.075f;
+            }
+            else
+            {
+                baseDrainRate = 0.1f;
+            }
+            float formfactor = WeaponStateInstance.IsBullpup ? 0.4f : 1f;
+            return WeaponStateInstance.ErgoFactor * formfactor * baseDrainRate * ((1f - HealthStateInstance.HealthStamRegenFactor) + 1f) * (1f - (SkillStateInstance.StrengthSkillAimBuff)) * PluginConfig.IdleStamDrainModi.Value;
+        }*/
 }

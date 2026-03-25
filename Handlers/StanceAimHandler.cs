@@ -7,7 +7,7 @@ using static RealismCommonLib.Plugin;
 
 namespace StanceOverhaul.Controllers.StateControllers
 {
-    public class StanceAimState : IStateController
+    public class StanceAimHandler : IControllerHelper
     {
         private BoolGateHandle _canAim;
 
@@ -27,6 +27,22 @@ namespace StanceOverhaul.Controllers.StateControllers
         {
             CheckForAimBlockers();
         }
+
+        //TODO: handle ADS speed modifiers
+ /*       public float StanceADSSpeedMulti
+        {
+            get
+            {
+                return
+                    IsIdle() ? IDLE_ADS_MULTI :
+                    StoredStance == EStance.ActiveAiming || TargetStance == EStance.ActiveAiming ? ACTIVE_AIM_ADS_MULTI :
+                    StoredStance == EStance.HighReady || TargetStance == EStance.HighReady ? HIGH_ADS_MULTI :
+                    StoredStance == EStance.LowReady || TargetStance == EStance.LowReady ? LOW_ADS_MULTI :
+                    StoredStance == EStance.ShortStock || TargetStance == EStance.ShortStock ? SHORT_STOCK_ADS_MULTI :
+                    StoredStance == EStance.PatrolStance || TargetStance == EStance.PatrolStance ? PATROL_ADS_MULTI :
+                    StoredStance == EStance.LeftShoulder || TargetStance == EStance.LeftShoulder ? LEFT_SHOULDER_ADS_MULTI : 1f;
+            }
+        }*/
 
         private void CheckForAimBlockers()
         {

@@ -1,14 +1,15 @@
-﻿using StanceOverhaul.Enums;
+﻿using StanceOverhaul.Controllers.StateControllers;
+using StanceOverhaul.Enums;
 using StanceOverhaul.Events;
 using StanceOverhaul.Stances;
 using System.Linq;
 using UnityEngine;
 using static RealismCommonLib.Plugin;
-using static StanceOverhaul.Plugin; 
+using static StanceOverhaul.Plugin;
 
-namespace StanceOverhaul.Controllers.StateControllers
+namespace StanceOverhaul
 {
-    public class StanceInputHandler: IStateController
+    public class StanceInputHandler : IControllerHelper
     {
         private StanceState _stanceState;
         private IStance _storedStance;
@@ -60,13 +61,13 @@ namespace StanceOverhaul.Controllers.StateControllers
         {
         }
 
-        public void OnWeaponSwap() 
+        public void OnWeaponSwap()
         {
             if (!PluginConfig.RememberStanceItem.Value && !PlayerStateInstance.WeaponIsReady)
                 _stanceState.CancelStances();
         }
- 
-        public void OnShotFired() 
+
+        public void OnShotFired()
         {
             bool rememberStance = PluginConfig.RememberStanceFiring.Value && AimStateInstance.IsAiming;
             bool isActiveAim = _stanceState.CurrentStanceType == EStance.ActiveAiming && !AimStateInstance.IsAiming;
@@ -108,7 +109,7 @@ namespace StanceOverhaul.Controllers.StateControllers
 
         //TODO: call this from an aim event
         private void ToggleStance(
-            IStance targetStance, 
+            IStance targetStance,
             bool setStoredStanceAsCurrent = false,
             bool setStoredStanceAsNone = false)
         {
@@ -169,7 +170,25 @@ namespace StanceOverhaul.Controllers.StateControllers
         /*       public void ToggleMounting() 
                {
                    ToggleStance(StanceControllerInstance.Mounting);
-               }*/
+               }
+        
+         
+                 private void OnToggleStepOut()
+        {
+            IsMounting = false;
+        }
+
+        private void OnChangeStance()
+        {
+            IsMounting = false;
+        }
+
+        private void OnToggleBipod()
+        {
+            IsMounting = false;
+        }
+         
+         */
     }
 }
 

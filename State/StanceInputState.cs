@@ -1,14 +1,15 @@
-﻿using StanceOverhaul.Enums;
+﻿using StanceOverhaul.Controllers.StateControllers;
+using StanceOverhaul.Enums;
 using StanceOverhaul.Events;
 using StanceOverhaul.Stances;
 using System.Linq;
 using UnityEngine;
 using static RealismCommonLib.Plugin;
-using static StanceOverhaul.Plugin; 
+using static StanceOverhaul.Plugin;
 
-namespace StanceOverhaul.Controllers.StateControllers
+namespace StanceOverhaul
 {
-    public class StanceInputListener : IStateController
+    public class StanceInputState : IControllerHelper
     {
         private StanceState _stanceState;
 
@@ -21,13 +22,12 @@ namespace StanceOverhaul.Controllers.StateControllers
             get
             {
                 return AimStateInstance.IsAiming
-                    || StanceControllerInstance.ShouldBlockAllStances
                     || PlayerStateInstance.IsSprinting
                     || PlayerStateInstance.IsInventoryOpen;
             }
         }
 
-        public StanceInputListener(StanceState stanceState)
+        public StanceInputState(StanceState stanceState)
         {
             _stanceState = stanceState;
         }
@@ -47,23 +47,22 @@ namespace StanceOverhaul.Controllers.StateControllers
 
         public void StanceInputUpdate()
         {
-            if (PlayerStateInstance.WeaponIsReady && !PlayerStateInstance.IsUsingStationaryWeapon)
+            MeleeCooldownTimer();
+
+            if (PlayerStateInstance.WeaponIsReady &&
+                !PlayerStateInstance.IsUsingStationaryWeapon &&
+                !StanceInputBlocked)
             {
-                MeleeCooldownTimer();
+                CheckForPatrolInput();
+                CheckForActimeAimInput();
+                CheckForMeleeInput();
 
-                if (!StanceInputBlocked) 
+                if (!WeaponStateInstance.TreatAsPistol)
                 {
-                    CheckForPatrolInput();
-                    CheckForActimeAimInput();
-                    CheckForMeleeInput();
-
-                    if (!WeaponStateInstance.TreatAsPistol)
-                    {
-                        CheckScrollInput();
-                        CheckForHighReadyInput();
-                        CheckForLowReadyInput();
-                        CheckForShortStockInput();
-                    }
+                    CheckScrollInput();
+                    CheckForHighReadyInput();
+                    CheckForLowReadyInput();
+                    CheckForShortStockInput();
                 }
             }
         }
@@ -86,14 +85,14 @@ namespace StanceOverhaul.Controllers.StateControllers
         {
             if (!PluginConfig.UseMouseWheelStance.Value) return;
 
-            //TODO: get actual player keybind
+            //TODO: get actual player keybinds
             bool isHoldingMagSelect = Input.GetKey(KeyCode.R);
             bool isHoldingHeightStance = Input.GetKey(KeyCode.C);
             bool isHoldingKeyModifier = Input.GetKey(KeyCode.C);
 
-            if (Input.GetKey(PluginConfig.StanceWheelComboKeyBind.Value.MainKey) && 
-                PluginConfig.UseMouseWheelPlusKey.Value || 
-                (!PluginConfig.UseMouseWheelPlusKey.Value && !Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.LeftAlt)))
+            if (Input.GetKey(PluginConfig.StanceWheelComboKeyBind.Value.MainKey) &&
+                PluginConfig.UseMouseWheelPlusKey.Value ||
+                !PluginConfig.UseMouseWheelPlusKey.Value && !Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.LeftAlt))
             {
                 float scrollDelta = Input.mouseScrollDelta.y;
                 if (scrollDelta != 0f)

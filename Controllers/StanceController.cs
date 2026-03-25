@@ -1,24 +1,18 @@
 ﻿using Comfort.Common;
 using EFT;
 using EFT.Animations;
-using EFT.Animations.NewRecoil;
-using EFT.InventoryLogic;
 using HarmonyLib;
 using RealismCommonLib.Events;
 using RealismCommonLib.ModifierHandlers;
-using RealismCommonLib.Utils;
+using StanceOverhaul.Controllers.PatchHooks;
+using StanceOverhaul.Controllers.StateControllers;
+using StanceOverhaul.Enums;
+using StanceOverhaul.Stances;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using UnityEngine;
-using static EFT.Player;
 using static RealismCommonLib.Plugin;
-using StanceOverhaul.Enums;
-using RealismCommonLib.StateControllers;
-using StanceOverhaul.Controllers.StateControllers;
-using StanceOverhaul.Controllers.PatchHooks;
-using System;
-using StanceOverhaul.Stances;
 
 namespace StanceOverhaul.Controllers
 {
@@ -26,12 +20,6 @@ namespace StanceOverhaul.Controllers
     {
         public const float STANCE_WEIGHT_LIMIT_KG = 8f;
         public const float CHONKER_MODIFIER = 0.7f;
-        public const float TAC_SPRINT_WEIGHT_LIMIT = 5.1f;
-        public const float TAC_SPRINT_WEIGHT_BULLPUP = 5.75f;
-        public const int TAC_SPRINT_LENGTH_LIMIT = 6;
-        public const float TAC_SPRINT_ERGO_LIMIT = 35f;
-        public const float TAC_SPRINT_RADIATION_LIMIT = 50f;
-        public const float TAC_SPRINT_TOXICITY_LIMIT = 50f;
         public const float HIGH_READY_RADIATION_LIMIT = 80f;
         public const float HIGH_READY_TOXICITY_LIMIT = 80f;
         public const float BASE_AIM_SPEED_SKILL_FACTOR = 0.5f;
@@ -101,14 +89,6 @@ namespace StanceOverhaul.Controllers
         private Vector3 _pistolLocalPosition = Vector3.zero;
         private Vector3 _rifleLocalPosition = Vector3.zero;
 
-        private EStance _lastRecordedStanceStamina = EStance.None; //used for stamina drate rate updates
-
-        //TODO: move to melee stance class
-        public bool CanDoMeleeDetection = false;
-        public bool MeleeHitSomething = false;
-
-        private bool _isHoldingBackMelee = false;
-
         public const float MANIP_TIMER = 0.25f;
         private float _manipTime = 0f;
         private float _manipTimerTarget = MANIP_TIMER;
@@ -131,7 +111,7 @@ namespace StanceOverhaul.Controllers
 
         public bool PauseLeftShoulder = false;
         public bool HaveResetLeftShoulder = false;
-        public bool IsDoingTacSprint = false;
+
 
         public bool IsBlindFiring 
         {
@@ -153,26 +133,6 @@ namespace StanceOverhaul.Controllers
         public float WiggleReturnSpeed = 1f;
 
         //extra rotaitons
-        private Vector3 _posePosOffest = Vector3.zero;
-        private Vector3 _poseRotOffest = Vector3.zero;
-        private Quaternion _poseQuatOffset = Quaternion.identity;
-
-        //tac sprint
-        private float _tacSprintTime = 0.0f;
-        private bool _canDoTacSprintTimer = false;
-
-        //mounting
-        private Quaternion _makeQuaternionDelta(Quaternion from, Quaternion to) => to * Quaternion.Inverse(from); //yeah I don't know what this is either
-        private float _mountAimSmoothed = 0f;
-        public float _cumulativeMountPitch = 0f;
-        public float _cumulativeMountYaw = 0f;
-        static Vector2 _lastMountYawPitch;
-        public EBracingDirection BracingDirection = EBracingDirection.None;
-        public bool IsBracing = false;
-        public bool _isRealismMounting = false;
-        public float BracingSwayBonus = 1f;
-        public float BracingRecoilBonus = 1f;
-
 
         /// <summary>
         /// Stores a stance to return to after doing active aim, melee or aiming
@@ -235,21 +195,6 @@ namespace StanceOverhaul.Controllers
             }
         }
 
-        public float StanceADSSpeedMulti
-        {
-            get
-            {
-                return
-                    IsIdle() ? IDLE_ADS_MULTI :
-                    StoredStance == EStance.ActiveAiming || TargetStance == EStance.ActiveAiming ? ACTIVE_AIM_ADS_MULTI :
-                    StoredStance == EStance.HighReady || TargetStance == EStance.HighReady ? HIGH_ADS_MULTI :
-                    StoredStance == EStance.LowReady || TargetStance == EStance.LowReady ? LOW_ADS_MULTI :
-                    StoredStance == EStance.ShortStock || TargetStance == EStance.ShortStock ? SHORT_STOCK_ADS_MULTI :
-                    StoredStance == EStance.PatrolStance || TargetStance == EStance.PatrolStance ? PATROL_ADS_MULTI :
-                    StoredStance == EStance.LeftShoulder || TargetStance == EStance.LeftShoulder ? LEFT_SHOULDER_ADS_MULTI : 1f;
-            }
-        }
-
         public float ErgoStanceSpeed
         {
             get
@@ -258,30 +203,6 @@ namespace StanceOverhaul.Controllers
                     WeaponStateInstance.BaseAimSpeed *
                     (1f + (SkillStateInstance.AimSkillADSBuff * BASE_AIM_SPEED_SKILL_FACTOR)) *
                     (WeaponStateInstance.TreatAsPistol ? BASE_AIM_SPEED_PISTOL_FACTOR : 1f);
-            }
-        }
-
-        public bool AllStancesReset
-        {
-            get
-            {
-                return HasResetActiveAim && HasResetLowReady && HasResetHighReady && HasResetShortStock && HasResetPistolPos && HaveResetLeftShoulder; //&& HasResetMelee
-            }
-        }
-
-        public bool ShouldBlockAllStances
-        {
-            get
-            {
-                return (IsMounting && WeaponStateInstance.BipodIsDeployed) || !MeleeIsToggleable;
-            }
-        }
-
-        public bool IsReadyForBayonetCharge
-        {
-            get
-            {
-                return (_isHoldingBackMelee);
             }
         }
 
@@ -306,18 +227,6 @@ namespace StanceOverhaul.Controllers
             }
         }
 
-        public bool HealthConditionPreventsTacSprint
-        {
-            get
-            {
-                return
-                    HazardsStateInstance.TotalToxicity > TAC_SPRINT_TOXICITY_LIMIT ||
-                    HazardsStateInstance.TotalRadiation > TAC_SPRINT_RADIATION_LIMIT ||
-                    HazardsStateInstance.IsCoughingInGas ||
-                    HealthStateAffectsStance;
-            }
-        }
-
         public bool HealthConditionForcesLowReady
         {
             get
@@ -329,24 +238,9 @@ namespace StanceOverhaul.Controllers
             }
         }
 
-        //TODO: weight limit should be factored by strength skill
-        public bool CanDoTacSprint
-        {
-            get
-            {
-                return PluginConfig.EnableTacSprint.Value
-                    && PlayerStateInstance.IsSprinting
-                    && TargetStance != EStance.ActiveAiming
-                    && (TargetStance == EStance.HighReady || StoredStance == EStance.HighReady)
-                    && WeaponStateInstance.TotalWeaponWeight <= (WeaponStateInstance.IsBullpup ? TAC_SPRINT_WEIGHT_BULLPUP : TAC_SPRINT_WEIGHT_LIMIT)
-                    && WeaponStateInstance.WeaponLength <= TAC_SPRINT_LENGTH_LIMIT && !PlayerStateInstance.IsScav
-                    && !HealthConditionPreventsTacSprint
-                    && WeaponStateInstance.TotalErgo > TAC_SPRINT_ERGO_LIMIT;
-            }
-        }
-
         //TODO: use const for weight
-        public bool ShouldForceLowReady
+        //replace with debuffs and animations
+ /*       public bool ShouldForceLowReady
         {
             get
             {
@@ -360,40 +254,7 @@ namespace StanceOverhaul.Controllers
                     && MeleeIsToggleable
                     && !IsBracing;
             }
-        }
-
-        //TODO: make logic support BSG mounting + realism mounting at the same time
-        //Replace with Enum and treat as stance
-        public bool IsMountings
-        {
-            get
-            {
-                return _isRealismMounting;
-            }
-            set
-            {
-                if (value != _isRealismMounting)
-                {
-                    Player player = PlayerStateInstance.Player;
-                    FirearmController fc = player.HandsController as FirearmController;
-                    if (fc == null)
-                    {
-                        value = false;
-                        return;
-                    }
-                    _isRealismMounting = value;
-                    if (player.ProceduralWeaponAnimation != null) player.ProceduralWeaponAnimation.method_23();
-                    float accuracy = fc.Item.GetTotalCenterOfImpact(false); //forces accuracy to update
-                    AccessTools.Field(typeof(Player.FirearmController), "float_3").SetValue(fc, accuracy); //update weapon accuracy
-                    player.ProceduralWeaponAnimation.UpdateTacticalReload(); //gives better chamber animations
-                    //this causes camera to detatch from weapon, breaks pretty badly
-                    //it's needed to enable animation change (player grip changes), maybe there is a check for this anim state that caused the issue that can be disabled
-                    //player.MovementContext.PlayerAnimator.SetProneBipodMount(player.MovementContext.IsInPronePose && WeaponStateInstance.BipodIsDeployed && value);
-                    fc.FirearmsAnimator.SetMounted(value);
-                    //player.ProceduralWeaponAnimation.SetMountingData(value, BracingDirection != EBracingDirection.Top);
-                }
-            }
-        }
+        }*/
 
         public bool WeaponIsReady 
         {
@@ -419,6 +280,7 @@ namespace StanceOverhaul.Controllers
             }
         }
 
+        //TODO: factor in strength skill
         public bool IsChonker
         {
             get
@@ -448,13 +310,13 @@ namespace StanceOverhaul.Controllers
             };
         }
 
-        private List<IStateController> _stateControllers = new List<IStateController>();
+        private List<IControllerHelper> _stateControllers = new List<IControllerHelper>();
 
         private InputHookPipeline _inputHookPipeline;
         private StanceInputHandler _inputHandler;
-        private StanceInputListener _inputListener;
-        private StanceMovementState _movementState;
-        private StanceAimState _aimState;
+        private StanceInputState _inputListener;
+        private StanceMovementHandler _movementState;
+        private StanceAimHandler _aimState;
         private StanceState _stanceState;
 
         public Spring StancePositionSpring { get; private set; }
@@ -523,10 +385,10 @@ namespace StanceOverhaul.Controllers
                 InitStateController(() => new InputHookPipeline());
 
             _movementState =
-                InitStateController(() => new StanceMovementState());
+                InitStateController(() => new StanceMovementHandler(_stanceState));
 
             _aimState =
-                InitStateController(() => new StanceAimState());
+                InitStateController(() => new StanceAimHandler());
 
             _stanceState =
                 InitStateController(() => new StanceState());
@@ -535,12 +397,12 @@ namespace StanceOverhaul.Controllers
                 InitStateController(() => new StanceInputHandler(_stanceState));
 
             _inputListener =
-                InitStateController(() => new StanceInputListener(_stanceState));
+                InitStateController(() => new StanceInputState(_stanceState));
 
             RunStateControllerAwake();
         }
 
-        private T InitStateController<T>(Func<T> factory) where T : IStateController
+        private T InitStateController<T>(Func<T> factory) where T : IControllerHelper
         {
             var instance = factory();
             _stateControllers.Add(instance);
@@ -549,7 +411,7 @@ namespace StanceOverhaul.Controllers
 
         private void RunStateControllerAwake()
         {
-            foreach (IStateController controller in _stateControllers)
+            foreach (IControllerHelper controller in _stateControllers)
             {
                 controller.RunOnAwake();
             }
@@ -557,7 +419,7 @@ namespace StanceOverhaul.Controllers
 
         private void RunStateControllerUpdate(float deltaTime)
         {
-            foreach (IStateController controller in _stateControllers)
+            foreach (IControllerHelper controller in _stateControllers)
             {
                 controller.RunOnUpdate(deltaTime);
             }
@@ -565,7 +427,7 @@ namespace StanceOverhaul.Controllers
 
         private void DestroyStateControllers()
         {
-            foreach (IStateController controller in _stateControllers)
+            foreach (IControllerHelper controller in _stateControllers)
             {
                 controller.RunOnDestroy();
             }
@@ -687,8 +549,8 @@ namespace StanceOverhaul.Controllers
             float bonus = 1f;
             if (!ReloadStateInstance.IsAttemptingRevolverReload) 
             {
-                if (TargetStance == EStance.LowReady == true && !WeaponStateInstance.IsShotgun) bonus = LOW_READY_RELOAD_SPEED_BUFF;
-                else if (TargetStance == EStance.HighReady == true && WeaponStateInstance.IsShotgun) bonus = HIGH_READY_RELOAD_SPEED_BUFF;
+                if (_stanceState.CurrentStance.StanceType == EStance.LowReady == true && !WeaponStateInstance.IsShotgun) bonus = LOW_READY_RELOAD_SPEED_BUFF;
+                else if (_stanceState.CurrentStance.StanceType == EStance.HighReady == true && WeaponStateInstance.IsShotgun) bonus = HIGH_READY_RELOAD_SPEED_BUFF;
             }
             _internalMagReload.Multiplier = bonus;
         }
@@ -696,29 +558,29 @@ namespace StanceOverhaul.Controllers
         private void ApplyMagReloadSpeedBonuses() 
         {
             _magReload.Multiplier =
-               TargetStance == EStance.ActiveAiming && ShouldAllowActiveOnReload ? ACTIVE_AIM_RECHAMBER_SPEED_BUFF :
-               TargetStance == EStance.HighReady ? HIGH_READY_RELOAD_SPEED_BUFF :
+               _stanceState.CurrentStance.StanceType == EStance.ActiveAiming && ShouldAllowActiveOnReload ? ACTIVE_AIM_RECHAMBER_SPEED_BUFF :
+               _stanceState.CurrentStance.StanceType == EStance.HighReady ? HIGH_READY_RELOAD_SPEED_BUFF :
                1f;
         }
 
         private void ApplyCheckAmmoSpeedBonus() 
         {
-            _checkAmmo.Multiplier = TargetStance == EStance.HighReady == true ? HIGH_READY_CHECK_AMMO_SPEED_BUFF : 1f;
+            _checkAmmo.Multiplier = _stanceState.CurrentStance.StanceType == EStance.HighReady == true ? HIGH_READY_CHECK_AMMO_SPEED_BUFF : 1f;
         }
 
         private void ApplyChamberSpeedBonus()
         {
-            _rechamber.Multiplier = 
-                TargetStance == EStance.ActiveAiming ? ACTIVE_AIM_RECHAMBER_SPEED_BUFF :
-                TargetStance == EStance.HighReady ? HIGH_READY_RECHAMBER_SPEED_BUFF :
+            _rechamber.Multiplier =
+                _stanceState.CurrentStance.StanceType == EStance.ActiveAiming ? ACTIVE_AIM_RECHAMBER_SPEED_BUFF :
+                _stanceState.CurrentStance.StanceType == EStance.HighReady ? HIGH_READY_RECHAMBER_SPEED_BUFF :
                 1f;
         }
 
         private void ApplyChamberCheckSpeedBonus()
         {
             _checkChamber.Multiplier =
-                TargetStance == EStance.ActiveAiming ? ACTIVE_AIM_RECHAMBER_SPEED_BUFF :
-                TargetStance == EStance.HighReady ? HIGH_READY_RECHAMBER_SPEED_BUFF :
+                _stanceState.CurrentStance.StanceType == EStance.ActiveAiming ? ACTIVE_AIM_RECHAMBER_SPEED_BUFF :
+                _stanceState.CurrentStance.StanceType == EStance.HighReady ? HIGH_READY_RECHAMBER_SPEED_BUFF :
                 1f;
         }
 
@@ -727,7 +589,8 @@ namespace StanceOverhaul.Controllers
             //check might be unnecessary
             if (!ReloadStateInstance.IsInReloadOpertation) return;
 
-            if (TargetStance == EStance.PatrolStance) TargetStance = EStance.None;
+            //TODO move this logic to patrol stance, will need to sub to same event
+            if (_stanceState.CurrentStance.StanceType == EStance.PatrolStance) TargetStance = EStance.None;
 
             PauseShortStock = true;
             PauseLeftShoulder = true;
@@ -776,7 +639,7 @@ namespace StanceOverhaul.Controllers
                 if (player.Physical.HoldingBreath) return;
 
                 //TODO: replace with animation bringing gun closer into shoulder
-                if (IsChonker) DoWiggleEffects(player, player.ProceduralWeaponAnimation, WeaponStateInstance.WeaponInstance, new Vector3(0.25f, 0.25f, 0.5f), wiggleFactor: 0.5f);
+                //if (!IsChonker) DoWiggleEffects(player, player.ProceduralWeaponAnimation, WeaponStateInstance.WeaponInstance, new Vector3(0.25f, 0.25f, 0.5f), wiggleFactor: 0.5f);
             }
         }
 
@@ -875,35 +738,9 @@ namespace StanceOverhaul.Controllers
             player.Physical.ConsumeAsMelee(2f + (WeaponStateInstance.ErgoFactor / 100f));
         }
 
-        private void DoTacSprint(Player.FirearmController fc, Player player)
-        {
-            if (CanDoTacSprint)
-            {
-                IsDoingTacSprint = true;
-                player.BodyAnimatorCommon.SetFloat(PlayerAnimator.WEAPON_SIZE_MODIFIER_PARAM_HASH, 2f);
-                _tacSprintTime = 0f;
-                _canDoTacSprintTimer = true;
-            }
-            else if (PluginConfig.EnableTacSprint.Value && _canDoTacSprintTimer)
-            {
-                _tacSprintTime += Time.deltaTime;
-                if (_tacSprintTime >= 0.5f)
-                {
-                    player.BodyAnimatorCommon.SetFloat(PlayerAnimator.WEAPON_SIZE_MODIFIER_PARAM_HASH, WeaponStateInstance.WeaponLength);
-                    _tacSprintTime = 0f;
-                    _canDoTacSprintTimer = false;
-                }
-                IsDoingTacSprint = false;
-            }
-            else
-            {
-                IsDoingTacSprint = false;
-            }
-        }
-
         // TODO: replace values with consts and replace pwa reference with common lib only
         //this is used for changing weapon motion, not sure if should live here
-        private float GetStanceWeaponInertiaFactor(ProceduralWeaponAnimation pwa, bool forDisplacement = false)
+    /*    private float GetStanceWeaponInertiaFactor(ProceduralWeaponAnimation pwa, bool forDisplacement = false)
         {
             if (forDisplacement)
             {
@@ -931,171 +768,20 @@ namespace StanceOverhaul.Controllers
                 TargetStance == EStance.LowReady ? 0.8f :
                 TargetStance == EStance.ActiveAiming ? 0.9f :
                 1f;
-        }
-
-        //TODO: replace with bespoke class that uses spring
-        private void DoADSWiggle(ProceduralWeaponAnimation pwa, Player player, FirearmController fc, float factor)
-        {
-            if (IsIdle() && !IsChonker && !WeaponStateInstance.IsPistol)
-            {
-                CanResetDamping = false;
-                float mountingFactor = IsMounting ? 0.1f : IsBracing ? 0.25f : 1f;
-                float headGearFactor = GearStateInstance.FaceShieldIsActive || GearStateInstance.NVGIsActive || GearStateInstance.HasGasMask ? 3f : 1f;
-                float baseLine = Mathf.Clamp(3.5f * factor * headGearFactor * mountingFactor * WeaponStateInstance.TotalAimStabilityModi, 0.1f, 17f);
-                float rndX = UnityEngine.Random.Range(baseLine * 0.9f, baseLine);
-                float rndY = UnityEngine.Random.Range(baseLine * 0.9f, baseLine);
-                Vector3 wiggleDir = new Vector3(-rndX, -rndY, 0f);
-
-                if (pwa.IsAiming && !_didAimWiggle)
-                {
-                    if (!FiringStateInstance.IsFiringFromStance && TargetStance != EStance.LeftShoulder) DoWiggleEffects(player, pwa, fc.Weapon, wiggleDir, wiggleFactor: factor, isADS: true);
-                    _didAimWiggle = true;
-                }
-                else if (!pwa.IsAiming && _didAimWiggle)
-                {
-                    _didAimWiggle = false;
-                }
-                _doDampingTimer = true;
-            }
-        }
-
-        //TODO: replace using recoil processes for wiggle effect, with bespoke procedural motion
-        //should use player, pwa and weapon instances from common lib only
-        public void DoWiggleEffects(Player player, ProceduralWeaponAnimation pwa, Weapon weapon, Vector3 wiggleDirection, bool playSound = false, float volume = 4f, float wiggleFactor = 1f, bool isADS = false, bool useGearSound = false)
-        {
-            if (playSound)
-            {
-                AudioControllerInstance.PlayADSSound(volume * PluginConfig.StanceSfxModifier.Value, useGearSound);
-            }
-
-  /*          NewRecoilShotEffect newRecoil = pwa.Shootingg.CurrentRecoilEffect as NewRecoilShotEffect;
-            if (isADS)
-            {
-                newRecoil.HandRotationRecoil.ReturnTrajectoryDumping = 0.3f * wiggleFactor;
-                pwa.Shootingg.CurrentRecoilEffect.HandRotationRecoilEffect.Damping = 0.3f * wiggleFactor;
-            }
-            player.ProceduralWeaponAnimation.Shootingg.CurrentRecoilEffect.RecoilProcessValues[3].IntensityMultiplicator = 0;
-            player.ProceduralWeaponAnimation.Shootingg.CurrentRecoilEffect.RecoilProcessValues[4].IntensityMultiplicator = 0;
-            float count = pwa.Shootingg.CurrentRecoilEffect.RecoilProcessValues.Length;
-            for (int i = 0; i < count; i++)
-            {
-                pwa.Shootingg.CurrentRecoilEffect.RecoilProcessValues[i].Process(wiggleDirection);
-            }
-            player.ProceduralWeaponAnimation.Shootingg.CurrentRecoilEffect.RecoilProcessValues[3].IntensityMultiplicator = 0;
-            player.ProceduralWeaponAnimation.Shootingg.CurrentRecoilEffect.RecoilProcessValues[4].IntensityMultiplicator = 0;*/
-        }
-
-        private void MoveGunToCameraPID(ProceduralWeaponAnimation pwa, float dt, float stanceMulti, ref float gunAxesTarget, ref float gunCameraAlignmentTarget, float camTargetAxes, float speedModifer, float tolerance = 0.001f, bool ignoreLeftShoulder = false)
-        {
-    /*        if (!AimStateInstance.IsAiming)
-            {
-                gunCameraAlignmentTarget = camTargetAxes;
-            }
-
-            if (IsColliding || PistolIsColliding || !pwa.OverlappingAllowsBlindfire || StopCameraMovement || (ShouldDoLeftShoulder && !ignoreLeftShoulder)) return;
-
-            bool skipPIDForRifle = FiringStateInstance.IsFiringMovement && !PluginConfig.EnableAltRifleRecoil.Value && !TreatWeaponAsPistolStance;
-            bool skipPIDForPistol = FiringStateInstance.IsFiringMovement && TreatWeaponAsPistolStance;
-            if (AimStateInstance.IsAiming && !skipPIDForRifle && !skipPIDForPistol)
-            {
-                float speed = speedModifer * stanceMulti;
-
-                // Calculate difference
-                float error = gunCameraAlignmentTarget - camTargetAxes;
-
-                if (Mathf.Abs(error) > tolerance)
-                {
-                    // Convert error into a vertical offset
-                    // (positive error = move weapon upward, negative = downward)
-                    float adjustment = error * speed * dt;
-
-                    gunAxesTarget += adjustment;
-                }
-            }*/
-        }
-
-      /*  private Vector3 GetRifleStancePIDModifier()
-        {
-            if (StoredStance == EStance.HighReady)
-                return new Vector3(0.6f, 0.35f, 1f);
-            if (StoredStance == EStance.LowReady)
-                return new Vector3(0.8f, 0.7f, 1f);
-            if (StoredStance == EStance.ShortStock)
-                return new Vector3(0.5f, 0.3f, 1f);
-            if (StoredStance == EStance.ActiveAiming)
-                return new Vector3(1.5f, 0.75f, 1f);
-
-            return Vector3.one;
-        }
-
-        public bool ShouldDoFaceGearCantedOffset() 
-        {
-            return (GearStateInstance.HasGasMask || (GearStateInstance.FaceShieldIsActive && GearStateInstance.GearBlocksMouth));
-        }
-
-        //non-stance related rotational and postion changes for immersion
-        public void DoExtraPosAndRot(ProceduralWeaponAnimation pwa, Player player)
-        {
-            //position
-            float stockOffset = !WeaponStateInstance.IsPistol && !WeaponStateInstance.HasShoulderContact ? -0.04f : 0f;
-            float stockPosOffset = WeaponStateInstance.StockPosition * 0.01f;
-            float posOffsetMulti = WeaponStateInstance.HasShoulderContact ? -0.04f : 0.04f;
-            float posePosOffset = (1f - player.MovementContext.PoseLevel) * posOffsetMulti;
-
-            float targetPosXOffset = pwa.IsAiming ? 0f : 0f;
-            float targetPosYOffset = pwa.IsAiming ? 0f : 0f;
-            float targetPosZOffset = pwa.IsAiming ? 0f : Mathf.Clamp(posePosOffset + stockOffset + stockPosOffset, -0.05f, 0.05f);
-            Vector3 targetPos = new Vector3(targetPosXOffset, targetPosYOffset, targetPosZOffset);
-
-            _posePosOffest = Vector3.Lerp(_posePosOffest, targetPos, 5f * Time.deltaTime);
-
-            //rotation
-            bool isMountedWithBipod = WeaponStateInstance.BipodIsDeployed && IsMounting;
-            bool doCantedSightOffset = IsCantedAiming(pwa, true);
-            bool doMaskOffset =
-                !doCantedSightOffset &&
-                !isMountedWithBipod &&
-                ShouldDoFaceGearCantedOffset() &&
-                !WeaponStateInstance.WeaponCanFSADS &&
-                pwa.IsAiming &&
-                WeaponStateInstance.HasShoulderContact &&
-                WeaponStateInstance.TreatAsPistol;
-            bool doLongMagOffset = WeaponStateInstance.HasLongMag && player.IsInPronePose && !isMountedWithBipod;
-            float cantedOffsetBase = -0.41f;
-            float magOffset = doCantedSightOffset ? 0f : doLongMagOffset && !pwa.IsAiming ? -0.35f : doLongMagOffset && pwa.IsAiming ? -0.12f : 0f;
-            float ergoOffset = WeaponStateInstance.ErgoFactor * -0.001f;
-            float poseRotOffset = (1f - player.MovementContext.PoseLevel) * -0.03f;
-            poseRotOffset += player.IsInPronePose ? -0.03f : 0f;
-            float maskFactor = doMaskOffset ? -0.025f + ergoOffset : 0f;
-            float baseRotOffset = pwa.IsAiming || IsMounting || IsBracing ? 0f : poseRotOffset + ergoOffset;
-            float cantedSightOffset = doCantedSightOffset ? cantedOffsetBase : 0f;
-
-            float rotX = 0f;
-            float rotY = Mathf.Clamp(baseRotOffset + maskFactor + magOffset, -0.5f, 0f) + cantedSightOffset;
-            float rotZ = 0f;
-            Vector3 targetRot = new Vector3(rotX, rotY, rotZ);
-
-            _poseRotOffest = Vector3.Lerp(_poseRotOffest, targetRot, 5f * Time.deltaTime); //speeds should be affected by stance multi? or player crouch speed?
-
-            Quaternion newRot = Quaternion.identity;
-            newRot.x = _poseRotOffest.x;
-            newRot.y = _poseRotOffest.y;
-            newRot.z = _poseRotOffest.z;
-            _poseQuatOffset = newRot;
         }*/
 
         public void DoPatrolStance(ProceduralWeaponAnimation pwa, Player player)
         {
             Vector3 posTarget = new Vector3(PluginConfig.test6.Value, PluginConfig.test7.Value, PluginConfig.test8.Value);
 
-            Vector3 patrolPos = TargetStance != EStance.PatrolStance ? Vector3.zero : posTarget;
+            Vector3 patrolPos = _stanceState.CurrentStanceType != EStance.PatrolStance ? Vector3.zero : posTarget;
             _patrolPos = Vector3.MoveTowards(_patrolPos, patrolPos, PluginConfig.test1.Value * Time.deltaTime);
 
             StancePositionSpring.Zero = _patrolPos;
 
             Vector3 rotTarget = new Vector3(PluginConfig.test3.Value, PluginConfig.test4.Value, PluginConfig.test5.Value);
 
-            Vector3 patrolRot = TargetStance != EStance.PatrolStance ? Vector3.zero : rotTarget;
+            Vector3 patrolRot = _stanceState.CurrentStanceType != EStance.PatrolStance ? Vector3.zero : rotTarget;
             _patrolRot = Vector3.MoveTowards(_patrolRot, patrolRot, PluginConfig.test2.Value * Time.deltaTime);
 
             StanceRotationSpring.Zero = _patrolRot;
@@ -1124,86 +810,7 @@ namespace StanceOverhaul.Controllers
             RotatationWiggleSpring.FixedUpdate(Time.deltaTime);
         }
 
-        //I've no idea wtf is going on here but it sort of works
-        private void HandleAltPistolPosition(Player player, Player.FirearmController fc, ProceduralWeaponAnimation pwa, float stanceMulti, float dt, Vector3 camTarget)
-        {
-/*            //left stance speed
-            float leftResetSpeedModi = _isLeftStanceResetState ? 0.2f : 1f;
 
-            //speed
-            float fpsFactor = Mathf.Pow(RealismCommonLib.Plugin.FPSFactor, 0.25f);
-            float speedFactorTarget = AimStateInstance.IsAiming ? PluginConfig.PistolPosResetSpeedMulti.Value * stanceMulti : PluginConfig.PistolPosSpeedMulti.Value * stanceMulti;
-            float pidSpeed = fpsFactor * leftResetSpeedModi * PluginConfig.PistolPosResetSpeedMulti.Value;
-            _pistolPosSpeed = Mathf.Lerp(_pistolPosSpeed, speedFactorTarget, dt * 10f);
-
-            if (!AimStateInstance.IsAiming)
-            {
-                _gunXTarget = !IsBlindFiring ? 0.038f : 0f;
-                _gunYTarget = -0.0385f;
-                _gunZTarget =  0f;
-            }
-
-            DoLeftShoulder(player, fc, pwa, _pistolPosSpeed, dt, _leftStancePistolPositionTarget, _leftStancePistolRotaitonTarget, stanceMulti * 2.5f, 0.05f);
-
-            if (RealismCommonLib.Plugin.FOVFixEnabled) 
-            {
-                MoveGunToCameraPID(pwa, dt, stanceMulti, ref _gunXTarget, ref _gunCameraAlignmentTargetX, camTarget.x, 0.15f * pidSpeed, 0.0001f);
-                MoveGunToCameraPID(pwa, dt, stanceMulti, ref _gunYTarget, ref _gunCameraAlignmentTargetY, camTarget.y, 0.3f * pidSpeed, ignoreLeftShoulder: true);
-                MoveGunToCameraPID(pwa, dt, stanceMulti, ref _gunZTarget, ref _gunCameraAlignmentTargetZ, camTarget.z, 0.4f * pidSpeed, ignoreLeftShoulder: true);
-            }
-
-            _currentPistolXPos = Mathf.Lerp(_currentPistolXPos, _gunXTarget, dt * _pistolPosSpeed);
-            _currentPistolYPos = Mathf.Lerp(_currentPistolYPos, _gunYTarget, dt * _pistolPosSpeed);
-            _currentPistolZPos = Mathf.Lerp(_currentPistolZPos, _gunZTarget, dt * _pistolPosSpeed); 
-
-            _pistolLocalPosition.x = _currentPistolXPos + _leftStancePosition.x;
-            _pistolLocalPosition.y = _currentPistolYPos + _leftStancePosition.y;
-            _pistolLocalPosition.z = _currentPistolZPos + _leftStancePosition.z;
-
-            pwa.HandsContainer.WeaponRoot.localPosition = _pistolLocalPosition;*/
-
-        }
-
-        private void HandleRiflePosition(Player player, Player.FirearmController fc, ProceduralWeaponAnimation pwa, float stanceMulti, float movementFactor, float dt, Vector3 camTarget)
-        {
-  /*          //left stance speeds
-            float leftResetPidModi = _isLeftStanceResetState ? 0f : 1f;
-
-            //speeds
-            float fpsFactor = Mathf.Pow(RealismCommonLib.Plugin.FPSFactor, 0.25f);   
-            float posSpeed = AimStateInstance.IsAiming ? 30f * WeaponStateInstance.TotalFinalAimSpeed : 6f * WeaponStateInstance.TotalFinalAimSpeed;
-            float pidSpeed = 30f * fpsFactor * leftResetPidModi;
-            Vector3 stanceModifer = GetRifleStancePIDModifier();
-
-            bool isCantedAiming = IsCantedAiming(pwa, false);
-            bool adjustSpeedForCant = isCantedAiming && StoredStance == EStance.ActiveAiming;
-
-            if (!AimStateInstance.IsAiming) 
-            {
-                _gunXTarget = BaseWeaponOffsetPosition.x + PluginConfig.WeapOffset.Value.x;
-                _gunYTarget = BaseWeaponOffsetPosition.y + PluginConfig.WeapOffset.Value.y;
-                _gunZTarget = BaseWeaponOffsetPosition.z + PluginConfig.WeapOffset.Value.z;
-            }
-
-            DoLeftShoulder(player, fc, pwa, stanceMulti, dt, _leftStanceRiflePositionTarget, _leftStanceRifleRotaitonTarget, stanceMulti * 4.5f);
-
-            if (PluginConfig.EnableAltRifle.Value && RealismCommonLib.Plugin.FOVFixEnabled)
-            {
-                MoveGunToCameraPID(pwa, dt, WeaponStateInstance.TotalFinalAimSpeed, ref _gunXTarget, ref _gunCameraAlignmentTargetX, camTarget.x, 0.3f * pidSpeed * stanceModifer.x, 0.0001f);
-                MoveGunToCameraPID(pwa, dt, WeaponStateInstance.TotalFinalAimSpeed, ref _gunYTarget, ref _gunCameraAlignmentTargetY, camTarget.y, 0.3f * pidSpeed * stanceModifer.y, 0.0001f, true);
-                MoveGunToCameraPID(pwa, dt, WeaponStateInstance.TotalFinalAimSpeed, ref _gunZTarget, ref _gunCameraAlignmentTargetZ, camTarget.z, 0.3f * pidSpeed * stanceModifer.z, 0.0001f, true);
-            }
-          
-            _currentRifleXPos = Mathf.Lerp(_currentRifleXPos, _gunXTarget, dt * posSpeed);
-            _currentRifleYPos = Mathf.Lerp(_currentRifleYPos, _gunYTarget, dt * posSpeed); //if trying to fix stance ADS, animspeed might be fucking with things
-            _currentRifleZPos = Mathf.Lerp(_currentRifleZPos, _gunZTarget, dt * posSpeed);
-
-            _rifleLocalPosition.x = _currentRifleXPos + _leftStancePosition.x;
-            _rifleLocalPosition.y = _currentRifleYPos + _leftStancePosition.y;
-            _rifleLocalPosition.z = _currentRifleZPos + _leftStancePosition.z;
-
-            pwa.HandsContainer.WeaponRoot.localPosition = _rifleLocalPosition;
-        }
 
         public float StanceSpeedMultiplier() 
         {
@@ -1228,7 +835,7 @@ namespace StanceOverhaul.Controllers
             float lowerBaseLimit = IsChonker ? 0.45f : 0.55f; //move to property + const, calculate once
             float lowerSpeedLimit = IsChonker ? 0.3f : 0.4f; //move to property + const, calculate once
             float ergoMulti = Mathf.Clamp(1.15f * ErgoStanceSpeed * Mathf.Pow(WeaponStateInstance.TotalWeaponHandlingModi, 0.4f), lowerBaseLimit, 1.2f); //move to property + const, calculate once
-            return Mathf.Clamp(ergoMulti * HealthStateInstance.StanceInjuryMulti * HealthStateInstance.AdrenalineStanceBonus * (Mathf.Max(PlayerStateInstance.RemainingArmStamFactor, 0.65f)), lowerSpeedLimit, 1.18f);*/
+            return Mathf.Clamp(ergoMulti * HealthStateInstance.StanceInjuryMulti * HealthStateInstance.AdrenalineStanceBonus * (Mathf.Max(PlayerStateInstance.RemainingArmStamFactor, 0.65f)), lowerSpeedLimit, 1.18f);
         }
 
         public void DoPistolStances(bool isThirdPerson, EFT.Animations.ProceduralWeaponAnimation pwa, float dt, Player player, Player.FirearmController fc, Vector3 camTarget)
@@ -1345,7 +952,7 @@ namespace StanceOverhaul.Controllers
             float stanceMulti = Mathf.Clamp(ergoMulti * HealthStateInstance.StanceInjuryMulti * HealthStateInstance.AdrenalineStanceBonus * (Mathf.Max(PlayerStateInstance.RemainingArmStamFactor, 0.65f)), lowerSpeedLimit, 1.18f); //move to property + const, calculate once
             float resetErgoMulti = (1f - stanceMulti) + 1f;
 
-            bool pauseStance = PlayerStateInstance.IsInventoryOpen || IsBlindFiring || TargetStance == EStance.LeftShoulder;
+            bool pauseStance = PlayerStateInstance.IsInventoryOpen || IsBlindFiring || _stanceState.CurrentStanceType == EStance.LeftShoulder;
              
             float wiggleErgoMulti = Mathf.Clamp((ErgoStanceSpeed * 0.5f), 0.1f, 1f);
             float stocklessModifier = WeaponStateInstance.HasShoulderContact ? 1f : 0.5f;

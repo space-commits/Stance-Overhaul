@@ -7,7 +7,7 @@ using static StanceOverhaul.Plugin;
 
 namespace StanceOverhaul.Controllers.StateControllers
 {
-    public class StanceMovementState : IStateController
+    public class StanceMovementHandler : IControllerHelper
     {
         private const float PATROL_STANCE_WALK_SPEED = 1.33f;
         private const float LOW_READY_WALK_SPEED = 1.15f;
@@ -24,6 +24,13 @@ namespace StanceOverhaul.Controllers.StateControllers
         private FloatMultiplierHandle _sprintSpeed;
         private FloatMultiplierHandle _preSprintAccelSpeed;
         private FloatMultiplierHandle _sprintAccelSpeed;
+
+        private StanceState _stanceState;
+
+        public StanceMovementHandler(StanceState stanceState) 
+        {
+            _stanceState = stanceState;
+        }
 
         public void RunOnAwake()
         {
@@ -49,7 +56,7 @@ namespace StanceOverhaul.Controllers.StateControllers
 
         private void UpdateWalkSpeed()
         {
-            float stanceFactor = GetStanceWalkSpeedFactor(StanceControllerInstance.TargetStance);
+            float stanceFactor = GetStanceWalkSpeedFactor(_stanceState.CurrentStanceType);
             _walkSpeed.Multiplier = stanceFactor;
         }
 
@@ -70,6 +77,7 @@ namespace StanceOverhaul.Controllers.StateControllers
             }
         }
 
+        //TODO move some of this move to tac sprint controller?
         private void UpdateSprintSpeed()
         {
             float stanceSpeedBonus =
@@ -77,7 +85,7 @@ namespace StanceOverhaul.Controllers.StateControllers
                 : 1f;
             _sprintSpeed.Multiplier = stanceSpeedBonus;
 
-            float stanceAccelBonus = GetStanceSprintAccelBonus(StanceControllerInstance.TargetStance, StanceControllerInstance.IsDoingTacSprint);
+            float stanceAccelBonus = GetStanceSprintAccelBonus(_stanceState.CurrentStanceType, StanceControllerInstance.IsDoingTacSprint);
             _preSprintAccelSpeed.Multiplier = stanceAccelBonus;
             _sprintAccelSpeed.Multiplier = stanceAccelBonus;
         }

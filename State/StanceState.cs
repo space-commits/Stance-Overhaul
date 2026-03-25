@@ -6,7 +6,7 @@ using StanceOverhaul.Enums;
 
 namespace StanceOverhaul.Controllers.StateControllers
 {
-    public class StanceState : IStateController
+    public class StanceState : IControllerHelper
     {
         private IStance _current;
         private IStance _queued;

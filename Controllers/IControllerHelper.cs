@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace StanceOverhaul.Controllers.StateControllers
 {
-    public interface IStateController
+    public interface IControllerHelper
     {
         public void RunOnAwake();
 

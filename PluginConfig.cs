@@ -8,11 +8,32 @@ namespace StanceOverhaul
 {
     internal static class PluginConfig
     {
+        public static ConfigEntry<float> test1 { get; set; }
+        public static ConfigEntry<float> test2 { get; set; }
+        public static ConfigEntry<float> test3 { get; set; }
+        public static ConfigEntry<float> test4 { get; set; }
+        public static ConfigEntry<float> test5 { get; set; }
+        public static ConfigEntry<float> test6 { get; set; }
+        public static ConfigEntry<float> test7 { get; set; }
+        public static ConfigEntry<float> test8 { get; set; }
+        public static ConfigEntry<float> test9 { get; set; }
+        public static ConfigEntry<float> test10 { get; set; }
+        public static ConfigEntry<float> test11 { get; set; }
+        public static ConfigEntry<float> test12 { get; set; }
+        public static ConfigEntry<float> test13 { get; set; }
+        public static ConfigEntry<float> test14 { get; set; }
+        public static ConfigEntry<float> test15 { get; set; }
+        public static ConfigEntry<float> test16 { get; set; }
+        public static ConfigEntry<float> test17 { get; set; }
+        public static ConfigEntry<float> test18 { get; set; }
+        public static ConfigEntry<float> test19 { get; set; }
+        public static ConfigEntry<float> test20 { get; set; }
+
+
         public static ConfigEntry<KeyboardShortcut> ActiveAimKeybind { get; set; }
         public static ConfigEntry<KeyboardShortcut> LowReadyKeybind { get; set; }
         public static ConfigEntry<KeyboardShortcut> HighReadyKeybind { get; set; }
         public static ConfigEntry<KeyboardShortcut> ShortStockKeybind { get; set; }
-        public static ConfigEntry<KeyboardShortcut> CycleStancesKeybind { get; set; }
         public static ConfigEntry<KeyboardShortcut> PatrolKeybind { get; set; }
         public static ConfigEntry<KeyboardShortcut> MeleeKeybind { get; set; }
         public static ConfigEntry<KeyboardShortcut> StanceWheelComboKeyBind { get; set; }
@@ -110,6 +131,7 @@ namespace StanceOverhaul
 
         public static void InitConfigBindings(ConfigFile config)
         {
+            string dev = "0. Dev.";
             string weapAimAndPos = "1. Weapon Stances And Position.";
             string stanceBinds = "2. Weapon Stances Keybinds.";
             string activeAim = "3. Active Aim.";
@@ -118,6 +140,27 @@ namespace StanceOverhaul
             string pistol = "6. Pistol Position And Stance.";
             string shortStock = "7. Short-Stocking.";
             string thirdPerson = "8. Third Person Animations.";
+
+            test1 = config.Bind<float>(dev, "test 1", 1f, new ConfigDescription("", new AcceptableValueRange<float>(-5000f, 5000f), new ConfigurationManagerAttributes { Order = 170, IsAdvanced = true, Browsable = true }));
+            test2 = config.Bind<float>(dev, "test 2", 1f, new ConfigDescription("", new AcceptableValueRange<float>(-5000f, 5000f), new ConfigurationManagerAttributes { Order = 160, IsAdvanced = true, Browsable = true }));
+            test3 = config.Bind<float>(dev, "test 3", 1f, new ConfigDescription("", new AcceptableValueRange<float>(-5000f, 5000f), new ConfigurationManagerAttributes { Order = 150, IsAdvanced = true, Browsable = true }));
+            test4 = config.Bind<float>(dev, "test 4", 1f, new ConfigDescription("", new AcceptableValueRange<float>(-5000f, 5000f), new ConfigurationManagerAttributes { Order = 140, IsAdvanced = true, Browsable = true }));
+            test5 = config.Bind<float>(dev, "test 5", 1f, new ConfigDescription("", new AcceptableValueRange<float>(-5000f, 5000f), new ConfigurationManagerAttributes { Order = 130, IsAdvanced = true, Browsable = true }));
+            test6 = config.Bind<float>(dev, "test 6", 1f, new ConfigDescription("", new AcceptableValueRange<float>(-5000f, 5000f), new ConfigurationManagerAttributes { Order = 120, IsAdvanced = true, Browsable = true }));
+            test7 = config.Bind<float>(dev, "test 7", 1f, new ConfigDescription("", new AcceptableValueRange<float>(-5000f, 5000f), new ConfigurationManagerAttributes { Order = 110, IsAdvanced = true, Browsable = true }));
+            test8 = config.Bind<float>(dev, "test 8", 1f, new ConfigDescription("", new AcceptableValueRange<float>(-5000f, 5000f), new ConfigurationManagerAttributes { Order = 100, IsAdvanced = true, Browsable = true }));
+            test9 = config.Bind<float>(dev, "test 9", 1f, new ConfigDescription("", new AcceptableValueRange<float>(-5000f, 5000f), new ConfigurationManagerAttributes { Order = 90, IsAdvanced = true, Browsable = true }));
+            test10 = config.Bind<float>(dev, "test 10", 1f, new ConfigDescription("", new AcceptableValueRange<float>(-5000f, 5000f), new ConfigurationManagerAttributes { Order = 80, IsAdvanced = true, Browsable = true }));
+            test11 = config.Bind<float>(dev, "test 11", 1f, new ConfigDescription("", new AcceptableValueRange<float>(-5000f, 5000f), new ConfigurationManagerAttributes { Order = 70, IsAdvanced = true, Browsable = true }));
+            test12 = config.Bind<float>(dev, "test 12", 1f, new ConfigDescription("", new AcceptableValueRange<float>(-5000f, 5000f), new ConfigurationManagerAttributes { Order = 60, IsAdvanced = true, Browsable = true }));
+            test13 = config.Bind<float>(dev, "test 13", 1f, new ConfigDescription("", new AcceptableValueRange<float>(-5000f, 5000f), new ConfigurationManagerAttributes { Order = 50, IsAdvanced = true, Browsable = true }));
+            test14 = config.Bind<float>(dev, "test 14", 1f, new ConfigDescription("", new AcceptableValueRange<float>(-5000f, 5000f), new ConfigurationManagerAttributes { Order = 40, IsAdvanced = true, Browsable = true }));
+            test15 = config.Bind<float>(dev, "test 15", 1f, new ConfigDescription("", new AcceptableValueRange<float>(-5000f, 5000f), new ConfigurationManagerAttributes { Order = 30, IsAdvanced = true, Browsable = true }));
+            test16 = config.Bind<float>(dev, "test 16", 1f, new ConfigDescription("", new AcceptableValueRange<float>(-5000f, 5000f), new ConfigurationManagerAttributes { Order = 20, IsAdvanced = true, Browsable = true }));
+            test17 = config.Bind<float>(dev, "test 17", 1f, new ConfigDescription("", new AcceptableValueRange<float>(-5000f, 5000f), new ConfigurationManagerAttributes { Order = 10, IsAdvanced = true, Browsable = true }));
+            test18 = config.Bind<float>(dev, "test 18", 1f, new ConfigDescription("", new AcceptableValueRange<float>(-5000f, 5000f), new ConfigurationManagerAttributes { Order = 0, IsAdvanced = true, Browsable = true }));
+            test19 = config.Bind<float>(dev, "test 19", 1f, new ConfigDescription("", new AcceptableValueRange<float>(-5000f, 5000f), new ConfigurationManagerAttributes { Order = -10, IsAdvanced = true, Browsable = true }));
+            test20 = config.Bind<float>(dev, "test 20", 1f, new ConfigDescription("", new AcceptableValueRange<float>(-5000f, 5000f), new ConfigurationManagerAttributes { Order = -10, IsAdvanced = true, Browsable = true }));
 
             EnableAnimationFixes = config.Bind<bool>(weapAimAndPos, "De-Jank EFT Animations",true, new ConfigDescription("Attempts To Make EFT Certain Animations Less Janky, Like Inventory And Door Animations.", null, new ConfigurationManagerAttributes { Order = 430, Browsable =true }));
             OverrideCollision = config.Bind<bool>(weapAimAndPos, "Override Collision",true, new ConfigDescription("If FOV Fix is installed, will override BSG's collision system completely to make it work well with stances and alt weapon positions. If not installed, will modify BSG collision system.", null, new ConfigurationManagerAttributes { Order = 410, Browsable =true }));
@@ -145,7 +188,6 @@ namespace StanceOverhaul
             EnableNVGAimBlock = config.Bind<bool>(weapAimAndPos, "Enable NVG Aim Block", true, new ConfigDescription("Magnified Optics Block ADS When Using NVGs.", null, new ConfigurationManagerAttributes { Order = 5, Browsable = true }));
             EnableThermalAimBlock = config.Bind<bool>(weapAimAndPos, "Enable Thermal Aim Block", true, new ConfigDescription("Can't Aim With Sights When Using Thermal Goggles.", null, new ConfigurationManagerAttributes { Order = 5, Browsable = true }));
 
-            CycleStancesKeybind = config.Bind(stanceBinds, "Cycle Stances Keybind", new KeyboardShortcut(KeyCode.None), new ConfigDescription("Cycles Between High, Low Ready and Short-Stocking. Double Click Returns To Idle.", null, new ConfigurationManagerAttributes { Order = 80, Browsable =true }));
             ActiveAimKeybind = config.Bind(stanceBinds, "Active Aim Keybind", new KeyboardShortcut(KeyCode.Mouse4), new ConfigDescription("Cants The Weapon Sideways, Improving Hipfire Accuracy.", null, new ConfigurationManagerAttributes { Order = 90, Browsable =true }));
             ToggleActiveAim = config.Bind<bool>(stanceBinds, "Use Toggle For Active Aim", false, new ConfigDescription("", null, new ConfigurationManagerAttributes { Order = 100, Browsable =true }));
             HighReadyKeybind = config.Bind(stanceBinds, "High Ready Keybind", new KeyboardShortcut(KeyCode.Mouse3, new[] { KeyCode.LeftAlt }), new ConfigDescription("", null, new ConfigurationManagerAttributes { Order = 110, Browsable =true }));

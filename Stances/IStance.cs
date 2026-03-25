@@ -1,22 +1,30 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using EFT;
-using Unity;
-using StanceOverhaul.Enums;
 using StanceOverhaul.Controllers;
+using StanceOverhaul.Enums;
 
 namespace StanceOverhaul.Stances
 {
     public interface IStance
     {
         public EStance StanceType { get; }
-        public bool ReadyToTransitionState { get; }
-        public bool HasReset { get; }
-        public bool HasCompleted { get; }
-        public bool DoStance { get; set; }
 
-        public void StanceUpdate();
+        bool IsActive { get; }
+        bool IsTransitioning { get; }
+        bool CanExit { get; }
 
+        public EStanceState State { get; }
+
+        void Enter();
+        void Exit(bool force = false);
+
+        void StanceUpdate(float deltaTime);
+
+        event Action<IStance> OnEnterStarted;
+        event Action<IStance> OnEnterCompleted;
+
+        event Action<IStance> OnCanExitChanged;
+
+        event Action<IStance> OnExitStarted;
+        event Action<IStance> OnExitCompleted;
     }
 }

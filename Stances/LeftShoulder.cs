@@ -1,4 +1,4 @@
-﻿using EFT.Animations;
+﻿/*using EFT.Animations;
 using StanceOverhaul.Controllers;
 using System;
 using System.Collections.Generic;
@@ -157,3 +157,4 @@ namespace StanceOverhaul.Stances
         }
     }
 }
+*/

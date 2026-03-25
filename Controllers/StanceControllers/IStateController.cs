@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-namespace StanceOverhaul.Controllers
+namespace StanceOverhaul.Controllers.StateControllers
 {
     public interface IStateController
     {
@@ -13,6 +13,6 @@ namespace StanceOverhaul.Controllers
 
         public void RunOnDestroy();
 
-        public void RunOnUpdate();
+        public void RunOnUpdate(float deltaTime);
     }
 }

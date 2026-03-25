@@ -10,9 +10,9 @@ using System;
 namespace StanceOverhaul.Stances
 {
 
-    public class PatrolStance : StanceBase
+    public class Melee : StanceBase
     {
-        public override EStance StanceType => EStance.PatrolStance;
+        public override EStance StanceType => EStance.Melee;
 
         private Vector3 _currentPos;
 

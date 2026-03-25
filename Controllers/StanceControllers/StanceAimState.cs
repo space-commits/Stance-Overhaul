@@ -9,14 +9,9 @@ namespace StanceOverhaul.Controllers.StateControllers
 {
     public class StanceAimState : IStateController
     {
-        private StanceController _stanceController;
-
         private BoolGateHandle _canAim;
 
-        public StanceAimState(StanceController stanceController)
-        {
-            _stanceController = stanceController;
-        }
+        public bool AimingInterrupted { get; private set; }
 
         public void RunOnAwake()
         {
@@ -28,7 +23,7 @@ namespace StanceOverhaul.Controllers.StateControllers
             BoolHandlers.CanAim.Remove(_canAim);
         }
 
-        public void RunOnUpdate()
+        public void RunOnUpdate(float deltaTime)
         {
             CheckForAimBlockers();
         }
@@ -56,6 +51,23 @@ namespace StanceOverhaul.Controllers.StateControllers
             if (nvgBlocksAds || faceshieldBlocksADS || thermalBlocksAds)
             {
                 _canAim.Allowed = false;
+            }
+        }
+
+        public void InterruptAim()
+        {
+            if (PlayerStateInstance.FirearmController.IsAiming && !AimingInterrupted)
+            {
+                PlayerStateInstance.FirearmController.ToggleAim();
+                AimingInterrupted = true;
+            }
+        }
+        public void UnInterruptAim()
+        {
+            if (!PlayerStateInstance.FirearmController.IsAiming && AimingInterrupted)
+            {
+                PlayerStateInstance.FirearmController.ToggleAim();
+                AimingInterrupted = false;
             }
         }
     }

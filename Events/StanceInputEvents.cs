@@ -16,6 +16,12 @@ namespace StanceOverhaul.Events
         public static event Action? ToggleMelee;
         public static event Action? OnActiveAimKeyDown;
         public static event Action? OnActiveAimKeyUp;
+        public static event Action? ToggleOffAllStances;
+
+        internal static void RaiseToggleOffAllStances()
+        {
+            BaseEventHandler.RaiseEvent(ToggleOffAllStances);
+        }
 
         internal static void RaiseTogglePatrolStance()
         {

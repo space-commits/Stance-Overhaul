@@ -2,26 +2,21 @@
 using EFT.Animations;
 using EFT.InputSystem;
 using RealismCommonLib.PatchPipeline;
+using StanceOverhaul.Controllers.StateControllers;
 using StanceOverhaul.Enums;
 using System;
 using UnityEngine;
 using static EFT.Player;
 using static RealismCommonLib.Plugin;
+using static StanceOverhaul.Plugin;
 
 namespace StanceOverhaul.Controllers.PatchHooks
 {
     internal class InputHookPipeline: IStateController
     {
-        private StanceController _stanceController;
-
         private IDisposable _inputVeto;
         private IDisposable _inputOverride;
         private IDisposable _inputOverrideHandler;
-
-        public InputHookPipeline(StanceController stanceController)
-        {
-            _stanceController = stanceController;
-        }
 
         public void RunOnAwake()
         {
@@ -74,7 +69,8 @@ namespace StanceOverhaul.Controllers.PatchHooks
             {
                 case ECommand.LeftStanceToggle:
                     return true;
-                case ECommand.ToggleBipods:
+                case ECommand.WeaponMounting:
+                    ModLogger.LogWarning("Mounting input override");
                     return PluginConfig.OverrideMounting.Value;
                 default:
                     return false;
@@ -88,7 +84,7 @@ namespace StanceOverhaul.Controllers.PatchHooks
                 case ECommand.LeftStanceToggle:
                     LeftStanceOverride();
                     break;
-                case ECommand.ToggleBipods:
+                case ECommand.WeaponMounting:
                     MountingOverride();
                     break;
 
@@ -105,21 +101,20 @@ namespace StanceOverhaul.Controllers.PatchHooks
         private bool ShouldVetoFiring()
         {
             bool isInStanceThatCanBlockFiring =
-                _stanceController.TargetStance != EStance.None &&
-                _stanceController.TargetStance != EStance.ActiveAiming &&
-                _stanceController.TargetStance != EStance.ShortStock &&
-                _stanceController.TargetStance != EStance.PistolCompressed;
+                StanceControllerInstance.TargetStance != EStance.None &&
+                StanceControllerInstance.TargetStance != EStance.ActiveAiming &&
+                StanceControllerInstance.TargetStance != EStance.ShortStock &&
+                StanceControllerInstance.TargetStance != EStance.PistolCompressed;
 
             bool shouldVeto =
                 PluginConfig.BlockFiring.Value &&
-                !_stanceController.ShouldForceLowReady &&
+                !StanceControllerInstance.ShouldForceLowReady &&
                 isInStanceThatCanBlockFiring;
 
             if (shouldVeto)
             {
-                _stanceController.TargetStance = EStance.None;
-                _stanceController.StoredStance = EStance.None;
-                _stanceController.StanceBlender.Target = 0f;
+                StanceControllerInstance.TargetStance = EStance.None;
+                StanceControllerInstance.StoredStance = EStance.None;
             }
 
             return shouldVeto;
@@ -129,19 +124,19 @@ namespace StanceOverhaul.Controllers.PatchHooks
         {
             Player player = PlayerStateInstance.Player;
 
-            if (_stanceController.IsBracing && !_stanceController.IsColliding)
+            if (StanceControllerInstance.IsBracing && !StanceControllerInstance.IsColliding)
             {
-                if (WeaponStateInstance.BipodIsDeployed && _stanceController.BracingDirection != EBracingDirection.Top) return;
+                if (WeaponStateInstance.BipodIsDeployed && StanceControllerInstance.BracingDirection != EBracingDirection.Top) return;
 
-                _stanceController.IsMounting = !_stanceController.IsMounting;
-                if (_stanceController.IsMounting) _stanceController.CancelAllStances();
+                StanceControllerInstance.IsMounting = !StanceControllerInstance.IsMounting;
+                if (StanceControllerInstance.IsMounting) StanceControllerInstance.CancelAllStances();
 
-                Vector3 wiggleDirection = _stanceController.IsMounting ? _stanceController.CoverWiggleDirection : _stanceController.CoverWiggleDirection * -1f;
-                _stanceController.DoWiggleEffects(player, player.ProceduralWeaponAnimation, WeaponStateInstance.Weapon, wiggleDirection, true, 1f, useGearSound: true);
+                Vector3 wiggleDirection = StanceControllerInstance.IsMounting ? StanceControllerInstance.CoverWiggleDirection : StanceControllerInstance.CoverWiggleDirection * -1f;
+                StanceControllerInstance.DoWiggleEffects(player, player.ProceduralWeaponAnimation, WeaponStateInstance.WeaponInstance, wiggleDirection, true, 1f, useGearSound: true);
             }
-            if (!_stanceController.IsBracing && _stanceController.IsMounting) _stanceController.IsMounting = false;
+            if (!StanceControllerInstance.IsBracing && StanceControllerInstance.IsMounting) StanceControllerInstance.IsMounting = false;
 
-            if (_stanceController.IsMounting && WeaponStateInstance.BipodIsDeployed)
+            if (StanceControllerInstance.IsMounting && WeaponStateInstance.BipodIsDeployed)
             {
                 ChangeScopeModeOnMount(player.ProceduralWeaponAnimation, PlayerStateInstance.FirearmController);
 
@@ -162,7 +157,7 @@ namespace StanceOverhaul.Controllers.PatchHooks
 
         private void LeftStanceOverride()
         {
-            if (!_stanceController.IsInForcedLowReady && !_stanceController.ShouldBlockAllStances) _stanceController.ToggleLeftShoulder();
+            if (!StanceControllerInstance.ShouldForceLowReady && !StanceControllerInstance.ShouldBlockAllStances) StanceControllerInstance.TargetStance = EStance.LeftShoulder;
         }
 
         //TODO: replace instance paramaters and use state instance
@@ -182,7 +177,7 @@ namespace StanceOverhaul.Controllers.PatchHooks
             }
         }
 
-        public void RunOnUpdate()
+        public void RunOnUpdate(float deltaTime)
         {
         }
     }

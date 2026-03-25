@@ -3,6 +3,7 @@ using RealismCommonLib.ModifierHandlers;
 using RealismCommonLib.StateControllers;
 using StanceOverhaul.Enums;
 using static RealismCommonLib.Plugin;
+using static StanceOverhaul.Plugin;
 
 namespace StanceOverhaul.Controllers.StateControllers
 {
@@ -19,18 +20,10 @@ namespace StanceOverhaul.Controllers.StateControllers
         private const float HIGH_READY_SPRINT_ACCEL = 1.2f;
         private const float TAC_SPRINT_SPEED_BONUS = 1.15f;
 
-
-        private StanceController _stanceController;
-
         private FloatMultiplierHandle _walkSpeed;
         private FloatMultiplierHandle _sprintSpeed;
         private FloatMultiplierHandle _preSprintAccelSpeed;
         private FloatMultiplierHandle _sprintAccelSpeed;
-
-        public StanceMovementState(StanceController stanceController)
-        {
-            _stanceController = stanceController;
-        }
 
         public void RunOnAwake()
         {
@@ -48,7 +41,7 @@ namespace StanceOverhaul.Controllers.StateControllers
             StatModifiers.SprintAccelModifier.Remove(_sprintAccelSpeed);
         }
 
-        public void RunOnUpdate()
+        public void RunOnUpdate(float deltaTime)
         {
             UpdateWalkSpeed();
             UpdateSprintSpeed();
@@ -56,7 +49,7 @@ namespace StanceOverhaul.Controllers.StateControllers
 
         private void UpdateWalkSpeed()
         {
-            float stanceFactor = GetStanceWalkSpeedFactor(_stanceController.TargetStance);
+            float stanceFactor = GetStanceWalkSpeedFactor(StanceControllerInstance.TargetStance);
             _walkSpeed.Multiplier = stanceFactor;
         }
 
@@ -80,11 +73,11 @@ namespace StanceOverhaul.Controllers.StateControllers
         private void UpdateSprintSpeed()
         {
             float stanceSpeedBonus =
-                _stanceController.IsDoingTacSprint ? TAC_SPRINT_SPEED_BONUS * (1f + PlayerStateInstance.Player.Skills.EnduranceBuffRestoration.Value)
+                StanceControllerInstance.IsDoingTacSprint ? TAC_SPRINT_SPEED_BONUS * (1f + PlayerStateInstance.Player.Skills.EnduranceBuffRestoration.Value)
                 : 1f;
             _sprintSpeed.Multiplier = stanceSpeedBonus;
 
-            float stanceAccelBonus = GetStanceSprintAccelBonus(_stanceController.TargetStance, _stanceController.IsDoingTacSprint);
+            float stanceAccelBonus = GetStanceSprintAccelBonus(StanceControllerInstance.TargetStance, StanceControllerInstance.IsDoingTacSprint);
             _preSprintAccelSpeed.Multiplier = stanceAccelBonus;
             _sprintAccelSpeed.Multiplier = stanceAccelBonus;
         }

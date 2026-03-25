@@ -12,7 +12,6 @@ namespace StanceOverhaul
     [BepInPlugin("com.fontaine.stanceoverhaul", "Fontaine-StanceOverhaul", "1.0.0")]
     public class Plugin : BaseUnityPlugin
     {
-
         public static StanceController StanceControllerInstance;
 
         void Awake()
@@ -24,11 +23,6 @@ namespace StanceOverhaul
             EnablePatches();
         }
 
-        void Update()
-        {
-            
-        }
-
         void EnablePatches() 
         {
             new TacticalReloadPatch().Enable();
@@ -36,17 +30,27 @@ namespace StanceOverhaul
             new DisableAimOnReloadPatch().Enable();
             new ChangeScopePatch().Enable();
             new MountingAndCollisionPatch().Enable();
-            new OnWeaponDrawPatch().Enable();
+            new CollisionPatch().Enable();
+            new SetFireModePatch().Enable();
+            new OperateStationaryWeaponPatch().Enable();
+            new WeaponOverlapViewPatch().Enable();
+            new WeaponOverlappingPatch().Enable();
+            new ShouldMoveWeapCloserPatch().Enable();
+            new WeaponLengthPatch().Enable();
+            new InitTransformsPatch().Enable();
+            new ChangePosePatch().Enable();
+            new SetTiltPatch().Enable();
+            new SpringGetPatch().Enable();
         }
 
         void SubscribeToEvents() 
         {
-            RealismCommonLib.Events.PlayerEvents.OnPlayerInit += AddStanceComponentsToPlayer;
+            RealismCommonLib.Events.PlayerEvents.OnPlayerInitArgs += AddStanceComponentsToPlayer;
         }
 
         void AddStanceComponentsToPlayer(Player player)
-        { 
-            player.gameObject.AddComponent<StanceController>();
+        {
+            StanceControllerInstance = player.gameObject.AddComponent<StanceController>();
         }
     }
 }

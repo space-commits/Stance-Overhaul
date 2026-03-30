@@ -29,7 +29,6 @@ namespace StanceOverhaul
         public static ConfigEntry<float> test19 { get; set; }
         public static ConfigEntry<float> test20 { get; set; }
 
-
         public static ConfigEntry<KeyboardShortcut> ActiveAimKeybind { get; set; }
         public static ConfigEntry<KeyboardShortcut> LowReadyKeybind { get; set; }
         public static ConfigEntry<KeyboardShortcut> HighReadyKeybind { get; set; }

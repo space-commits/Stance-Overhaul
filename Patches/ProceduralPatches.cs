@@ -70,11 +70,11 @@ namespace StanceOverhaul.Patches
             Player player = (Player)_playerField.GetValue(firearmController);
             if (player != null && player.IsYourPlayer)
             {
-                if (Plugin.StanceControllerInstance.IsMounting && WeaponStateInstance.BipodIsDeployed && Plugin.StanceControllerInstance.BracingDirection == EBracingDirection.Top)
+             /*   if (Plugin.StanceControllerInstance.IsMounting && WeaponStateInstance.BipodIsDeployed && Plugin.StanceControllerInstance.BracingDirection == EBracingDirection.Top)
                 {
                     __result = true;
                     return false;
-                }
+                }*/
             }
             return true;
         }
@@ -92,10 +92,10 @@ namespace StanceOverhaul.Patches
         [PatchPrefix]
         private static bool Prefix(PlayerAnimator __instance, bool enabled)
         {
-            if (enabled && Plugin.StanceControllerInstance.CanDoMeleeDetection && WeaponStateInstance.HasBayonet && Plugin.StanceControllerInstance.IsReadyForBayonetCharge)
+     /*       if (enabled && Plugin.StanceControllerInstance.CanDoMeleeDetection && WeaponStateInstance.HasBayonet && Plugin.StanceControllerInstance.IsReadyForBayonetCharge)
             {
                 return false;
-            }
+            }*/
             return true;
         }
     }
@@ -116,10 +116,10 @@ namespace StanceOverhaul.Patches
         private static bool PatchPreFix(ReloadClass __instance)
         {
             Player player = (Player)_playerField.GetValue(__instance);
-            if (player.IsYourPlayer && Plugin.StanceControllerInstance.IsMounting)
+ /*           if (player.IsYourPlayer && Plugin.StanceControllerInstance.IsMounting)
             {
                 return false;
-            }
+            }*/
             return true;
         }
     }
@@ -141,7 +141,7 @@ namespace StanceOverhaul.Patches
         private static bool PatchPreFix(FirearmController __instance)
         {
             Player player = (Player)_playerField.GetValue(__instance);
-            if (player.IsYourPlayer && PluginConfig.OverrideMounting.Value)
+   /*         if (player.IsYourPlayer && PluginConfig.OverrideMounting.Value)
             {
                 if (WeaponStateInstance.BipodIsDeployed && Plugin.StanceControllerInstance.IsMounting)
                 {
@@ -168,7 +168,7 @@ namespace StanceOverhaul.Patches
                     player.RaiseSightChangedEvent(player.ProceduralWeaponAnimation.CurrentAimingMod);
                     return false;
                 }
-            }
+            }*/
             return true;
         }
     }
@@ -218,7 +218,7 @@ namespace StanceOverhaul.Patches
             return typeof(ProceduralWeaponAnimation).GetMethod("AvoidObstacles", BindingFlags.Instance | BindingFlags.Public);
         }
 
-        private static void DoMounting(Player player, ProceduralWeaponAnimation pwa)
+/*        private static void DoMounting(Player player, ProceduralWeaponAnimation pwa)
         {
             if (Plugin.StanceControllerInstance.IsMounting)
             {
@@ -334,9 +334,9 @@ namespace StanceOverhaul.Patches
                 _stanceInverseFactor = 1f;
                 Plugin.StanceControllerInstance.CameraMovmentForCollisionSpeed = 0.07f;
             }
-        }
+        }*/
 
-        private static void AssignFinalTransforms(bool isPistol, float length)
+ /*       private static void AssignFinalTransforms(bool isPistol, float length)
         {
             if (isPistol)
             {
@@ -361,8 +361,8 @@ namespace StanceOverhaul.Patches
             }
             else if (Plugin.StanceControllerInstance.TargetStance == EStance.ActiveAiming || Plugin.StanceControllerInstance.StoredStance == EStance.ActiveAiming)
             {
-                /*                _finalPos = new Vector3(0.35f, 0.0f, 0.2f);
-                                _finalRot = new Vector3(0f, 0f, -0.9f);*/
+                *//*                _finalPos = new Vector3(0.35f, 0.0f, 0.2f);
+                                _finalRot = new Vector3(0f, 0f, -0.9f);*//*
                 _finalPos = new Vector3(0.05f, -0.2f, 0.1f);
                 _finalRot = new Vector3(-0.5f, -0.5f, -0.5f);
             }
@@ -376,9 +376,9 @@ namespace StanceOverhaul.Patches
                 _finalPos = new Vector3(0f, 0.05f, -0.15f);
                 _finalRot = new Vector3(0.2f, -0.1f, -0.1f);
             }
-        }
+        }*/
 
-        private static void CollisionOverride(ProceduralWeaponAnimation pwa, FirearmController fc)
+/*        private static void CollisionOverride(ProceduralWeaponAnimation pwa, FirearmController fc)
         {
             _blendField.SetValue(pwa.TurnAway, 0f);
             _smoothInField.SetValue(pwa.TurnAway, 0f);
@@ -520,7 +520,7 @@ namespace StanceOverhaul.Patches
                 _finalStateEndTimer = 0f;
             }
         }
-
+*/
         [PatchPostfix]
         private static void PatchPostfix(ProceduralWeaponAnimation __instance)
         {
@@ -529,9 +529,9 @@ namespace StanceOverhaul.Patches
             Player player = (Player)_playerField.GetValue(firearmController);
             if (player != null && player.IsYourPlayer && player.MovementContext.CurrentState.Name != EPlayerState.Stationary)
             {
-                if (PluginConfig.OverrideCollision.Value && FOVFixEnabled) CollisionOverride(__instance, firearmController);
+      /*          if (PluginConfig.OverrideCollision.Value && FOVFixEnabled) CollisionOverride(__instance, firearmController);
                 else if (PluginConfig.OverrideCollision.Value) ModifyBSGCollisions(__instance, firearmController);
-                DoMounting(player, __instance);
+                DoMounting(player, __instance);*/
             }
         }
     }
@@ -549,7 +549,7 @@ namespace StanceOverhaul.Patches
         private static bool Prefix(FirearmsAnimator __instance, Weapon.EFireMode fireMode, bool skipAnimation = false)
         {
             __instance.ResetLeftHand();
-            skipAnimation = Plugin.StanceControllerInstance.TargetStance == EStance.HighReady && PlayerStateInstance.IsSprinting ? true : skipAnimation;
+            skipAnimation = Plugin.StanceControllerInstance.CurrentStanceType == EStance.HighReady && PlayerStateInstance.IsSprinting ? true : skipAnimation;
             WeaponAnimationSpeedControllerClass.SetFireMode(__instance.Animator, (float)fireMode);
             if (!skipAnimation)
             {
@@ -561,6 +561,7 @@ namespace StanceOverhaul.Patches
 
     //Entry point to disable stances when starting operating stationary weapon
     //This could be moved to common lib, and check ran in update for using stationary wepaon
+    //TODO: replace with event that stancecontroller listens to, or inputhandler
     public class OperateStationaryWeaponPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -571,12 +572,12 @@ namespace StanceOverhaul.Patches
         [PatchPostfix]
         private static void PatchPostfix(Player __instance)
         {
-            if (__instance.IsYourPlayer)
+        /*    if (__instance.IsYourPlayer)
             {
                 Plugin.StanceControllerInstance.CancelAllStances();
                 Plugin.StanceControllerInstance.StanceCurrentPosition = Vector3.zero;
 
-            }
+            }*/
         }
     }
 
@@ -609,7 +610,7 @@ namespace StanceOverhaul.Patches
             return typeof(Player.FirearmController).GetMethod("method_11", BindingFlags.Instance | BindingFlags.Public);
         }
 
-        private static void SetMountingStatus(EBracingDirection coverDir)
+ /*       private static void SetMountingStatus(EBracingDirection coverDir)
         {
             if (!Plugin.StanceControllerInstance.IsMounting)
             {
@@ -642,9 +643,9 @@ namespace StanceOverhaul.Patches
                 return true;
             }
             return false;
-        }
+        }*/
 
-        private static bool CheckForCoverCollision(EBracingDirection coverDir, Vector3 start, Vector3 direction, Vector3 spherePos, float radius)
+   /*     private static bool CheckForCoverCollision(EBracingDirection coverDir, Vector3 start, Vector3 direction, Vector3 spherePos, float radius)
         {
             RaycastHit raycastHit;
             if (Physics.Linecast(start, direction, out raycastHit, EFTHardSettings.Instance.WEAPON_OCCLUSION_LAYERS))
@@ -670,9 +671,10 @@ namespace StanceOverhaul.Patches
             }
 
             return false;
-        }
+        }*/
 
-        private static void DetectBracing(FirearmController fc, Player player, float ln)
+        // TODO: move to a difference class and possible integrate with  BSG's mounting system
+/*        private static void DetectBracing(FirearmController fc, Player player, float ln)
         {
             _timer += 1;
             if (_timer >= 60)
@@ -728,8 +730,9 @@ namespace StanceOverhaul.Patches
                 Plugin.StanceControllerInstance.BracingRecoilBonus = Mathf.Lerp(Plugin.StanceControllerInstance.BracingRecoilBonus, 1f, 0.05f);
             }
         }
-
-        private static void DoMelee(FirearmController fc, Player player, float ln)
+*/
+        //move to a mellee stance class as much as possible
+/*        private static void DoMelee(FirearmController fc, Player player, float ln)
         {
             if (Plugin.StanceControllerInstance.TargetStance == EStance.Melee && Plugin.StanceControllerInstance.CanDoMeleeDetection && !Plugin.StanceControllerInstance.MeleeHitSomething)
             {
@@ -799,8 +802,8 @@ namespace StanceOverhaul.Patches
                     }
                     float vol = WeaponStateInstance.HasBayonet ? 10f : 12f;
                     Singleton<BetterAudio>.Instance.PlayDropItem(baseballComp.SurfaceSound, JsonType.EItemDropSoundType.Rifle, raycastHit.point, vol);
-                    /*                  Plugin.StanceControllerInstance.DoWiggleEffects(player, player.ProceduralWeaponAnimation, fc, new Vector3(-10f, 10f, 0f), true, 1.5f);
-                    */
+                    *//*                  Plugin.StanceControllerInstance.DoWiggleEffects(player, player.ProceduralWeaponAnimation, fc, new Vector3(-10f, 10f, 0f), true, 1.5f);
+                    *//*
                     player.Physical.ConsumeAsMelee(0.2f * (1f + (weaponWeight * 0.1f)));
 
                     Plugin.StanceControllerInstance.CanDoMeleeDetection = false;
@@ -808,7 +811,7 @@ namespace StanceOverhaul.Patches
                     return;
                 }
             }
-        }
+        }*/
 
 
         [PatchPrefix]
@@ -817,12 +820,13 @@ namespace StanceOverhaul.Patches
             Player player = (Player)_playerField.GetValue(__instance);
             if (player.IsYourPlayer)
             {
-                DoMelee(__instance, player, ln);
-                DetectBracing(__instance, player, ln);
+                //DoMelee(__instance, player, ln);
+                //DetectBracing(__instance, player, ln);
             }
         }
     }
 
+    //TODO: If using BSG's mounting, skip check
     //Override to prevent BSG collision check when mounting or doing own collision detectio
     public class WeaponOverlapViewPatch : ModulePatch
     {
@@ -838,10 +842,10 @@ namespace StanceOverhaul.Patches
         private static bool PatchPrefix(Player.FirearmController __instance)
         {
             Player player = (Player)playerField.GetValue(__instance);
-            if (player.IsYourPlayer && (Plugin.StanceControllerInstance.IsMounting || Plugin.StanceControllerInstance.IsColliding))
+/*            if (player.IsYourPlayer && (Plugin.StanceControllerInstance.CurrentStance == EStance.Mounting || Plugin.StanceControllerInstance.IsColliding))
             {
                 return false;
-            }
+            }*/
             return true;
         }
     }
@@ -891,7 +895,7 @@ namespace StanceOverhaul.Patches
             Player player = (Player)playerField.GetValue(__instance);
             if (player.IsYourPlayer)
             {
-                if (Plugin.StanceControllerInstance.TargetStance == EStance.PatrolStance)
+                if (Plugin.StanceControllerInstance.CurrentStanceType == EStance.PatrolStance)
                 {
                     weaponLnField.SetValue(__instance, Plugin.StanceControllerInstance.StanceModifiedWeaponLength * 0.75f);
                     return;
@@ -908,17 +912,17 @@ namespace StanceOverhaul.Patches
                         weaponLnField.SetValue(__instance, Plugin.StanceControllerInstance.StanceModifiedWeaponLength * 0.8f);
                         return;
                     }
-                    if (Plugin.StanceControllerInstance.TargetStance == EStance.ShortStock)
+                    if (Plugin.StanceControllerInstance.CurrentStanceType == EStance.ShortStock)
                     {
                         weaponLnField.SetValue(__instance, Plugin.StanceControllerInstance.StanceModifiedWeaponLength * 0.9f);
                         return;
                     }
-                    if (Plugin.StanceControllerInstance.TargetStance == EStance.HighReady)
+                    if (Plugin.StanceControllerInstance.CurrentStanceType == EStance.HighReady)
                     {
                         weaponLnField.SetValue(__instance, Plugin.StanceControllerInstance.StanceModifiedWeaponLength * 0.95f);
                         return;
                     }
-                    if (Plugin.StanceControllerInstance.TargetStance == EStance.LowReady)
+                    if (Plugin.StanceControllerInstance.CurrentStanceType == EStance.LowReady)
                     {
                         weaponLnField.SetValue(__instance, Plugin.StanceControllerInstance.StanceModifiedWeaponLength * 0.98f);
                         return;
@@ -1010,8 +1014,8 @@ namespace StanceOverhaul.Patches
             Player player = (Player)playerField.GetValue(movementContext);
 
             if (player.IsYourPlayer)
-            {
-                Plugin.StanceControllerInstance.IsMounting = false;
+            {   //TODO replace with event, and have mount stance class sub to it
+                //Plugin.StanceControllerInstance.IsMounting = false;
             }
         }
     }
@@ -1040,13 +1044,14 @@ namespace StanceOverhaul.Patches
             if (player.IsYourPlayer)
             {
                 float tiltTolerance = WeaponStateInstance.BipodIsDeployed ? 0.5f : 2.5f;
-                if (!Plugin.StanceControllerInstance.IsMounting)
+                if (!Plugin.StanceControllerInstance)
                 {
                     tiltBeforeMount = tilt;
                 }
                 else if (Math.Abs(tiltBeforeMount - tilt) > tiltTolerance)
                 {
-                    Plugin.StanceControllerInstance.IsMounting = false;
+                    //TODO replace with event, and have mount stance class sub to it
+                    //Plugin.StanceControllerInstance.IsMounting = false;
                     tiltBeforeMount = 0f;
                 }
             }

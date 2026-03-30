@@ -82,6 +82,10 @@
     </Compile>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Events\" />
+  </ItemGroup>
+
   <Target Name="PostBuildCopy" AfterTargets="Build">
     <Copy SourceFiles="$(TargetDir)$(TargetFileName)" DestinationFolder="F:\SP EFT\SPT-406\BepInEx\plugins\" />
   </Target>

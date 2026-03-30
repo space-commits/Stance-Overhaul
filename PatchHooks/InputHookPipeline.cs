@@ -17,6 +17,13 @@ namespace StanceOverhaul.Controllers.PatchHooks
         private IDisposable _inputVeto;
         private IDisposable _inputOverride;
         private IDisposable _inputOverrideHandler;
+        
+        private StanceState _stanceState;
+
+        public InputHookPipeline(StanceState stanceState)
+        {
+            _stanceState = stanceState;
+        }
 
         public void RunOnAwake()
         {
@@ -35,17 +42,17 @@ namespace StanceOverhaul.Controllers.PatchHooks
             _inputOverrideHandler = Pipelines.InputOverrideHandler.Register(HandleOverrideLogic);
         }
 
-        private void DeRegisterWithPipeline(IDisposable pipeline)
-        {
-            pipeline?.Dispose();
-            pipeline = null;
-        }
-
         private void DeRegisterWithPipelines()
         {
             DeRegisterWithPipeline(_inputVeto);
             DeRegisterWithPipeline(_inputOverride);
             DeRegisterWithPipeline(_inputOverrideHandler);
+        }
+
+        private void DeRegisterWithPipeline(IDisposable pipeline)
+        {
+            pipeline?.Dispose();
+            pipeline = null;
         }
 
         private bool ShouldVetoInput(InputContext ctx)
@@ -101,20 +108,18 @@ namespace StanceOverhaul.Controllers.PatchHooks
         private bool ShouldVetoFiring()
         {
             bool isInStanceThatCanBlockFiring =
-                StanceControllerInstance.TargetStance != EStance.None &&
-                StanceControllerInstance.TargetStance != EStance.ActiveAiming &&
-                StanceControllerInstance.TargetStance != EStance.ShortStock &&
-                StanceControllerInstance.TargetStance != EStance.PistolCompressed;
+                StanceControllerInstance.CurrentStanceType == EStance.HighReady ||
+                StanceControllerInstance.CurrentStanceType == EStance.LowReady ||
+                StanceControllerInstance.CurrentStanceType == EStance.PatrolStance;
 
             bool shouldVeto =
                 PluginConfig.BlockFiring.Value &&
-                !StanceControllerInstance.ShouldForceLowReady &&
+                //!StanceControllerInstance.ShouldForceLowReady &&
                 isInStanceThatCanBlockFiring;
 
             if (shouldVeto)
             {
-                StanceControllerInstance.TargetStance = EStance.None;
-                StanceControllerInstance.StoredStance = EStance.None;
+                _stanceState.CancelAll();
             }
 
             return shouldVeto;
@@ -122,7 +127,7 @@ namespace StanceOverhaul.Controllers.PatchHooks
 
         private void MountingOverride()
         {
-            Player player = PlayerStateInstance.Player;
+   /*         Player player = PlayerStateInstance.Player;
 
             if (StanceControllerInstance.IsBracing && !StanceControllerInstance.IsColliding)
             {
@@ -141,7 +146,7 @@ namespace StanceOverhaul.Controllers.PatchHooks
                 ChangeScopeModeOnMount(player.ProceduralWeaponAnimation, PlayerStateInstance.FirearmController);
 
                 //attempts to enable prone mounted animation
-                /*
+                *//*
                     MountPointData mountData = new MountPointData(StanceController.MountPos, StanceController.MountDir, EMountSideDirection.Forward);
                     Quaternion targetBodyRotation = Quaternion.AngleAxis(player.MovementContext.Yaw, Vector3.up);
                     player.MovementContext.PlayerMountingPointData.SetData(mountData, player.MovementContext.TransformPosition, player.MovementContext.PoseLevel, player.MovementContext.Yaw, PluginConfig.test10.Value, targetBodyRotation, new Vector2(0f, 0f), new Vector2(-3, 6), new Vector2(-10, 10));
@@ -151,17 +156,18 @@ namespace StanceOverhaul.Controllers.PatchHooks
                 /*       AccessTools.Field(typeof(MovementContext), "_inMountedState").SetValue(player.MovementContext, true);
                          player.MovementContext.PlayerAnimator.SetProneBipodMount(true);
                          fc.FirearmsAnimator.SetMounted(true);
-                         player.ProceduralWeaponAnimation.SetMountingData(true, true);*/
-            }
+                         player.ProceduralWeaponAnimation.SetMountingData(true, true);*//*
+            }*/
         }
 
+        //TODO: replace with event
         private void LeftStanceOverride()
         {
-            if (!StanceControllerInstance.ShouldForceLowReady && !StanceControllerInstance.ShouldBlockAllStances) StanceControllerInstance.TargetStance = EStance.LeftShoulder;
-        }
+/*            if (!StanceControllerInstance.ShouldForceLowReady && !StanceControllerInstance.ShouldBlockAllStances) StanceControllerInstance.TargetStance = EStance.LeftShoulder;
+*/        }
 
         //TODO: replace instance paramaters and use state instance
-        private void ChangeScopeModeOnMount(ProceduralWeaponAnimation pwa, FirearmController fc)
+        /*private void ChangeScopeModeOnMount(ProceduralWeaponAnimation pwa, FirearmController fc)
         {
             int aimIndex = pwa.AimIndex;
             if (Mathf.Abs(pwa.ScopeAimTransforms[aimIndex].Rotation) >= EFTHardSettings.Instance.SCOPE_ROTATION_THRESHOLD)
@@ -175,7 +181,7 @@ namespace StanceOverhaul.Controllers.PatchHooks
                     }
                 }
             }
-        }
+        }*/
 
         public void RunOnUpdate(float deltaTime)
         {

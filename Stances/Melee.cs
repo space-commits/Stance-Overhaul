@@ -35,9 +35,9 @@ namespace StanceOverhaul.Stances
             _progress = 0f;
         }
 
-        public override void Exit(bool force = false)
+        public override void TryExit(bool force = false)
         { 
-            base.Exit();
+            base.TryExit();
             //no reset here - we reverse from current progress
         }
 

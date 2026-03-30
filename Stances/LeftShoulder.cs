@@ -1,4 +1,110 @@
-﻿/*using EFT.Animations;
+﻿using RealismCommonLib.Utils;
+using StanceOverhaul.Enums;
+using UnityEngine;
+using static RealismCommonLib.Plugin;
+using static StanceOverhaul.Plugin;
+
+namespace StanceOverhaul.Stances;
+
+public class LeftStance : StanceBase
+{
+    public override EStance StanceType => EStance.LeftShoulder;
+
+    float _progress;
+    float _speed = 5f;
+
+    protected override void OnWeaponStateReset() => Unpause();
+    protected override void OnInternalMagReload() => PauseStanceOnReload();
+    protected override void OnQuickMagReload() => PauseStanceOnReload();
+    protected override void OnMagReload() => PauseStanceOnReload();
+    protected override void OnCheckChamber() => Pause();
+    protected override void OnRechamber() => Pause();
+    protected override void OnMalfFix() => Pause();
+
+    private void PauseStanceOnReload()
+    {
+        if (!ReloadStateInstance.IsInReloadOpertation) return;
+        Pause();
+    }
+
+    private void Pause()
+    {
+        PauseStance = true;
+    }
+
+    private void Unpause()
+    {
+        PauseStance = false;
+    }
+
+    public override void Enter()
+    {
+        base.Enter();
+        _progress = 0f;
+    }
+
+    protected override bool UpdateEnter(float dt)
+    {
+        if (base.PauseStance) DoStanceExitAnimation(dt);
+        else DoStanceAnimation(dt);
+
+        return MathUtils.IsGreaterThanOrEqualTo(_progress, 1f);
+    }
+
+    protected override void UpdateActive(float dt)
+    {
+        if (base.PauseStance) DoStanceExitAnimation(dt);
+        else DoStanceAnimation(dt); //called here to allow re-entering stance after pausing
+    }
+
+    protected override bool UpdateExit(float dt)
+    {
+        DoStanceExitAnimation(dt);
+
+        //TODO: have switch statement with differnt blend values for different stances
+        //if transitioning to another stance, blend out until fully exited, if toggling off without another stance, blend back to default values
+        float threshold = StanceControllerInstance.NextStanceType != EStance.None ? PluginConfig.test19.Value : 0f;
+
+        return MathUtils.IsLessThanOrEqualTo(_progress, threshold); //depending on next stance, use a different value to start blending
+    }
+
+    private void DoStanceAnimation(float dt)
+    {
+
+        _progress += dt * PluginConfig.test1.Value;
+        _progress = Mathf.Clamp01(_progress);
+
+        var rotCurve = new Vector3Curve(PluginConfig.test11.Value, PluginConfig.test12.Value, PluginConfig.test13.Value);
+        StanceRotation = rotCurve.Evaluate(_progress);
+
+        var posCurve = new Vector3Curve(PluginConfig.test14.Value, PluginConfig.test15.Value, PluginConfig.test16.Value);
+        StancePosition = posCurve.Evaluate(_progress);
+
+        SetCanExit(true); //while active, can transition to another stance at any time
+    }
+
+    private void DoStanceExitAnimation(float dt)
+    {
+        _progress -= dt * PluginConfig.test1.Value;
+        _progress = Mathf.Clamp01(_progress);
+
+        var rotCurve = new Vector3Curve(PluginConfig.test11.Value, PluginConfig.test12.Value, PluginConfig.test13.Value);
+        StanceRotation = rotCurve.Evaluate(_progress);
+
+        var posCurve = new Vector3Curve(PluginConfig.test14.Value, PluginConfig.test15.Value, PluginConfig.test16.Value);
+        StancePosition = posCurve.Evaluate(_progress);
+    }
+}
+
+
+
+
+
+
+
+
+
+/*using EFT.Animations;
 using StanceOverhaul.Controllers;
 using System;
 using System.Collections.Generic;

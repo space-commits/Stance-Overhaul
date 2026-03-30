@@ -9,7 +9,7 @@ using static StanceOverhaul.Plugin;
 
 namespace StanceOverhaul
 {
-    public class StanceInputState : IControllerHelper
+    internal class StanceInputListener : IControllerHelper
     {
         private StanceState _stanceState;
 
@@ -27,7 +27,7 @@ namespace StanceOverhaul
             }
         }
 
-        public StanceInputState(StanceState stanceState)
+        public StanceInputListener(StanceState stanceState)
         {
             _stanceState = stanceState;
         }

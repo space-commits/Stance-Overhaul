@@ -1,149 +1,91 @@
-﻿using EFT.Animations;
-using EFT;
+﻿using RealismCommonLib.Utils;
 using StanceOverhaul.Enums;
-using System.Collections;
 using UnityEngine;
 using static RealismCommonLib.Plugin;
-using StanceOverhaul.Controllers;
-using System;
+using static StanceOverhaul.Plugin;
 
-namespace StanceOverhaul.Stances
+namespace StanceOverhaul.Stances;
+
+public class PatrolStance : StanceBase
 {
+    public override EStance StanceType => EStance.PatrolStance;
 
-    public class PatrolStance : StanceBase
+    float _progress;
+    float _speed = 5f;
+
+    protected override void OnInternalMagReload() => CancelStanceOnReload();
+    protected override void OnQuickMagReload() => CancelStanceOnReload();
+    protected override void OnMagReload() => CancelStanceOnReload();
+    protected override void OnCheckChamber() => CancelStanceOnManip();
+    protected override void OnRechamber() => CancelStanceOnManip();
+    protected override void OnMalfFix() => CancelStanceOnManip();
+
+    private void CancelStanceOnReload()
     {
-        public override EStance StanceType => EStance.PatrolStance;
-
-        private Vector3 _currentPos;
-
-        float _progress;
-        float _speed = 5f;
-
-
-        public override void Enter()
-        {
-            base.Enter();
-            _progress = 0f;
-        }
-
-        public override void Exit(bool force = false)
-        { 
-            base.Exit();
-            //no reset here - we reverse from current progress
-        }
-
-
-        private Vector3 GetPatrolPos()
-        {
-            return WeaponStateInstance.TreatAsPistol
-                ? new Vector3(0.05f, 0f, 0f)
-                : new Vector3(0.2f, 0.025f, 0.1f);
-        }
-
-        protected override bool UpdateEnter(float dt)
-        {
-            _progress += dt * _speed;
-            _progress = Mathf.Clamp01(_progress);
-
-            //float t = curve.Evaluate(_progress);, then pass this to Lerp.
-
-            _currentPos = Vector3.Lerp(Vector3.zero, GetPatrolPos(), _progress);
-
-            ApplyOffset();
-
-            return _progress >= 1f;
-        }
-
-        protected override void UpdateActive(float dt)
-        {
-            ApplyOffset();
-        }
-
-        protected override bool UpdateExit(float dt)
-        {
-            _progress -= dt * _speed;
-            _progress = Mathf.Clamp01(_progress);
-
-            _currentPos = Vector3.Lerp(Vector3.zero, GetPatrolPos(), _progress);
-
-            ApplyOffset();
-
-            return _progress <= 0f;
-        }
-
-        private void ApplyOffset() 
-        {
-            //spring stuff goes here, or set property that state controller has access to
-        }
+        if (!ReloadStateInstance.IsInReloadOpertation) return;
+        CancelStanceOnManip();
     }
 
-    //TODO: change to use animation curves
-    /*    public class PatrolStance : IStance
-        {
-            public bool DoStance { get; set; } = false;
+    private void CancelStanceOnManip()
+    {
+        TryExit(true);
+    }
 
-            public bool HasReset { get; private set; } = false;
+    public override void Enter()
+    {
+        base.Enter();
+        _progress = 0f;
+    }
 
-            public bool HasCompleted { get; private set; } = false;
+    protected override bool UpdateEnter(float dt)
+    {
+        if (PauseStance) DoStanceExitAnimation(dt);
+        else DoStanceAnimation(dt);
 
-            public bool ReadyToTransitionState { get; private set; } = false;
+        return MathUtils.IsGreaterThanOrEqualTo(_progress, 1f);
+    }
 
-            public Vector3 CurrentPosition { get; private set; } = Vector3.zero;
+    protected override void UpdateActive(float dt)
+    {
+        if (PauseStance) DoStanceExitAnimation(dt);
+        else DoStanceAnimation(dt); //called here to allow re-entering stance after pausing
+    }
 
-            public Quaternion CurrentRotation { get; private set; } = Quaternion.identity;
+    protected override bool UpdateExit(float dt)
+    {
+        DoStanceExitAnimation(dt);
 
-            public EStance StanceType 
-            { 
-                get
-                {
-                    return EStance.PatrolStance;
-                }
-            }
+        //TODO: have switch statement with differnt blend values for different stances
+        //if transitioning to another stance, blend out until fully exited, if toggling off without another stance, blend back to default values
+        float threshold =  StanceControllerInstance.NextStanceType != EStance.None ? PluginConfig.test18.Value : 0f; 
 
-            private StanceController _stanceController;
-            private ProceduralWeaponAnimation _pwa;
+        return MathUtils.IsLessThanOrEqualTo(_progress, threshold); //depending on next stance, use a different value to start blending
+    }
 
-            private Vector3 _currentRot = Vector3.zero;
+    private void DoStanceAnimation(float dt) 
+    {
+        _progress += dt * PluginConfig.test1.Value;
+        _progress = Mathf.Clamp01(_progress);
 
-            private Vector3 _riflePatrolPos = new Vector3(0.2f, 0.025f, 0.1f);
-            private Vector3 _riflePatrolRot = new Vector3(0.05f, -0.05f, -0.5f);
-            private Vector3 _pistolPatrolPos = new Vector3(0.05f, 0f, 0f);
-            private Vector3 _pistolPatrolRot = new Vector3(0.1f, -0.1f, -0.1f);
+        var rotCurve = new Vector3Curve(PluginConfig.test3.Value, PluginConfig.test4.Value, PluginConfig.test5.Value);
+        StanceRotation = rotCurve.Evaluate(_progress);
 
-            public PatrolStance(StanceController stanceController)
-            {
-                _stanceController = stanceController;
-                _pwa = PlayerStateInstance.Player.ProceduralWeaponAnimation;
-            }
+        var posCurve = new Vector3Curve(PluginConfig.test6.Value, PluginConfig.test7.Value, PluginConfig.test8.Value);
+        StancePosition = posCurve.Evaluate(_progress);
 
-            public void StanceUpdate()
-            {
-                DoPatrolStance();
-            }
+        SetCanExit(true); //while active, can transition to another stance at any time
+    }
 
-            public void DoPatrolStance()
-            {
-                Vector3 targetPos = DoStance ? Vector3.zero : WeaponStateInstance.TreatAsPistol ? _pistolPatrolPos : _riflePatrolPos;
-                CurrentPosition = Vector3.Lerp(CurrentPosition, targetPos, 5.5f * Time.deltaTime);
+    private void DoStanceExitAnimation(float dt) 
+    {
+        _progress -= dt * PluginConfig.test1.Value;
+        _progress = Mathf.Clamp01(_progress);
 
-                Vector3 targetRot = DoStance ? Vector3.zero : WeaponStateInstance.TreatAsPistol ? _pistolPatrolRot : _riflePatrolRot;
-                _currentRot = Vector3.Lerp(_currentRot, targetRot, 5.5f * Time.deltaTime);
-                CurrentRotation = Quaternion.Euler(_currentRot);
+        var rotCurve = new Vector3Curve(PluginConfig.test3.Value, PluginConfig.test4.Value, PluginConfig.test5.Value);
+        StanceRotation = rotCurve.Evaluate(_progress);
 
-                float distanceToComplete = Vector3.Distance(CurrentPosition, targetPos);
-                float distanceToReset = Vector3.Distance(CurrentPosition, targetPos);
-
-                if (distanceToComplete <= 0.05f)
-                    HasCompleted = true;
-                else 
-                    HasCompleted = false;
-
-                if (distanceToComplete <= 0.05f)
-                    HasReset = true;
-                else
-                    HasReset = false;
-
-                if (HasCompleted || HasReset)
-                    ReadyToTransitionState = false;
-            }*/
+        var posCurve = new Vector3Curve(PluginConfig.test6.Value, PluginConfig.test7.Value, PluginConfig.test8.Value);
+        StancePosition = posCurve.Evaluate(_progress);
+    }
 }
+

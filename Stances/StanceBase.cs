@@ -1,64 +1,132 @@
-﻿using System;
-using StanceOverhaul.Controllers;
-using StanceOverhaul.Controllers.StateControllers;
+﻿using RealismCommonLib.Events;
+using RealismCommonLib.Utils;
 using StanceOverhaul.Enums;
-using static Val;
+using System;
+using UnityEngine;
+using static RealismCommonLib.Plugin;
 
 namespace StanceOverhaul.Stances
 {
-    public abstract class StanceBase : IStance
+    public abstract class StanceBase : IStance, IDisposable
     {
         public EStanceState State => _state;
         public virtual EStance StanceType => EStance.None;
 
-        public bool IsActive => _state == EStanceState.Active;
-        public bool IsTransitioning => _state == EStanceState.Entering || _state == EStanceState.Exiting;
-       
-        public bool CanExit => _state == EStanceState.Active;
+        public bool IsActive => _state == EStanceState.Active || _state == EStanceState.Entering;
+
+        public Vector3 StancePosition { get; protected set; } = Vector3.zero;
+        public Vector3 StanceRotation { get; protected set; } = Vector3.zero;
+
+        protected bool _canExit = false;
+        protected bool _exitRequested = false;
 
         protected EStanceState _state = EStanceState.Inactive;
-
-        private bool _lastCanExit = false;
 
         public event Action<IStance> OnEnterStarted;
         public event Action<IStance> OnEnterCompleted;
         public event Action<IStance> OnExitStarted;
         public event Action<IStance> OnExitCompleted;
-        public event Action<IStance> OnCanExitChanged;
+
+        private const float MANIP_TIMER = 0.25f;
+        public bool PauseStance { get; protected set; } = false;
+        public DelayTimer ManipTimer { get; } = new DelayTimer(MANIP_TIMER);
+
+        public StanceBase()
+        {
+            ReloadEvents.WeaponStateReset += OnWeaponStateReset;
+            ReloadEvents.CheckAmmo += OnCheckAmmo;
+            ReloadEvents.ChamberCheck += OnCheckChamber;
+            ReloadEvents.Rechamber += OnRechamber;
+            ReloadEvents.MagReload += OnMagReload;
+            ReloadEvents.QuickMagReload += OnQuickMagReload;
+            ReloadEvents.InternalMagReload += OnInternalMagReload;
+            ReloadEvents.MalfFix += OnMalfFix;
+        }
+
+        public void Dispose()
+        {
+            ReloadEvents.WeaponStateReset -= OnWeaponStateReset;
+            ReloadEvents.CheckAmmo -= OnCheckAmmo;
+            ReloadEvents.ChamberCheck -= OnCheckChamber;
+            ReloadEvents.Rechamber -= OnRechamber;
+            ReloadEvents.MagReload -= OnMagReload;
+            ReloadEvents.QuickMagReload -= OnQuickMagReload;
+            ReloadEvents.InternalMagReload -= OnInternalMagReload;
+            ReloadEvents.MalfFix -= OnMalfFix;
+        }
+
+        protected virtual void OnWeaponStateReset() 
+        {
+            PauseStance = false;
+            ManipTimer.Start();
+        }
+
+        protected virtual void OnMalfFix() { }
+
+        protected virtual void OnRechamber() {}
+
+        protected virtual void OnCheckChamber() {}
+
+        protected virtual void OnCheckAmmo() {}
+
+        protected virtual void OnInternalMagReload() {}
+
+        protected virtual void OnMagReload() {}
+
+        protected virtual void OnQuickMagReload() {}
 
         public virtual void Enter()
         {
             if (_state != EStanceState.Inactive)
                 return;
 
-            _state = EStanceState.Entering;
+            ModLogger.LogWarning("stance Enter");
+
+            _state = EStanceState.Entering; 
             OnEnterStarted?.Invoke(this);
         }
 
-        public virtual void Exit(bool force = false)
+        public virtual void TryExit(bool force = false)
         {
-            if (_state == EStanceState.Inactive)
+            ModLogger.LogWarning("stance Exit");
+
+            if (_state == EStanceState.Inactive || _state == EStanceState.Exiting)
                 return;
 
-            if (!force && !CanExit)
-                return;
+            if (force)
+                _canExit = true;
 
+            _exitRequested = true;
+        }
+
+        protected void BeginExit()
+        {      
+            ModLogger.LogWarning("begin exit");
             if (_state == EStanceState.Exiting)
                 return;
 
+            ModLogger.LogWarning("set state to exiting");
             _state = EStanceState.Exiting;
             OnExitStarted?.Invoke(this);
         }
 
         public void StanceUpdate(float dt) 
         {
+            UpdateManipTimer();
+
+            if (_exitRequested && _canExit)
+            {
+                _exitRequested = false;
+                _canExit = false;
+                BeginExit();
+            }
+
             switch (_state)
             {
                 case EStanceState.Entering:
                     if (UpdateEnter(dt))
                     {
-                        _state = EStanceState.Active;
-                        OnEnterCompleted?.Invoke(this);
+                        OnEnter();
                     }
                     break;
                 case EStanceState.Active:
@@ -67,23 +135,41 @@ namespace StanceOverhaul.Stances
                 case EStanceState.Exiting:
                     if (UpdateExit(dt))
                     {
-                        _state = EStanceState.Inactive;
-                        OnExitCompleted?.Invoke(this);
+                        OnExit();
                     }
                     break;
             }
-            CheckCanExitChanged();
         }
 
-        //TODO: this is not a good implementation, try find another way notify controller that stance can exit
-        protected void CheckCanExitChanged()
+        private void OnEnter()
         {
-            bool currentExit = CanExit;
-            if (currentExit != _lastCanExit)
+            ModLogger.LogWarning("OnEnter");
+            _state = EStanceState.Active;
+            OnEnterCompleted?.Invoke(this);
+        }
+
+        private void OnExit()
+        {
+            ModLogger.LogWarning("OnExit");
+            _state = EStanceState.Inactive;
+            PauseStance = false;
+            ManipTimer.Stop();
+            OnExitCompleted?.Invoke(this);
+        }
+
+        private void UpdateManipTimer()
+        {
+            if (ManipTimer.Update())
             {
-                _lastCanExit = currentExit;
-                OnCanExitChanged?.Invoke(this);
+                PauseStance = false;
             }
+        }
+
+        protected void SetCanExit(bool value)
+        {
+            if (_canExit == value) return;
+
+            _canExit = value;
         }
 
         protected abstract bool UpdateEnter(float dt);

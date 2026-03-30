@@ -3,19 +3,22 @@ using System.Collections.Generic;
 using UnityEngine;
 using StanceOverhaul.Stances;
 using StanceOverhaul.Enums;
+using static RealismCommonLib.Plugin;
 
 namespace StanceOverhaul.Controllers.StateControllers
 {
-    public class StanceState : IControllerHelper
+    internal class StanceState : IControllerHelper
     {
         private IStance _current;
-        private IStance _queued;
+        private IStance _next;
 
         public IStance CurrentStance => _current;
+        public IStance NextStance => _next;
 
         public EStance CurrentStanceType => _current?.StanceType ?? EStance.None;
+        public EStance NextStanceType => _next?.StanceType ?? EStance.None;
 
-        public bool NoActiveStances => _current.State == EStanceState.Inactive && _queued == null; 
+        public bool NoActiveStances => _current.State == EStanceState.Inactive && _next == null;
 
         public void RunOnAwake()
         {
@@ -28,69 +31,57 @@ namespace StanceOverhaul.Controllers.StateControllers
         public void RunOnUpdate(float deltaTime)
         {
             _current?.StanceUpdate(deltaTime);
+            ProcessTransitions();
         }
 
-        public void CancelStances() 
+        private void ProcessTransitions()
         {
-            _current?.Exit(force: true);
-            _queued = null;
+            if (_next != null &&
+                _next != _current && 
+                (_current == null || _current.State == EStanceState.Inactive)) 
+            {
+                _current = _next;
+                _next = null;
+                _current.Enter();
+            }
         }
 
         public void RequestStance(IStance stance)
         {
-            //toggle off if pressing key for current stance
-            if (_current == stance)
+            _next = stance;
+
+            if (_next == _current && _current.IsActive) 
             {
-                _queued = null;
-                _current.Exit(force: true);
+                ModLogger.LogWarning("toggle off");
+
+                _next = null;
+                _current.TryExit(force: true);
                 return;
             }
 
-            _queued = stance;
-            TryProcessQueue();
-        }
-
-        private void TryProcessQueue()
-        {
-            if (_current == null)
+            if (_next == _current && !_current.IsActive)
             {
-                ActivateQueued();
+                ModLogger.LogWarning("ractivating");
+                _current.Enter();
+            }
+
+            if (_next != _current)
+            {
+                ModLogger.LogWarning("not current");
+
+                if (_current != null)
+                    _current.TryExit();
                 return;
             }
 
-            _current.OnExitCompleted += OnCurrentExitComplete;
-            _current.Exit(force: _current.IsTransitioning || !_current.CanExit);
         }
 
-        private void ActivateQueued()
+        public void CancelAll()
         {
-            if (_queued == null)
-                return;
+            _next = null;
 
-            _current = _queued;
-            _queued = null;
-
-            _current.OnCanExitChanged += OnCurrentCanExitChanged;
-
-            _current.OnEnterCompleted += OnEnterComplete;
-            _current.Enter();
-        }
-
-        private void OnCurrentCanExitChanged(IStance stance)
-        {
-            TryProcessQueue();
-        }
-
-        private void OnCurrentExitComplete(IStance stance)
-        {
-            _current.OnExitCompleted -= OnCurrentExitComplete;
-            ActivateQueued();
-        }
-
-        private void OnEnterComplete(IStance stance)
-        {
-            stance.OnEnterCompleted -= OnEnterComplete;
-            //optional: notify other systems
+            if (_current != null)
+                _current.TryExit(force: true);
         }
     }
 }

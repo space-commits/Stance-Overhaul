@@ -9,7 +9,7 @@ using static StanceOverhaul.Plugin;
 
 namespace StanceOverhaul
 {
-    public class StanceInputHandler : IControllerHelper
+    internal class StanceInputHandler : IControllerHelper
     {
         private StanceState _stanceState;
         private IStance _storedStance;
@@ -55,6 +55,14 @@ namespace StanceOverhaul
             RealismCommonLib.Events.PlayerEvents.OnWeaponDraw -= OnWeaponSwap;
             RealismCommonLib.Events.PlayerEvents.AimStateChanged -= OnADSToggled;
             RealismCommonLib.Events.PlayerEvents.OnShotFired -= OnShotFired;
+            StanceInputEvents.TogglePatrolStance -= TogglePatrolStance;
+            StanceInputEvents.ToggleHighReady -= ToggleHighReady;
+            StanceInputEvents.ToggleLowReady -= ToggleLowReady;
+            StanceInputEvents.ToggleShortStock -= ToggleShortStock;
+            StanceInputEvents.ToggleActiveAim -= ToggleActiveAim;
+            StanceInputEvents.OnActiveAimKeyDown -= OnActiveAimKeyDown;
+            StanceInputEvents.OnActiveAimKeyUp -= OnActiveAimKeyUp;
+            StanceInputEvents.ToggleMelee -= ToggleMelee;
         }
 
         public void StanceInputUpdate()
@@ -64,7 +72,7 @@ namespace StanceOverhaul
         public void OnWeaponSwap()
         {
             if (!PluginConfig.RememberStanceItem.Value && !PlayerStateInstance.WeaponIsReady)
-                _stanceState.CancelStances();
+                _stanceState.CancelAll();
         }
 
         public void OnShotFired()
@@ -78,9 +86,11 @@ namespace StanceOverhaul
                 || _stanceState.CurrentStanceType == EStance.ShortStock
                 || _stanceState.CurrentStanceType == EStance.PistolCompressed;
 
+
             if (!keepStance)
             {
-                _stanceState.CancelStances();
+                _stanceState.CancelAll();
+                _storedStance = null;
             }
         }
 
@@ -94,12 +104,14 @@ namespace StanceOverhaul
             ToggleStance(_storedStance);
         }
 
+        //TODO: this may need a rework
+        //maybe stances hould sub to ADS toggle and pause themselves, or handle cancelling themselves
         public void OnADSToggled()
         {
             if (AimStateInstance.IsAiming)
             {
                 _storedStance = _stanceState.CurrentStance;
-                _stanceState.CancelStances();
+                _stanceState.CancelAll();
             }
             else
             {
@@ -108,29 +120,35 @@ namespace StanceOverhaul
         }
 
         //TODO: call this from an aim event
+        //TODO: this may need a rework
         private void ToggleStance(
             IStance targetStance,
             bool setStoredStanceAsCurrent = false,
             bool setStoredStanceAsNone = false)
         {
+            if (targetStance == null) return;
+
+            ModLogger.LogWarning("requesting");
             _stanceState.RequestStance(targetStance);
 
             if (setStoredStanceAsCurrent && _storedStance != null)
                 _stanceState.RequestStance(_storedStance);
 
-            if (setStoredStanceAsCurrent)
+            if (setStoredStanceAsNone)
                 _storedStance = null;
         }
 
         //TODO: call this from an aim event
         public void TogglePatrolStance()
         {
+            ModLogger.LogWarning("toggle patrol");
             ToggleStance(StanceControllerInstance.PatrolStance, false, true);
         }
 
         private void ToggleLeftShoulder()
         {
-            //ToggleStance(StanceControllerInstance.LeftShoulder, false, true);
+            ModLogger.LogWarning("toggle left shoulder");
+            ToggleStance(StanceControllerInstance.LeftShoulder, false, true);
         }
 
         private void ToggleHighReady()

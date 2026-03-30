@@ -7,7 +7,7 @@ using static StanceOverhaul.Plugin;
 
 namespace StanceOverhaul.Controllers.StateControllers
 {
-    public class StanceMovementHandler : IControllerHelper
+    internal class StanceMovementHandler : IControllerHelper
     {
         private const float PATROL_STANCE_WALK_SPEED = 1.33f;
         private const float LOW_READY_WALK_SPEED = 1.15f;
@@ -78,16 +78,17 @@ namespace StanceOverhaul.Controllers.StateControllers
         }
 
         //TODO move some of this move to tac sprint controller?
+        //TODO implement
         private void UpdateSprintSpeed()
         {
-            float stanceSpeedBonus =
+         /*   float stanceSpeedBonus =
                 StanceControllerInstance.IsDoingTacSprint ? TAC_SPRINT_SPEED_BONUS * (1f + PlayerStateInstance.Player.Skills.EnduranceBuffRestoration.Value)
                 : 1f;
             _sprintSpeed.Multiplier = stanceSpeedBonus;
 
             float stanceAccelBonus = GetStanceSprintAccelBonus(_stanceState.CurrentStanceType, StanceControllerInstance.IsDoingTacSprint);
             _preSprintAccelSpeed.Multiplier = stanceAccelBonus;
-            _sprintAccelSpeed.Multiplier = stanceAccelBonus;
+            _sprintAccelSpeed.Multiplier = stanceAccelBonus;*/
         }
 
         private float GetStanceSprintAccelBonus(EStance stance, bool isTacSprint)

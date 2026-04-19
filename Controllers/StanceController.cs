@@ -310,6 +310,9 @@ namespace StanceOverhaul.Controllers
 
         public bool AwakeRan { get; private set; } = false;
 
+        public EStance CurrentStanceType => _stanceState.CurrentStanceType;
+        public EStance NextStanceType => _stanceState.NextStanceType;
+
         void Awake()
         {
             AwakeRan = true;
@@ -525,53 +528,9 @@ namespace StanceOverhaul.Controllers
             return PlayerStateInstance.Player.MovementContext.CurrentState.Name != EPlayerState.Stationary;
         }
 
-        public EStance CurrentStanceType => _stanceState.CurrentStanceType;
-
-        public EStance NextStanceType => _stanceState.NextStanceType;
-
-
-        public Vector3 CurrentStancePosition
-        {
-            get
-            {
-                return _stanceState.CurrentStance != null ? _stanceState.CurrentStance.StancePosition : Vector3.zero;
-            }
-        }
-
-        public Vector3 CurrentStanceRotation
-        {
-            get
-            {
-                return _stanceState.CurrentStance != null ? _stanceState.CurrentStance.StanceRotation : Vector3.zero;
-            }
-        }
-
-        public Vector3 NextStancePosition
-        {
-            get
-            {
-                return _stanceState.NextStance != null ? _stanceState.NextStance.StancePosition : Vector3.zero;
-            }
-        }
-
-        public Vector3 NextStanceRotation
-        {
-            get
-            {
-                return _stanceState.NextStance != null ? _stanceState.NextStance.StanceRotation : Vector3.zero;
-
-            }
-        }
-
-        private Vector3 _blendedRotation = Vector3.zero;
-        private Vector3 _blendedPostion = Vector3.zero;
-        private float _blendAlpha = 0f;
-
         private void ProceduralUpdate(float dt) 
         {
-
-            BlendStances(dt);
-
+            //TODO: set these outside of update, and based on weapon stats
             StanceRotationSpring.ReturnSpeed = PluginConfig.test9.Value;
             StancePositionSpring.ReturnSpeed = PluginConfig.test9.Value;
 
@@ -582,32 +541,14 @@ namespace StanceOverhaul.Controllers
             StancePositionSpring.FixedUpdate(dt);
         }
 
-        private void BlendStances(float dt)
-        {
-            if (_stanceState.CurrentStance != null)
-            {
-                if (_stanceState.NextStance == null)
-                {
-                    ModLogger.LogWarning("next is null");
-                    StancePositionSpring.Zero = CurrentStancePosition;
-                    StanceRotationSpring.Zero = CurrentStanceRotation;
-                    return;
-                }
-
-                _blendAlpha += dt * PluginConfig.test20.Value;
-
-                StancePositionSpring.Zero = Vector3.Lerp(CurrentStancePosition, NextStancePosition, _blendAlpha);
-                StanceRotationSpring.Zero = Vector3.Slerp(CurrentStanceRotation, NextStanceRotation, _blendAlpha);
-            }
-        }
-
+        //TODO: move reload bonuses to a reload controller class
         private void ApplyInternalReloadSpeedBonus()
         {
             float bonus = 1f;
             if (!ReloadStateInstance.IsAttemptingRevolverReload) 
             {
-                if (_stanceState.CurrentStance.StanceType == EStance.LowReady == true && !WeaponStateInstance.IsShotgun) bonus = LOW_READY_RELOAD_SPEED_BUFF;
-                else if (_stanceState.CurrentStance.StanceType == EStance.HighReady == true && WeaponStateInstance.IsShotgun) bonus = HIGH_READY_RELOAD_SPEED_BUFF;
+                if (CurrentStanceType == EStance.LowReady == true && !WeaponStateInstance.IsShotgun) bonus = LOW_READY_RELOAD_SPEED_BUFF;
+                else if (CurrentStanceType == EStance.HighReady == true && WeaponStateInstance.IsShotgun) bonus = HIGH_READY_RELOAD_SPEED_BUFF;
             }
             _internalMagReload.Multiplier = bonus;
         }
@@ -615,29 +556,29 @@ namespace StanceOverhaul.Controllers
         private void ApplyMagReloadSpeedBonuses() 
         {
             _magReload.Multiplier =
-               _stanceState.CurrentStance.StanceType == EStance.ActiveAiming && ShouldAllowActiveOnReload ? ACTIVE_AIM_RECHAMBER_SPEED_BUFF :
-               _stanceState.CurrentStance.StanceType == EStance.HighReady ? HIGH_READY_RELOAD_SPEED_BUFF :
+               CurrentStanceType == EStance.ActiveAiming && ShouldAllowActiveOnReload ? ACTIVE_AIM_RECHAMBER_SPEED_BUFF :
+               CurrentStanceType == EStance.HighReady ? HIGH_READY_RELOAD_SPEED_BUFF :
                1f;
         }
 
         private void ApplyCheckAmmoSpeedBonus() 
         {
-            _checkAmmo.Multiplier = _stanceState.CurrentStance.StanceType == EStance.HighReady == true ? HIGH_READY_CHECK_AMMO_SPEED_BUFF : 1f;
+            _checkAmmo.Multiplier = CurrentStanceType == EStance.HighReady ? HIGH_READY_CHECK_AMMO_SPEED_BUFF : 1f;
         }
 
         private void ApplyChamberSpeedBonus()
         {
             _rechamber.Multiplier =
-                _stanceState.CurrentStance.StanceType == EStance.ActiveAiming ? ACTIVE_AIM_RECHAMBER_SPEED_BUFF :
-                _stanceState.CurrentStance.StanceType == EStance.HighReady ? HIGH_READY_RECHAMBER_SPEED_BUFF :
+                CurrentStanceType == EStance.ActiveAiming ? ACTIVE_AIM_RECHAMBER_SPEED_BUFF :
+                CurrentStanceType == EStance.HighReady ? HIGH_READY_RECHAMBER_SPEED_BUFF :
                 1f;
         }
 
         private void ApplyChamberCheckSpeedBonus()
         {
             _checkChamber.Multiplier =
-                _stanceState.CurrentStance.StanceType == EStance.ActiveAiming ? ACTIVE_AIM_RECHAMBER_SPEED_BUFF :
-                _stanceState.CurrentStance.StanceType == EStance.HighReady ? HIGH_READY_RECHAMBER_SPEED_BUFF :
+                CurrentStanceType == EStance.ActiveAiming ? ACTIVE_AIM_RECHAMBER_SPEED_BUFF :
+                CurrentStanceType == EStance.HighReady ? HIGH_READY_RECHAMBER_SPEED_BUFF :
                 1f;
         }
 
@@ -789,7 +730,7 @@ namespace StanceOverhaul.Controllers
         private void DoMeleeEffect()
         {
             Player player = Singleton<GameWorld>.Instance.MainPlayer;
-            Player.FirearmController fc = player.HandsController as Player.FirearmController;
+            Player.FirearmController? fc = player.HandsController as Player.FirearmController;
             if (WeaponStateInstance.HasBayonet)
             {
                 AudioControllerInstance.PlayKnifeAttackSound(2);

@@ -12,6 +12,8 @@ namespace StanceOverhaul.Stances
         public Vector3 StanceRotation { get; }
         public Vector3 StancePosition { get; }
 
+        public bool CanTransition { get; }
+
         bool IsActive { get; }
 
         public EStanceState State { get; }

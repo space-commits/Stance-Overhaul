@@ -8,7 +8,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
-
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <Target Name="Build Cleanup" AfterTargets="Build">

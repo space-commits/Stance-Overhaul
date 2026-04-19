@@ -12,7 +12,7 @@ namespace StanceOverhaul
     internal class StanceInputHandler : IControllerHelper
     {
         private StanceState _stanceState;
-        private IStance _storedStance;
+        private IStance? _storedStance;
 
         public StanceInputHandler(StanceState stanceState)
         {
@@ -47,6 +47,7 @@ namespace StanceOverhaul
             StanceInputEvents.OnActiveAimKeyDown += OnActiveAimKeyDown;
             StanceInputEvents.OnActiveAimKeyUp += OnActiveAimKeyUp;
             StanceInputEvents.ToggleMelee += ToggleMelee;
+            StanceInputEvents.ToggleLeftShoulder += ToggleLeftShoulder;
             //StanceInputEvents.ToggleMounting += ToggleMounting; TODO: decide if will override BSG mounting
         }
 
@@ -63,6 +64,8 @@ namespace StanceOverhaul
             StanceInputEvents.OnActiveAimKeyDown -= OnActiveAimKeyDown;
             StanceInputEvents.OnActiveAimKeyUp -= OnActiveAimKeyUp;
             StanceInputEvents.ToggleMelee -= ToggleMelee;
+            StanceInputEvents.ToggleLeftShoulder -= ToggleLeftShoulder;
+
         }
 
         public void StanceInputUpdate()
@@ -101,7 +104,7 @@ namespace StanceOverhaul
 
         public void OnActiveAimKeyUp()
         {
-            ToggleStance(_storedStance);
+            //ToggleStance(_storedStance);
         }
 
         //TODO: this may need a rework
@@ -110,20 +113,23 @@ namespace StanceOverhaul
         {
             if (AimStateInstance.IsAiming)
             {
-                _storedStance = _stanceState.CurrentStance;
+                if (_stanceState.CurrentStance?.IsActive == true) 
+                    _storedStance = _stanceState.CurrentStance;
+
                 _stanceState.CancelAll();
             }
-            else
+            else if (_storedStance != null)
             {
                 ToggleStance(_storedStance);
+                _storedStance = null;
             }
         }
 
         //TODO: call this from an aim event
         //TODO: this may need a rework
         private void ToggleStance(
-            IStance targetStance,
-            bool setStoredStanceAsCurrent = false,
+            IStance? targetStance,
+            bool setCurrentToStoredStance = false,
             bool setStoredStanceAsNone = false)
         {
             if (targetStance == null) return;
@@ -131,7 +137,7 @@ namespace StanceOverhaul
             ModLogger.LogWarning("requesting");
             _stanceState.RequestStance(targetStance);
 
-            if (setStoredStanceAsCurrent && _storedStance != null)
+            if (setCurrentToStoredStance && _storedStance != null)
                 _stanceState.RequestStance(_storedStance);
 
             if (setStoredStanceAsNone)
@@ -169,15 +175,14 @@ namespace StanceOverhaul
         public void ToggleActiveAim()
         {
             //ToggleStance(StanceControllerInstance.ActiveAiming);
-            if (_stanceState.CurrentStance.StanceType != EStance.ActiveAiming)
-            {
-                ToggleStance(_storedStance);
-            }
+/*            if (_stanceState
+                .CurrentStance?.StanceType != EStance.ActiveAiming)
+                ToggleStance(_storedStance);*/
         }
 
         public void ToggleMelee()
         {
-            if (_stanceState.CurrentStance.StanceType == EStance.Melee)
+            if (_stanceState.CurrentStance?.StanceType == EStance.Melee)
                 return;
 
             //ToggleStance(StanceControllerInstance.Melee);

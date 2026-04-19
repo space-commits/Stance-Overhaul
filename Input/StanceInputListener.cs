@@ -1,4 +1,5 @@
-﻿using StanceOverhaul.Controllers.StateControllers;
+﻿using RealismCommonLib.Events;
+using StanceOverhaul.Controllers.StateControllers;
 using StanceOverhaul.Enums;
 using StanceOverhaul.Events;
 using StanceOverhaul.Stances;
@@ -34,6 +35,7 @@ namespace StanceOverhaul
 
         public void RunOnAwake()
         {
+            InputEvents.ToggleLeftStanceInput += StanceInputEvents.RaiseToggleLeftShoulder;
         }
 
         public void RunOnDestroy()

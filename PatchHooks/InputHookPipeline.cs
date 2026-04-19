@@ -75,6 +75,7 @@ namespace StanceOverhaul.Controllers.PatchHooks
             switch (ctx.Command)
             {
                 case ECommand.LeftStanceToggle:
+                    ModLogger.LogWarning("Overrding left shoulder");
                     return true;
                 case ECommand.WeaponMounting:
                     ModLogger.LogWarning("Mounting input override");
@@ -89,7 +90,7 @@ namespace StanceOverhaul.Controllers.PatchHooks
             switch (ctx.Command)
             {
                 case ECommand.LeftStanceToggle:
-                    LeftStanceOverride();
+                    //input system subs to ToggleLeftShoulder event, so no need to call anything here
                     break;
                 case ECommand.WeaponMounting:
                     MountingOverride();
@@ -159,12 +160,6 @@ namespace StanceOverhaul.Controllers.PatchHooks
                          player.ProceduralWeaponAnimation.SetMountingData(true, true);*//*
             }*/
         }
-
-        //TODO: replace with event
-        private void LeftStanceOverride()
-        {
-/*            if (!StanceControllerInstance.ShouldForceLowReady && !StanceControllerInstance.ShouldBlockAllStances) StanceControllerInstance.TargetStance = EStance.LeftShoulder;
-*/        }
 
         //TODO: replace instance paramaters and use state instance
         /*private void ChangeScopeModeOnMount(ProceduralWeaponAnimation pwa, FirearmController fc)

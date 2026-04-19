@@ -65,12 +65,13 @@ public class LeftStance : StanceBase
         //if transitioning to another stance, blend out until fully exited, if toggling off without another stance, blend back to default values
         float threshold = StanceControllerInstance.NextStanceType != EStance.None ? PluginConfig.test19.Value : 0f;
 
-        return MathUtils.IsLessThanOrEqualTo(_progress, threshold); //depending on next stance, use a different value to start blending
+        CanTransition = MathUtils.IsLessThanOrEqualTo(_progress, threshold);
+
+        return MathUtils.IsLessThanOrEqualTo(_progress, 0f);
     }
 
     private void DoStanceAnimation(float dt)
     {
-
         _progress += dt * PluginConfig.test1.Value;
         _progress = Mathf.Clamp01(_progress);
 

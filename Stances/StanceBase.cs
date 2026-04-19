@@ -1,5 +1,6 @@
 ﻿using RealismCommonLib.Events;
 using RealismCommonLib.Utils;
+using StanceOverhaul.Controllers.StateControllers;
 using StanceOverhaul.Enums;
 using System;
 using UnityEngine;
@@ -17,15 +18,17 @@ namespace StanceOverhaul.Stances
         public Vector3 StancePosition { get; protected set; } = Vector3.zero;
         public Vector3 StanceRotation { get; protected set; } = Vector3.zero;
 
+        public bool CanTransition { get; protected set; } = false;
+
         protected bool _canExit = false;
         protected bool _exitRequested = false;
 
         protected EStanceState _state = EStanceState.Inactive;
 
-        public event Action<IStance> OnEnterStarted;
-        public event Action<IStance> OnEnterCompleted;
-        public event Action<IStance> OnExitStarted;
-        public event Action<IStance> OnExitCompleted;
+        public event Action<IStance>? OnEnterStarted;
+        public event Action<IStance>? OnEnterCompleted;
+        public event Action<IStance>? OnExitStarted;
+        public event Action<IStance>? OnExitCompleted;
 
         private const float MANIP_TIMER = 0.25f;
         public bool PauseStance { get; protected set; } = false;
@@ -82,7 +85,8 @@ namespace StanceOverhaul.Stances
 
             ModLogger.LogWarning("stance Enter");
 
-            _state = EStanceState.Entering; 
+            CanTransition = false;
+            _state = EStanceState.Entering;
             OnEnterStarted?.Invoke(this);
         }
 

@@ -69,11 +69,11 @@ public class PatrolStance : StanceBase
         _progress += dt * PluginConfig.test1.Value;
         _progress = Mathf.Clamp01(_progress);
 
-        var rotCurve = new Vector3Curve(PluginConfig.test3.Value, PluginConfig.test4.Value, PluginConfig.test5.Value);
+/*        var rotCurve = new Vector3Curve(PluginConfig.test3.Value, PluginConfig.test4.Value, PluginConfig.test5.Value);
         StanceRotation = rotCurve.Evaluate(_progress);
 
         var posCurve = new Vector3Curve(PluginConfig.test6.Value, PluginConfig.test7.Value, PluginConfig.test8.Value);
-        StancePosition = posCurve.Evaluate(_progress);
+        StancePosition = posCurve.Evaluate(_progress);*/
 
         SetCanExit(true); //while active, can transition to another stance at any time
     }
@@ -82,12 +82,12 @@ public class PatrolStance : StanceBase
     {
         _progress -= dt * PluginConfig.test1.Value;
         _progress = Mathf.Clamp01(_progress);
-
+/*
         var rotCurve = new Vector3Curve(PluginConfig.test3.Value, PluginConfig.test4.Value, PluginConfig.test5.Value);
         StanceRotation = rotCurve.Evaluate(_progress);
 
         var posCurve = new Vector3Curve(PluginConfig.test6.Value, PluginConfig.test7.Value, PluginConfig.test8.Value);
-        StancePosition = posCurve.Evaluate(_progress);
+        StancePosition = posCurve.Evaluate(_progress);*/
     }
 }
 

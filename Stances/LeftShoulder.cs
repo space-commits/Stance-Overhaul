@@ -75,11 +75,11 @@ public class LeftStance : StanceBase
         _progress += dt * PluginConfig.test1.Value;
         _progress = Mathf.Clamp01(_progress);
 
-        var rotCurve = new Vector3Curve(PluginConfig.test11.Value, PluginConfig.test12.Value, PluginConfig.test13.Value);
+    /*    var rotCurve = new Vector3Curve(PluginConfig.test11.Value, PluginConfig.test12.Value, PluginConfig.test13.Value);
         StanceRotation = rotCurve.Evaluate(_progress);
 
         var posCurve = new Vector3Curve(PluginConfig.test14.Value, PluginConfig.test15.Value, PluginConfig.test16.Value);
-        StancePosition = posCurve.Evaluate(_progress);
+        StancePosition = posCurve.Evaluate(_progress);*/
 
         SetCanExit(true); //while active, can transition to another stance at any time
     }
@@ -89,11 +89,11 @@ public class LeftStance : StanceBase
         _progress -= dt * PluginConfig.test1.Value;
         _progress = Mathf.Clamp01(_progress);
 
-        var rotCurve = new Vector3Curve(PluginConfig.test11.Value, PluginConfig.test12.Value, PluginConfig.test13.Value);
+ /*       var rotCurve = new Vector3Curve(PluginConfig.test11.Value, PluginConfig.test12.Value, PluginConfig.test13.Value);
         StanceRotation = rotCurve.Evaluate(_progress);
 
         var posCurve = new Vector3Curve(PluginConfig.test14.Value, PluginConfig.test15.Value, PluginConfig.test16.Value);
-        StancePosition = posCurve.Evaluate(_progress);
+        StancePosition = posCurve.Evaluate(_progress);*/
     }
 }
 

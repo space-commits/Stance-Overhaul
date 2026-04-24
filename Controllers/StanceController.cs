@@ -298,15 +298,16 @@ namespace StanceOverhaul.Controllers
         private StanceMovementHandler _movementState;
         private StanceAimHandler _aimState;
         private StanceState _stanceState;
+        private StanceState2 _stanceState2;
 
         public Spring StancePositionSpring { get; private set; }
         public Spring StanceRotationSpring { get; private set; }
         public Spring PositionWiggleSpring { get; private set; }
         public Spring RotatationWiggleSpring { get; private set; }
 
-        private List<StanceBase> _stances = new List<StanceBase>();
-        public PatrolStance PatrolStance { get; private set; }
-        public LeftStance LeftShoulder { get; private set; }
+        private List<StanceBase2> _stances2 = new List<StanceBase2>();
+        public PatrolStance2 PatrolStance { get; private set; }
+        public LeftStance2 LeftShoulder { get; private set; }
 
         public bool AwakeRan { get; private set; } = false;
 
@@ -347,16 +348,16 @@ namespace StanceOverhaul.Controllers
         private void InitStances() 
         {
             PatrolStance =
-                InitStance(() => new PatrolStance());
+                InitStance(() => new PatrolStance2());
 
             LeftShoulder =
-                InitStance(() => new LeftStance());
+                InitStance(() => new LeftStance2());
         }
 
-        private T InitStance<T>(Func<T> factory) where T : StanceBase
+        private T InitStance<T>(Func<T> factory) where T : StanceBase2
         {
             var instance = factory();
-            _stances.Add(instance);
+            _stances2.Add(instance);
             return instance;
         }
 
@@ -373,6 +374,9 @@ namespace StanceOverhaul.Controllers
             _stanceState =
                 InitStateController(() => new StanceState());
 
+            _stanceState2 =
+                InitStateController(() => new StanceState2());
+
             _inputHookPipeline =
                 InitStateController(() => new InputHookPipeline(_stanceState));
 
@@ -383,7 +387,7 @@ namespace StanceOverhaul.Controllers
                 InitStateController(() => new StanceAimHandler());
 
             _inputHandler =
-                InitStateController(() => new StanceInputHandler(_stanceState));
+                InitStateController(() => new StanceInputHandler(_stanceState2));
 
             _inputListener =
                 InitStateController(() => new StanceInputListener(_stanceState));
@@ -424,7 +428,7 @@ namespace StanceOverhaul.Controllers
 
         private void RunStanceDispose() 
         {
-            foreach (StanceBase stance in _stances)
+            foreach (StanceBase2 stance in _stances2)
             {
                 stance.Dispose();
             }

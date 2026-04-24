@@ -80,6 +80,12 @@
     <Compile Update="Stances\Melee.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Stances\PatrolStance.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="State\StanceState2.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>

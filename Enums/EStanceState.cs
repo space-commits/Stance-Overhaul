@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace StanceOverhaul.Enums;
+﻿namespace StanceOverhaul.Enums;
 
 public enum EStanceState
 {

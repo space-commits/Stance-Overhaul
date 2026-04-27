@@ -6,85 +6,39 @@ using UnityEngine;
 using static RealismCommonLib.Plugin;
 using StanceOverhaul.Controllers;
 using System;
+using RealismCommonLib.Utils;
 
 namespace StanceOverhaul.Stances
 {
 
-    public class Melee : StanceBase
+/*    public class Melee : StanceBase
     {
-        public override EStance StanceType => EStance.Melee;
+        public override EStance StanceType => EStance.LeftShoulder;
 
-        private Vector3 _currentPos;
+        public override Vector3Curve EnterPositionCurve => _enterPos;
+        public override Vector3Curve EnterRotationCurve => _enterRot;
 
-        float _progress;
-        float _speed = 5f;
+        public override Vector3Curve ExitPositionCurve => _exitPos;
+        public override Vector3Curve ExitRotationCurve => _exitRot;
 
-        private bool _isHoldingBackMelee = false;
+        public override float BlendThreshold => 0.5f;
+        public override float BaseSpeed => 1f;
 
-        public bool IsReadyForBayonetCharge
+        private readonly Vector3Curve _enterPos;
+        private readonly Vector3Curve _enterRot;
+
+        private readonly Vector3Curve _exitPos;
+        private readonly Vector3Curve _exitRot;
+
+        public Melee()
         {
-            get
-            {
-                return (_isHoldingBackMelee);
-            }
+            _enterPos = RealismCommonLib.Utils.CurveDrawer.GetCurve("left_enter_position");
+            _enterRot = RealismCommonLib.Utils.CurveDrawer.GetCurve("left_enter_rotation");
+
+            _exitPos = RealismCommonLib.Utils.CurveDrawer.GetCurve("left_exit_position");
+            _exitRot = RealismCommonLib.Utils.CurveDrawer.GetCurve("left_exit_rotation");
         }
-
-        public override void Enter()
-        {
-            base.Enter();
-            _progress = 0f;
-        }
-
-        public override void TryExit(bool force = false)
-        { 
-            base.TryExit();
-            //no reset here - we reverse from current progress
-        }
-
-
-        private Vector3 GetPatrolPos()
-        {
-            return WeaponStateInstance.TreatAsPistol
-                ? new Vector3(0.05f, 0f, 0f)
-                : new Vector3(0.2f, 0.025f, 0.1f);
-        }
-
-        protected override bool UpdateEnter(float dt)
-        {
-            _progress += dt * _speed;
-            _progress = Mathf.Clamp01(_progress);
-
-            //float t = curve.Evaluate(_progress);, then pass this to Lerp.
-
-            _currentPos = Vector3.Lerp(Vector3.zero, GetPatrolPos(), _progress);
-
-            ApplyOffset();
-
-            return _progress >= 1f;
-        }
-
-        protected override void UpdateActive(float dt)
-        {
-            ApplyOffset();
-        }
-
-        protected override bool UpdateExit(float dt)
-        {
-            _progress -= dt * _speed;
-            _progress = Mathf.Clamp01(_progress);
-
-            _currentPos = Vector3.Lerp(Vector3.zero, GetPatrolPos(), _progress);
-
-            ApplyOffset();
-
-            return _progress <= 0f;
-        }
-
-        private void ApplyOffset() 
-        {
-            //spring stuff goes here, or set property that state controller has access to
-        }
-    }
+    }*/
 
     //TODO: change to use animation curves
     /*    public class PatrolStance : IStance

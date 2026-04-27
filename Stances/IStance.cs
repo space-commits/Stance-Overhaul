@@ -1,4 +1,5 @@
 ﻿using System;
+using RealismCommonLib.Utils;
 using StanceOverhaul.Controllers;
 using StanceOverhaul.Enums;
 using UnityEngine;
@@ -9,24 +10,17 @@ namespace StanceOverhaul.Stances
     {
         public EStance StanceType { get; }
 
-        public Vector3 StanceRotation { get; }
-        public Vector3 StancePosition { get; }
+        public abstract Vector3Curve EnterRotationCurve { get; }
+        public abstract Vector3Curve EnterPositionCurve { get; }
 
-        public bool CanTransition { get; }
+        public abstract Vector3Curve ExitRotationCurve { get; }
+        public abstract Vector3Curve ExitPositionCurve { get; }
 
-        bool IsActive { get; }
+        public float BlendThreshold { get; }
+        public float BaseSpeed { get; }
 
-        public EStanceState State { get; }
-
-        void Enter();
-        void TryExit(bool force = false);
-
-        void StanceUpdate(float deltaTime);
-
-        event Action<IStance> OnEnterStarted;
-        event Action<IStance> OnEnterCompleted;
-
-        event Action<IStance> OnExitStarted;
-        event Action<IStance> OnExitCompleted;
+        void OnEnter();
+        void OnExit();
+        void OnHoldUpdate(float deltaTime);
     }
 }

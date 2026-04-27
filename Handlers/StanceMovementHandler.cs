@@ -1,8 +1,7 @@
-﻿using EFT;
-using RealismCommonLib.ModifierHandlers;
-using RealismCommonLib.StateControllers;
+﻿using RealismCommonLib.ModifierHandlers;
 using StanceOverhaul.Enums;
-using static RealismCommonLib.Plugin;
+using StanceOverhaul.Handlers;
+using StanceOverhaul.State;
 using static StanceOverhaul.Plugin;
 
 namespace StanceOverhaul.Controllers.StateControllers
@@ -24,13 +23,6 @@ namespace StanceOverhaul.Controllers.StateControllers
         private FloatMultiplierHandle _sprintSpeed;
         private FloatMultiplierHandle _preSprintAccelSpeed;
         private FloatMultiplierHandle _sprintAccelSpeed;
-
-        private StanceState _stanceState;
-
-        public StanceMovementHandler(StanceState stanceState) 
-        {
-            _stanceState = stanceState;
-        }
 
         public void RunOnAwake()
         {
@@ -56,7 +48,7 @@ namespace StanceOverhaul.Controllers.StateControllers
 
         private void UpdateWalkSpeed()
         {
-            float stanceFactor = GetStanceWalkSpeedFactor(_stanceState.CurrentStanceType);
+            float stanceFactor = GetStanceWalkSpeedFactor(StanceControllerInstance.CurrentStanceType);
             _walkSpeed.Multiplier = stanceFactor;
         }
 

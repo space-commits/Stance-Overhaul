@@ -1,18 +1,20 @@
 ﻿using Comfort.Common;
 using EFT;
 using EFT.Animations;
-using HarmonyLib;
 using RealismCommonLib.Events;
 using RealismCommonLib.ModifierHandlers;
+using RealismCommonLib.Utils;
 using StanceOverhaul.Controllers.PatchHooks;
 using StanceOverhaul.Controllers.StateControllers;
 using StanceOverhaul.Enums;
+using StanceOverhaul.Handlers;
+using StanceOverhaul.Handlers.Aiming;
+using StanceOverhaul.Handlers.StanceInput;
 using StanceOverhaul.Stances;
+using StanceOverhaul.State;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
-using RealismCommonLib.Utils;
 using static RealismCommonLib.Plugin;
 
 namespace StanceOverhaul.Controllers
@@ -91,7 +93,10 @@ namespace StanceOverhaul.Controllers
         public float CameraMovmentForCollisionSpeed = 0.01f;
         public bool IsColliding = false;
         public bool PistolIsColliding = false;
-  
+
+        int _nFixedFrames = 0;
+        float _fixedTime = 0f;
+
         public bool IsBlindFiring 
         {
             get 
@@ -298,21 +303,21 @@ namespace StanceOverhaul.Controllers
         private StanceMovementHandler _movementState;
         private StanceAimHandler _aimState;
         private StanceState _stanceState;
-        private StanceState2 _stanceState2;
 
         public Spring StancePositionSpring { get; private set; }
         public Spring StanceRotationSpring { get; private set; }
         public Spring PositionWiggleSpring { get; private set; }
         public Spring RotatationWiggleSpring { get; private set; }
 
-        private List<StanceBase2> _stances2 = new List<StanceBase2>();
-        public PatrolStance2 PatrolStance { get; private set; }
-        public LeftStance2 LeftShoulder { get; private set; }
+        private List<StanceBase> _stances2 = new List<StanceBase>();
+        public PatrolStance PatrolStance { get; private set; }
+        public LeftStance LeftShoulder { get; private set; }
+        public LowReady LowReady { get; private set; }
+        public HighReady HighReady { get; private set; }
 
         public bool AwakeRan { get; private set; } = false;
 
         public EStance CurrentStanceType => _stanceState.CurrentStanceType;
-        public EStance NextStanceType => _stanceState.NextStanceType;
 
         void Awake()
         {
@@ -326,14 +331,33 @@ namespace StanceOverhaul.Controllers
             InitStances();
         }
 
-        public void LateUpdate()
+        // Emulates how BSG used FixedUpdate as a clock for FPS-independent animations
+        void FixedUpdate()
         {
-            float dt = Time.deltaTime;
+            _nFixedFrames++;
+            _fixedTime += Time.fixedDeltaTime;
+        }
+
+        void LateUpdate()
+        {
+            float regularTime = Time.deltaTime;
 
             if (!CanDoUpdate()) return;
 
-            ProceduralUpdate(dt);
-            RunUpdates(dt);
+            RunUpdates(regularTime);
+
+            if (_nFixedFrames > 0)
+            {
+                float fixedTime = _fixedTime / _nFixedFrames;
+
+                for (int i = 0; i < _nFixedFrames; i++)
+                {
+                    ProceduralUpdate(fixedTime);
+                }
+
+                _nFixedFrames = 0;
+                _fixedTime = 0f;
+            }
         }
 
         void OnDestroy()
@@ -348,13 +372,19 @@ namespace StanceOverhaul.Controllers
         private void InitStances() 
         {
             PatrolStance =
-                InitStance(() => new PatrolStance2());
+                InitStance(() => new PatrolStance());
 
             LeftShoulder =
-                InitStance(() => new LeftStance2());
+                InitStance(() => new LeftStance());
+
+            HighReady =
+                InitStance(() => new HighReady());
+
+            LowReady =
+                InitStance(() => new LowReady());
         }
 
-        private T InitStance<T>(Func<T> factory) where T : StanceBase2
+        private T InitStance<T>(Func<T> factory) where T : StanceBase
         {
             var instance = factory();
             _stances2.Add(instance);
@@ -374,23 +404,23 @@ namespace StanceOverhaul.Controllers
             _stanceState =
                 InitStateController(() => new StanceState());
 
-            _stanceState2 =
-                InitStateController(() => new StanceState2());
+            _stanceState =
+                InitStateController(() => new StanceState());
 
             _inputHookPipeline =
-                InitStateController(() => new InputHookPipeline(_stanceState));
+                InitStateController(() => new InputHookPipeline());
 
             _movementState =
-                InitStateController(() => new StanceMovementHandler(_stanceState));
+                InitStateController(() => new StanceMovementHandler());
 
             _aimState =
                 InitStateController(() => new StanceAimHandler());
 
             _inputHandler =
-                InitStateController(() => new StanceInputHandler(_stanceState2));
+                InitStateController(() => new StanceInputHandler(_stanceState));
 
             _inputListener =
-                InitStateController(() => new StanceInputListener(_stanceState));
+                InitStateController(() => new StanceInputListener());
 
             RunControllerAwake();
         }
@@ -428,7 +458,7 @@ namespace StanceOverhaul.Controllers
 
         private void RunStanceDispose() 
         {
-            foreach (StanceBase2 stance in _stances2)
+            foreach (StanceBase stance in _stances2)
             {
                 stance.Dispose();
             }
@@ -705,7 +735,7 @@ namespace StanceOverhaul.Controllers
 
         public bool IsIdle()
         {
-            return _stanceState.NoActiveStances;
+            return _stanceState.ActiveStance == null;
         }
 
         //Should be replaced with some sort of event based system.

@@ -69,27 +69,22 @@
       <HintPath>F:\SP EFT\SPT-406\EscapeFromTarkov_Data\Managed\UnityEngine.UI.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    <PackageReference Include="BepInEx.Core" Version="5.4.21" />
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>F:\SP EFT\SPT-406\EscapeFromTarkov_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.InputModule">
+      <HintPath>F:\SP EFT\SPT-406\EscapeFromTarkov_Data\Managed\UnityEngine.InputModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="BepInEx">
+      <HintPath>F:\SP EFT\SPT-406\BepInEx\core\BepInEx.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\RealismCommonLib\RealismCommonLib.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Stances\Melee.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="Stances\PatrolStance.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Update="State\StanceState2.cs">
-      <SubType>Code</SubType>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Events\" />
   </ItemGroup>
 
   <Target Name="PostBuildCopy" AfterTargets="Build">

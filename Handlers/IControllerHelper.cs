@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-namespace StanceOverhaul.Controllers.StateControllers
+namespace StanceOverhaul.Handlers
 {
     public interface IControllerHelper
     {

@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
 
-namespace StanceOverhaul.Controllers.StateControllers
+namespace StanceOverhaul.SpringAnimators
 {
-    internal class IdleAnimationHandler
+    internal class IdleAnimator : ISpringAnimator
     {
         //TODO: plays idle animations using its own spring instance
         //tracks when player is considered idle, using its own timers

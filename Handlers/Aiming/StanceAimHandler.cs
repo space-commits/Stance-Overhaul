@@ -4,8 +4,9 @@ using System.Collections.Generic;
 using System.Text;
 using RealismCommonLib.StateControllers;
 using static RealismCommonLib.Plugin;
+using StanceOverhaul.Handlers;
 
-namespace StanceOverhaul.Controllers.StateControllers
+namespace StanceOverhaul.Handlers.Aiming
 {
     public class StanceAimHandler : IControllerHelper
     {
@@ -29,20 +30,20 @@ namespace StanceOverhaul.Controllers.StateControllers
         }
 
         //TODO: handle ADS speed modifiers
- /*       public float StanceADSSpeedMulti
-        {
-            get
-            {
-                return
-                    IsIdle() ? IDLE_ADS_MULTI :
-                    StoredStance == EStance.ActiveAiming || TargetStance == EStance.ActiveAiming ? ACTIVE_AIM_ADS_MULTI :
-                    StoredStance == EStance.HighReady || TargetStance == EStance.HighReady ? HIGH_ADS_MULTI :
-                    StoredStance == EStance.LowReady || TargetStance == EStance.LowReady ? LOW_ADS_MULTI :
-                    StoredStance == EStance.ShortStock || TargetStance == EStance.ShortStock ? SHORT_STOCK_ADS_MULTI :
-                    StoredStance == EStance.PatrolStance || TargetStance == EStance.PatrolStance ? PATROL_ADS_MULTI :
-                    StoredStance == EStance.LeftShoulder || TargetStance == EStance.LeftShoulder ? LEFT_SHOULDER_ADS_MULTI : 1f;
-            }
-        }*/
+        /*       public float StanceADSSpeedMulti
+               {
+                   get
+                   {
+                       return
+                           IsIdle() ? IDLE_ADS_MULTI :
+                           StoredStance == EStance.ActiveAiming || TargetStance == EStance.ActiveAiming ? ACTIVE_AIM_ADS_MULTI :
+                           StoredStance == EStance.HighReady || TargetStance == EStance.HighReady ? HIGH_ADS_MULTI :
+                           StoredStance == EStance.LowReady || TargetStance == EStance.LowReady ? LOW_ADS_MULTI :
+                           StoredStance == EStance.ShortStock || TargetStance == EStance.ShortStock ? SHORT_STOCK_ADS_MULTI :
+                           StoredStance == EStance.PatrolStance || TargetStance == EStance.PatrolStance ? PATROL_ADS_MULTI :
+                           StoredStance == EStance.LeftShoulder || TargetStance == EStance.LeftShoulder ? LEFT_SHOULDER_ADS_MULTI : 1f;
+                   }
+               }*/
 
         private void CheckForAimBlockers()
         {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using RealismCommonLib.Events;
 
-namespace StanceOverhaul.Events
+namespace StanceOverhaul.Handlers.StanceInput
 {
     public static class StanceInputEvents
     {
@@ -17,6 +17,12 @@ namespace StanceOverhaul.Events
         public static event Action? OnActiveAimKeyDown;
         public static event Action? OnActiveAimKeyUp;
         public static event Action? ToggleOffAllStances;
+        public static event Action? OnAttemptedToFireFromStance;
+
+        internal static void RaiseOnAttemptedToFireFromStance()
+        {
+            BaseEventHandler.RaiseEvent(OnAttemptedToFireFromStance);
+        }
 
         internal static void RaiseToggleOffAllStances()
         {

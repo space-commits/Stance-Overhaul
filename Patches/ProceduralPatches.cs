@@ -830,22 +830,42 @@ namespace StanceOverhaul.Patches
     //Override to prevent BSG collision check when mounting or doing own collision detectio
     public class WeaponOverlapViewPatch : ModulePatch
     {
-        private static FieldInfo playerField;
+        private static FieldInfo _playerField;
 
         protected override MethodBase GetTargetMethod()
         {
-            playerField = AccessTools.Field(typeof(EFT.Player.FirearmController), "_player");
+            _playerField = AccessTools.Field(typeof(EFT.Player.FirearmController), "_player");
+
             return typeof(Player.FirearmController).GetMethod("WeaponOverlapView", BindingFlags.Instance | BindingFlags.Public);
         }
 
         [PatchPrefix]
         private static bool PatchPrefix(Player.FirearmController __instance)
         {
-            Player player = (Player)playerField.GetValue(__instance);
-/*            if (player.IsYourPlayer && (Plugin.StanceControllerInstance.CurrentStance == EStance.Mounting || Plugin.StanceControllerInstance.IsColliding))
+            Player player = (Player)_playerField.GetValue(__instance);
+            /*            if (player.IsYourPlayer && (Plugin.StanceControllerInstance.CurrentStance == EStance.Mounting || Plugin.StanceControllerInstance.IsColliding))
+                        {
+                            return false;
+                        }*/
+
+     /*     too jank to use TurnAway, but I could possible try to extract how they rotate the arms
+            if (Plugin.StanceControllerInstance.CurrentStanceType == EStance.PatrolStance) 
             {
+                Vector3 vector = player.ProceduralWeaponAnimation.HandsContainer.HandsPosition.Get();
+                player.ProceduralWeaponAnimation.OverlappingAllowsBlindfire = false;
+                player.ProceduralWeaponAnimation.TurnAway.OverlapsWithPlayer = true;
+                player.ProceduralWeaponAnimation.TurnAway.OriginZShift = vector.y;
+                player.ProceduralWeaponAnimation.TurnAway.OverlapDepth = PluginConfig.test18.Value;
+
+                _blendField.SetValue(player.ProceduralWeaponAnimation.TurnAway, PluginConfig.test15.Value);
+                _smoothInField.SetValue(player.ProceduralWeaponAnimation.TurnAway, PluginConfig.test16.Value);
+                _smoothOutField.SetValue(player.ProceduralWeaponAnimation.TurnAway, PluginConfig.test17.Value);
+
                 return false;
             }*/
+
+
+
             return true;
         }
     }

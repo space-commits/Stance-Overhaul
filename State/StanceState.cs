@@ -1,71 +1,57 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using StanceOverhaul.Enums;
+using StanceOverhaul.Handlers;
 using StanceOverhaul.Stances;
-using StanceOverhaul.Enums;
+using UnityEngine;
 using static RealismCommonLib.Plugin;
-using RealismCommonLib.Utils;
 
-namespace StanceOverhaul.Controllers.StateControllers
+namespace StanceOverhaul.State
 {
     internal class StanceState : IControllerHelper
     {
-        private IStance? _current;
-        private IStance? _next;
-        private IStance? _queued; //TODO: when a stance is toggled during a transition, queue up that stance and it becomes _next stance when appropriate
+        private StanceSlot? _primary;
+        private StanceSlot? _incoming;
+        private bool _incomingPaused;
 
-        public EStance CurrentStanceType
+        private Vector3 _smoothedPosition;
+        private Vector3 _smoothedRotation;
+
+        public float SmoothSpeed { get; private set; } = 20f; //TODO: expose in config?
+
+        public Vector3 StancePosition { get; private set; }
+        public Vector3 StanceRotation { get; private set; }
+
+        public EStance CurrentStanceType 
+        {
+            get
+            {
+                if (_primary != null && _primary.IsActive)
+                    return _primary.Stance.StanceType;
+                if (_incoming != null && !_incomingPaused && _incoming.IsActive)
+                    return _incoming.Stance.StanceType;
+                return EStance.None;
+            }
+        }
+
+        public bool PrimaryIsActive
+        {
+            get
+            {
+                return _primary != null && _primary.IsActive;
+            }
+        }
+
+        public IStance? ActiveStance 
         {
             get 
             {
-                return 
-                    _current == null || _current.State == EStanceState.Inactive ? EStance.None : 
-                    _current.StanceType;
+                if (_primary != null && _primary.IsActive)
+                    return _primary.Stance;
+                if (_incoming != null && !_incomingPaused && _incoming.IsActive)
+                    return _incoming.Stance;
+                return null;       
             }
         }
-
-        public IStance? CurrentStance => _current;
-
-        public EStance NextStanceType => _next?.StanceType ?? EStance.None;
-
-        public bool NoActiveStances => _current?.State == EStanceState.Inactive && _next == null;
-
-        private float _blendAlpha = 0f;
-
-        //TODO: move blending to own class
-        public Vector3 CurrentStancePosition
-        {
-            get
-            {
-                return _current != null ? _current.StancePosition : Vector3.zero;
-            }
-        }
-
-        public Vector3 CurrentStanceRotation
-        {
-            get
-            {
-                return _current != null ? _current.StanceRotation : Vector3.zero;
-            }
-        }
-
-        public Vector3 NextStancePosition
-        {
-            get
-            {
-                return _next != null ? _next.StancePosition : Vector3.zero;
-            }
-        }
-
-        public Vector3 NextStanceRotation
-        {
-            get
-            {
-                return _next != null ? _next.StanceRotation : Vector3.zero;
-
-            }
-        }
-
+  
         public void RunOnAwake()
         {
         }
@@ -76,113 +62,174 @@ namespace StanceOverhaul.Controllers.StateControllers
 
         public void RunOnUpdate(float deltaTime)
         {
-            BlendStances(deltaTime);
-            ProcessTransitions();
-        }
+            //update primary
+            _primary?.SlotUpdate(deltaTime);
 
-        private void BlendStances(float deltaTime)
-        {
-            if (_current == null) return;
-
-            _current.StanceUpdate(deltaTime);
-
-            if (_next == null)
+            //check blend threshold - unpause incoming if met
+            if (_incoming != null && _incomingPaused && _primary != null)
             {
-                _blendAlpha = 0f;
-                Plugin.StanceControllerInstance.StancePositionSpring.Zero = CurrentStancePosition;
-                Plugin.StanceControllerInstance.StanceRotationSpring.Zero = CurrentStanceRotation;
-                return;
+                if (_primary.Direction != 0
+                    && _primary.IdleProximity <= _primary.Stance.BlendThreshold) 
+                {
+                    ModLogger.LogWarning("== threshold met");
+                    _incomingPaused = false;
+                }
+
+                ModLogger.LogWarning($"IdleProximity {_primary.IdleProximity} BlendThreshold {_primary.Stance.BlendThreshold}");
             }
 
-            if (_next.State != EStanceState.Inactive) 
+            //upate incoming if not paused
+            if (_incoming != null && !_incomingPaused)
+                _incoming.SlotUpdate(deltaTime);
+
+            //cleanup completed slots: discard slots that reached idle
+            if (_primary?.IsAtIdle == true && _incoming == null)
+                _primary = null;
+
+            if (_incoming != null && _incoming.IsAtPose) 
             {
-                ModLogger.LogWarning("blending");
+                _primary = _incoming;
+                _incoming = null;
+                _incomingPaused = false;
 
-                _blendAlpha = Mathf.Clamp01(_blendAlpha + deltaTime * PluginConfig.test20.Value);
-
-                _next.StanceUpdate(deltaTime);
-
-                Plugin.StanceControllerInstance.StancePositionSpring.Zero = Vector3.Lerp(CurrentStancePosition, NextStancePosition, _blendAlpha);
-                Plugin.StanceControllerInstance.StanceRotationSpring.Zero = Vector3.Slerp(CurrentStanceRotation, NextStanceRotation, _blendAlpha);
-            }
-        }
-
-
-        //TODO: fix this mess, very hard to debug or make sense of it.
-        // Need to refactor request processing and transitions to allow two stances to exist
-        private void ProcessTransitions()
-        {
-            if (_current == null) return;
-
-            if (_current.State == EStanceState.Exiting
-                && _current.CanTransition == true
-                && _next?.State == EStanceState.Inactive)
-            {
-                ModLogger.LogWarning("starting transition");
-
-                _next.Enter();
+                ModLogger.LogWarning("== incoming is at idle");
             }
 
-            if (_next != null
-                && _next?.State != EStanceState.Inactive
-                && (MathUtils.IsGreaterThanOrEqualTo(_blendAlpha, 1f) || _current.State == EStanceState.Inactive))
-            {
-                ModLogger.LogWarning($"next stanfe state {_next?.State}");
-                ModLogger.LogWarning($"ending transition {_blendAlpha}");
+            //evaluate output from active slots
+            var rawPos = Vector3.zero;
+            var rawRot = Vector3.zero;
 
-                _blendAlpha = 0f;
-                _current = _next;
-                _next = null;
+            if (_primary != null && _incoming != null && !_incomingPaused) 
+            {
+                float weight = _incoming.Progress;
+                rawPos = Vector3.Lerp(_primary.EvaluatePosition(), _incoming.EvaluatePosition(), weight);
+                rawRot = Vector3.Lerp(_primary.EvaluateRotation(), _incoming.EvaluateRotation(), weight);
+            }
+            else if (_primary != null) 
+            {
+                rawPos = _primary.EvaluatePosition();
+                rawRot = _primary.EvaluateRotation();
+            }
+            else if (_incoming != null)
+            {
+                rawPos = _incoming.EvaluatePosition();
+                rawRot = _incoming.EvaluateRotation();
             }
 
+            //output smoothing
+            float smoothFactor = Mathf.Clamp01(deltaTime * PluginConfig.test19.Value);
+            _smoothedPosition = Vector3.Lerp(_smoothedPosition, rawPos, smoothFactor);
+            _smoothedRotation = Vector3.Lerp(_smoothedRotation, rawRot, smoothFactor);
+
+            StancePosition = _smoothedPosition;
+            StanceRotation = _smoothedRotation;
+
+            //TODO: movre responsibility to controller or different class
+            Plugin.StanceControllerInstance.StancePositionSpring.Zero = StancePosition;
+            Plugin.StanceControllerInstance.StanceRotationSpring.Zero = StanceRotation;
         }
 
         public void RequestStance(IStance stance)
         {
-
-            if (stance != _current && _current == null)
+            // no active stance: simple enter
+            if (_primary == null && _incoming == null)
             {
-                ModLogger.LogWarning("toggling on for first time");
-                _current = stance;
-                _next = null;
-                _current.Enter();
+                ModLogger.LogWarning("toggle stance from no stance");
+                _primary = new StanceSlot(stance, ECurveType.Enter, 0f, +1);
+                stance.OnEnter();
                 return;
             }
 
-            if (stance == _current && _current.IsActive) 
+            // same stance as primary: toggle exit or reverse
+            if (_primary?.Stance == stance && _incoming == null)
             {
-                ModLogger.LogWarning("toggle off");
+                //holding -> switch to exit curve
+                if (_primary.Direction == 0)
+                {
+                    ModLogger.LogWarning("switch to exit curve from hold");
+                    _primary.ActiveCurve = ECurveType.Exit;
+                    _primary.Progress = 0f;
+                    _primary.Direction = +1;
+                    stance.OnExit();
+                }
+                else if (_primary.IsHeadingToIdle) // heading to idle -> reverse toward pose
+                {
+                    ModLogger.LogWarning("reverse direction towards pose");
+                    _primary.Direction = -1; //should this be +1 or -1?
+                    stance.OnEnter(); 
+                }
+                else // heading to pose -> reverse toward idle
+                {
+                    ModLogger.LogWarning("reverse direction towards idle");
+                    _primary.Direction = -1; //should this be +1 or -1?
+                    stance.OnExit(); 
+                }
+                return;      
+            }
 
-                _current.TryExit(force: true);
+            //cancel incoming during blend
+            if (_incoming?.Stance == stance) 
+            {
+                ModLogger.LogWarning($"cancel incoming during blend");
+                BeginExit(_incoming);
                 return;
             }
 
-            if (stance == _current && !_current.IsActive)
+            //third stance during blend
+            if (_incoming != null)
             {
-                ModLogger.LogWarning("reactivating");
-                _current.Enter();
-                return;
+                ModLogger.LogWarning("third stance during blend");
+                //collapse: drop primary, promte incoming, start its exit
+                _primary = _incoming;
+                _incoming = null;
+                BeginExit(_primary);
+            }
+            else if (_primary != null)
+            {
+                ModLogger.LogWarning($"normal transition A -> B {stance.StanceType}");
+                //normal transition A -> B
+                BeginExit(_primary);
             }
 
-            if (stance != _current)
+            _incoming = new StanceSlot(stance, ECurveType.Enter, 0f, +1);
+            _incomingPaused = true; //will be unpaused once blend threshold is met
+            stance.OnEnter();
+            ModLogger.LogWarning($"incoming queued and paused {stance.StanceType}");
+        }
+
+        public void BeginExit(StanceSlot slot)
+        {
+            if (slot.Direction == 0) //holding -> switch to exit curve
             {
-                ModLogger.LogWarning("not current");
-
-                _next = stance;
-
-                if (_current != null)
-                    _current.TryExit();
+                ModLogger.LogWarning($"switch to exit curve  {slot.Stance.StanceType}");
+                slot.ActiveCurve = ECurveType.Exit;
+                slot.Progress = 0f;
+                slot.Direction = +1;
+            }
+            else if (slot.IsHeadingToIdle) // already heading to idle: no change needed
+            {
+                ModLogger.LogWarning($"headed to idle: on change  {slot.Stance.StanceType}");
 
                 return;
             }
+            else // heading to pose -> change direction to idle, stay on the same curve, just reverse
+            {
+                ModLogger.LogWarning($"reverse direction {slot.Stance.StanceType}");
+                slot.Direction *= -1; //should this be +1 or -1?
+            }
+
+            slot.Stance.OnExit();
         }
 
         public void CancelAll()
         {
-            _next = null;
+            ModLogger.LogWarning("cancel all");
 
-            if (_current != null)
-                _current.TryExit(force: true);
+            if (_primary != null)
+                BeginExit(_primary);
+
+            if (_incoming != null)
+                BeginExit(_incoming);
         }
     }
 }

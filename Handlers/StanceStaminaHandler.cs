@@ -1,5 +1,6 @@
 ﻿using EFT;
 using RealismCommonLib.ModifierHandlers;
+using StanceOverhaul.Handlers;
 using StanceOverhaul.Stances;
 using System;
 using System.Collections.Generic;

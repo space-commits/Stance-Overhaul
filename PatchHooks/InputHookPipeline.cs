@@ -4,6 +4,8 @@ using EFT.InputSystem;
 using RealismCommonLib.PatchPipeline;
 using StanceOverhaul.Controllers.StateControllers;
 using StanceOverhaul.Enums;
+using StanceOverhaul.Handlers;
+using StanceOverhaul.Handlers.StanceInput;
 using System;
 using UnityEngine;
 using static EFT.Player;
@@ -18,13 +20,6 @@ namespace StanceOverhaul.Controllers.PatchHooks
         private IDisposable _inputOverride;
         private IDisposable _inputOverrideHandler;
         
-        private StanceState _stanceState;
-
-        public InputHookPipeline(StanceState stanceState)
-        {
-            _stanceState = stanceState;
-        }
-
         public void RunOnAwake()
         {
             RegisterWithPipelines();
@@ -120,7 +115,7 @@ namespace StanceOverhaul.Controllers.PatchHooks
 
             if (shouldVeto)
             {
-                _stanceState.CancelAll();
+                StanceInputEvents.RaiseOnAttemptedToFireFromStance(); 
             }
 
             return shouldVeto;

@@ -1,19 +1,15 @@
 ﻿using RealismCommonLib.Events;
-using StanceOverhaul.Controllers.StateControllers;
 using StanceOverhaul.Enums;
-using StanceOverhaul.Events;
-using StanceOverhaul.Stances;
+using StanceOverhaul.State;
 using System.Linq;
 using UnityEngine;
 using static RealismCommonLib.Plugin;
 using static StanceOverhaul.Plugin;
 
-namespace StanceOverhaul
+namespace StanceOverhaul.Handlers.StanceInput
 {
     internal class StanceInputListener : IControllerHelper
     {
-        private StanceState _stanceState;
-
         private bool _activeAimWasTriggered;
         private bool _meleeIsToggleable = true;
         private float _meleeTimer = 0f;
@@ -28,11 +24,6 @@ namespace StanceOverhaul
             }
         }
 
-        public StanceInputListener(StanceState stanceState)
-        {
-            _stanceState = stanceState;
-        }
-
         public void RunOnAwake()
         {
             InputEvents.ToggleLeftStanceInput += StanceInputEvents.RaiseToggleLeftShoulder;
@@ -44,12 +35,12 @@ namespace StanceOverhaul
 
         public void RunOnUpdate(float deltaTime)
         {
-            StanceInputUpdate();
+            StanceInputUpdate(deltaTime);
         }
 
-        public void StanceInputUpdate()
+        public void StanceInputUpdate(float deltaTime)
         {
-            MeleeCooldownTimer();
+            MeleeCooldownTimer(deltaTime);
 
             if (PlayerStateInstance.WeaponIsReady &&
                 !PlayerStateInstance.IsUsingStationaryWeapon &&
@@ -70,11 +61,11 @@ namespace StanceOverhaul
         }
 
         //TODO: Replace with time gate?
-        public void MeleeCooldownTimer()
+        public void MeleeCooldownTimer(float deltaTime)
         {
             if (_meleeIsToggleable) return;
 
-            _meleeTimer += Time.deltaTime;
+            _meleeTimer += deltaTime;
 
             if (_meleeTimer >= 0.25f)
             {
@@ -88,51 +79,80 @@ namespace StanceOverhaul
             if (!PluginConfig.UseMouseWheelStance.Value) return;
 
             //TODO: get actual player keybinds
-            bool isHoldingMagSelect = Input.GetKey(KeyCode.R);
+            bool isHoldingMagSelect = UnityEngine.Input.GetKey(KeyCode.R);
             bool isHoldingHeightStance = Input.GetKey(KeyCode.C);
             bool isHoldingKeyModifier = Input.GetKey(KeyCode.C);
 
-            if (Input.GetKey(PluginConfig.StanceWheelComboKeyBind.Value.MainKey) &&
+            if (UnityEngine.Input.GetKey(PluginConfig.StanceWheelComboKeyBind.Value.MainKey) &&
                 PluginConfig.UseMouseWheelPlusKey.Value ||
                 !PluginConfig.UseMouseWheelPlusKey.Value && !Input.GetKey(KeyCode.LeftControl) && !Input.GetKey(KeyCode.LeftAlt))
             {
                 float scrollDelta = Input.mouseScrollDelta.y;
-                if (scrollDelta != 0f)
-                {
-                    HandleScrollInput(scrollDelta);
-                }
+
+                if (Mathf.Abs(scrollDelta) < 0.1f)
+                    return;
+
+                int dir = scrollDelta > 0 ? 1 : -1;
+
+                HandleScrollInput(dir);
             }
         }
 
-        private void HandleScrollInput(float scrollIncrement)
+        private void HandleScrollInput(float direction)
         {
-            var stance = _stanceState.CurrentStanceType;
+            var current =  StanceControllerInstance.CurrentStanceType;
 
-            if (scrollIncrement == -1)
+            if (current == EStance.None)
+                current = EStance.None;
+
+            if (direction < 0)
             {
-                if (stance == EStance.HighReady)
+                ModLogger.LogWarning($"-1 {current}");
+
+                // Idle → LowReady
+                if (current == EStance.None)
+                {
+                    StanceInputEvents.RaiseToggleLowReady();
+                    return;
+                }
+
+                // HighReady → LowReady (optional direct swap if already high)
+                if (current == EStance.HighReady)
                 {
                     StanceInputEvents.RaiseToggleHighReady();
                     return;
                 }
 
-                if (stance != EStance.LowReady)
-                {
-                    StanceInputEvents.RaiseToggleLowReady();
-                }
+                // LowReady → no-op
+                if (current == EStance.LowReady)
+                    return;
 
                 return;
             }
 
-            if (scrollIncrement == 1 && stance != EStance.HighReady)
+            if (direction > 0)
             {
-                if (stance == EStance.LowReady)
+                ModLogger.LogWarning($"+1  {current}");
+
+                // LowReady → Idle
+                if (current == EStance.LowReady)
                 {
                     StanceInputEvents.RaiseToggleLowReady();
                     return;
                 }
 
-                StanceInputEvents.RaiseToggleHighReady();
+                // Idle → HighReady
+                if (current == EStance.None)
+                {
+                    StanceInputEvents.RaiseToggleHighReady();
+                    return;
+                }
+
+                // HighReady → no-op
+                if (current == EStance.HighReady)
+                    return;
+
+                return;
             }
         }
 

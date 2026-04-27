@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace StanceOverhaul.Handlers
+namespace StanceOverhaul.SpringAnimators
 {
     internal class WiggleAnimator : ISpringAnimator
     {

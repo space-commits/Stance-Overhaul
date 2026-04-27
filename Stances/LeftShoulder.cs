@@ -10,98 +10,30 @@ public class LeftStance : StanceBase
 {
     public override EStance StanceType => EStance.LeftShoulder;
 
-    float _progress;
-    float _speed = 5f;
+    public override Vector3Curve EnterPositionCurve => _enterPos;
+    public override Vector3Curve EnterRotationCurve => _enterRot;
 
-    protected override void OnWeaponStateReset() => Unpause();
-    protected override void OnInternalMagReload() => PauseStanceOnReload();
-    protected override void OnQuickMagReload() => PauseStanceOnReload();
-    protected override void OnMagReload() => PauseStanceOnReload();
-    protected override void OnCheckChamber() => Pause();
-    protected override void OnRechamber() => Pause();
-    protected override void OnMalfFix() => Pause();
+    public override Vector3Curve ExitPositionCurve => _exitPos;
+    public override Vector3Curve ExitRotationCurve => _exitRot;
 
-    private void PauseStanceOnReload()
+    public override float BlendThreshold => 0.15f;
+    public override float BaseSpeed => 3f;
+
+    private readonly Vector3Curve _enterPos;
+    private readonly Vector3Curve _enterRot;
+
+    private readonly Vector3Curve _exitPos;
+    private readonly Vector3Curve _exitRot;
+
+    public LeftStance()
     {
-        if (!ReloadStateInstance.IsInReloadOpertation) return;
-        Pause();
-    }
+        _enterPos = RealismCommonLib.Utils.CurveDrawer.GetCurve("left_enter_position");
+        _enterRot = RealismCommonLib.Utils.CurveDrawer.GetCurve("left_enter_rotation");
 
-    private void Pause()
-    {
-        PauseStance = true;
-    }
-
-    private void Unpause()
-    {
-        PauseStance = false;
-    }
-
-    public override void Enter()
-    {
-        base.Enter();
-        _progress = 0f;
-    }
-
-    protected override bool UpdateEnter(float dt)
-    {
-        if (base.PauseStance) DoStanceExitAnimation(dt);
-        else DoStanceAnimation(dt);
-
-        return MathUtils.IsGreaterThanOrEqualTo(_progress, 1f);
-    }
-
-    protected override void UpdateActive(float dt)
-    {
-        if (base.PauseStance) DoStanceExitAnimation(dt);
-        else DoStanceAnimation(dt); //called here to allow re-entering stance after pausing
-    }
-
-    protected override bool UpdateExit(float dt)
-    {
-        DoStanceExitAnimation(dt);
-
-        //TODO: have switch statement with differnt blend values for different stances
-        //if transitioning to another stance, blend out until fully exited, if toggling off without another stance, blend back to default values
-        float threshold = StanceControllerInstance.NextStanceType != EStance.None ? PluginConfig.test19.Value : 0f;
-
-        CanTransition = MathUtils.IsLessThanOrEqualTo(_progress, threshold);
-
-        return MathUtils.IsLessThanOrEqualTo(_progress, 0f);
-    }
-
-    private void DoStanceAnimation(float dt)
-    {
-        _progress += dt * PluginConfig.test1.Value;
-        _progress = Mathf.Clamp01(_progress);
-
-    /*    var rotCurve = new Vector3Curve(PluginConfig.test11.Value, PluginConfig.test12.Value, PluginConfig.test13.Value);
-        StanceRotation = rotCurve.Evaluate(_progress);
-
-        var posCurve = new Vector3Curve(PluginConfig.test14.Value, PluginConfig.test15.Value, PluginConfig.test16.Value);
-        StancePosition = posCurve.Evaluate(_progress);*/
-
-        SetCanExit(true); //while active, can transition to another stance at any time
-    }
-
-    private void DoStanceExitAnimation(float dt)
-    {
-        _progress -= dt * PluginConfig.test1.Value;
-        _progress = Mathf.Clamp01(_progress);
-
- /*       var rotCurve = new Vector3Curve(PluginConfig.test11.Value, PluginConfig.test12.Value, PluginConfig.test13.Value);
-        StanceRotation = rotCurve.Evaluate(_progress);
-
-        var posCurve = new Vector3Curve(PluginConfig.test14.Value, PluginConfig.test15.Value, PluginConfig.test16.Value);
-        StancePosition = posCurve.Evaluate(_progress);*/
+        _exitPos = RealismCommonLib.Utils.CurveDrawer.GetCurve("left_exit_position");
+        _exitRot = RealismCommonLib.Utils.CurveDrawer.GetCurve("left_exit_rotation");
     }
 }
-
-
-
-
-
-
 
 
 

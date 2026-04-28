@@ -27,11 +27,7 @@ namespace StanceOverhaul.State
         {
             get
             {
-                if (_primary != null && _primary.IsActive)
-                    return _primary.Stance.StanceType;
-                if (_incoming != null && !_incomingPaused && _incoming.IsActive)
-                    return _incoming.Stance.StanceType;
-                return EStance.None;
+                return ActiveStance?.StanceType ?? EStance.None;
             }
         }
 
@@ -39,13 +35,16 @@ namespace StanceOverhaul.State
         {
             get 
             {
-                if (_primary != null && _primary.IsActive)
-                    return _primary.Stance;
-                if (_incoming != null && !_incomingPaused && _incoming.IsActive)
+                if (_incoming != null && !_incomingPaused && _incoming.IsAtOrHeadingToPose)
                     return _incoming.Stance;
+
+                if (_primary != null && _primary.IsAtOrHeadingToPose)
+                    return _primary.Stance;
                 return null;       
             }
         }
+
+        public bool IsIdle => ActiveStance == null ;
   
         public void RunOnAwake()
         {
@@ -239,8 +238,17 @@ namespace StanceOverhaul.State
             if (_primary != null)
                 BeginExit(_primary);
 
-            if (_incoming != null)
+            if (_incoming == null) return;
+ 
+            if (_incomingPaused)
+            {
+                _incoming = null;
+                _incomingPaused = false;
+            }
+            else
+            {
                 BeginExit(_incoming);
+            }
         }
     }
 }

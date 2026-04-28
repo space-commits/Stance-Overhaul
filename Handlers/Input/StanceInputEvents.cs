@@ -11,7 +11,6 @@ namespace StanceOverhaul.Handlers.StanceInput
         public static event Action? ToggleLowReady;
         public static event Action? ToggleShortStock;
         public static event Action? ToggleActiveAim;
-        public static event Action? ToggleLeftShoulder;
         public static event Action? TogglePatrolStance;
         public static event Action? ToggleMelee;
         public static event Action? OnActiveAimKeyDown;
@@ -32,11 +31,6 @@ namespace StanceOverhaul.Handlers.StanceInput
         internal static void RaiseTogglePatrolStance()
         {
             BaseEventHandler.RaiseEvent(TogglePatrolStance);
-        }
-
-        internal static void RaiseToggleLeftShoulder()
-        {
-            BaseEventHandler.RaiseEvent(ToggleLeftShoulder);
         }
 
         internal static void RaiseToggleHighReady()

@@ -1,4 +1,5 @@
-﻿using StanceOverhaul.Enums;
+﻿using RealismCommonLib.Events;
+using StanceOverhaul.Enums;
 using StanceOverhaul.Stances;
 using StanceOverhaul.State;
 using static RealismCommonLib.Plugin;
@@ -46,7 +47,7 @@ namespace StanceOverhaul.Handlers.StanceInput
             StanceInputEvents.OnActiveAimKeyDown += OnActiveAimKeyDown;
             StanceInputEvents.OnActiveAimKeyUp += OnActiveAimKeyUp;
             StanceInputEvents.ToggleMelee += ToggleMelee;
-            StanceInputEvents.ToggleLeftShoulder += ToggleLeftShoulder;
+            InputEvents.ToggleLeftStanceInput += ToggleLeftShoulder;
             StanceInputEvents.OnAttemptedToFireFromStance += OnAttemptedToFireFromStance;
             //StanceInputEvents.ToggleMounting += ToggleMounting; TODO: decide if will override BSG mounting
         }
@@ -64,7 +65,7 @@ namespace StanceOverhaul.Handlers.StanceInput
             StanceInputEvents.OnActiveAimKeyDown -= OnActiveAimKeyDown;
             StanceInputEvents.OnActiveAimKeyUp -= OnActiveAimKeyUp;
             StanceInputEvents.ToggleMelee -= ToggleMelee;
-            StanceInputEvents.ToggleLeftShoulder -= ToggleLeftShoulder;
+            InputEvents.ToggleLeftStanceInput -= ToggleLeftShoulder;
             StanceInputEvents.OnAttemptedToFireFromStance -= OnAttemptedToFireFromStance;
         }
 

@@ -88,7 +88,7 @@
   </ItemGroup>
 
   <Target Name="PostBuildCopy" AfterTargets="Build">
-    <Copy SourceFiles="$(TargetDir)$(TargetFileName)" DestinationFolder="F:\SP EFT\SPT-406\BepInEx\plugins\" />
+    <Copy SourceFiles="$(TargetDir)$(TargetFileName)" DestinationFolder="F:\SP EFT\SPT-406\BepInEx\plugins\Realism" />
   </Target>
 
 </Project>

@@ -26,7 +26,6 @@ namespace StanceOverhaul.Handlers.StanceInput
 
         public void RunOnAwake()
         {
-            InputEvents.ToggleLeftStanceInput += StanceInputEvents.RaiseToggleLeftShoulder;
         }
 
         public void RunOnDestroy()

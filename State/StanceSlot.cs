@@ -35,7 +35,7 @@ internal class StanceSlot
         (ActiveCurve == ECurveType.Enter && Direction == +1) ||
         (ActiveCurve == ECurveType.Exit && Direction == -1);
 
-    public bool IsActive =>
+    public bool IsAtOrHeadingToPose =>
         IsAtPose || IsHeadingToPose;
 
     public float IdleProximity =>

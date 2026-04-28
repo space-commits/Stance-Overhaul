@@ -1,6 +1,7 @@
 ﻿using StanceOverhaul.Enums;
 using StanceOverhaul.Handlers;
 using StanceOverhaul.Stances;
+using System.Text;
 using UnityEngine;
 using static RealismCommonLib.Plugin;
 
@@ -8,8 +9,10 @@ namespace StanceOverhaul.State
 {
     internal class StanceState : IControllerHelper
     {
+        private IStance? _requestedStance;
         private StanceSlot? _primary;
         private StanceSlot? _incoming;
+
         private bool _incomingPaused;
 
         private Vector3 _smoothedPosition;
@@ -29,14 +32,6 @@ namespace StanceOverhaul.State
                 if (_incoming != null && !_incomingPaused && _incoming.IsActive)
                     return _incoming.Stance.StanceType;
                 return EStance.None;
-            }
-        }
-
-        public bool PrimaryIsActive
-        {
-            get
-            {
-                return _primary != null && _primary.IsActive;
             }
         }
 
@@ -62,14 +57,26 @@ namespace StanceOverhaul.State
 
         public void RunOnUpdate(float deltaTime)
         {
+            UpdateStanceState(deltaTime);
+        }
+
+        private void UpdateStanceState(float deltaTime)
+        {
             //update primary
             _primary?.SlotUpdate(deltaTime);
 
             //check blend threshold - unpause incoming if met
             if (_incoming != null && _incomingPaused && _primary != null)
             {
-                if (_primary.Direction != 0
-                    && _primary.IdleProximity <= _primary.Stance.BlendThreshold) 
+          /*      if (_primary.Direction != 0
+                    && _primary.IdleProximity <= _primary.Stance.BlendThreshold)
+                {
+                    ModLogger.LogWarning("== threshold met");
+                    _incomingPaused = false;
+                }*/
+
+                if (_primary.IsHeadingToIdle
+                && _primary.IdleProximity >= _primary.Stance.BlendThreshold)
                 {
                     ModLogger.LogWarning("== threshold met");
                     _incomingPaused = false;
@@ -83,29 +90,33 @@ namespace StanceOverhaul.State
                 _incoming.SlotUpdate(deltaTime);
 
             //cleanup completed slots: discard slots that reached idle
-            if (_primary?.IsAtIdle == true && _incoming == null)
+            if (_primary?.IsAtIdle == true) //&& _incoming == null
                 _primary = null;
 
-            if (_incoming != null && _incoming.IsAtPose) 
+            if (_incoming != null && !_incomingPaused && _incoming.IsAtIdle)
+                _incoming = null;
+
+            //promooe incoming if primary is gone
+            if (_primary == null && _incoming != null)
             {
                 _primary = _incoming;
                 _incoming = null;
                 _incomingPaused = false;
 
-                ModLogger.LogWarning("== incoming is at idle");
+                ModLogger.LogWarning("== incoming promoted to primary");
             }
 
             //evaluate output from active slots
             var rawPos = Vector3.zero;
             var rawRot = Vector3.zero;
 
-            if (_primary != null && _incoming != null && !_incomingPaused) 
+            if (_primary != null && _incoming != null && !_incomingPaused)
             {
                 float weight = _incoming.Progress;
                 rawPos = Vector3.Lerp(_primary.EvaluatePosition(), _incoming.EvaluatePosition(), weight);
                 rawRot = Vector3.Lerp(_primary.EvaluateRotation(), _incoming.EvaluateRotation(), weight);
             }
-            else if (_primary != null) 
+            else if (_primary != null)
             {
                 rawPos = _primary.EvaluatePosition();
                 rawRot = _primary.EvaluateRotation();
@@ -155,13 +166,13 @@ namespace StanceOverhaul.State
                 else if (_primary.IsHeadingToIdle) // heading to idle -> reverse toward pose
                 {
                     ModLogger.LogWarning("reverse direction towards pose");
-                    _primary.Direction = -1; //should this be +1 or -1?
-                    stance.OnEnter(); 
+                    _primary.Direction *= -1; //should this be +1 or -1?
+                    /*stance.OnEnter();*/ 
                 }
                 else // heading to pose -> reverse toward idle
                 {
                     ModLogger.LogWarning("reverse direction towards idle");
-                    _primary.Direction = -1; //should this be +1 or -1?
+                    _primary.Direction *= -1; //should this be +1 or -1?
                     stance.OnExit(); 
                 }
                 return;      
@@ -184,7 +195,7 @@ namespace StanceOverhaul.State
                 _incoming = null;
                 BeginExit(_primary);
             }
-            else if (_primary != null)
+            else // if (_primary != null)
             {
                 ModLogger.LogWarning($"normal transition A -> B {stance.StanceType}");
                 //normal transition A -> B

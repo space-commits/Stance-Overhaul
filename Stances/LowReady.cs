@@ -16,7 +16,7 @@ public class LowReady : StanceBase
     public override Vector3Curve ExitPositionCurve => _exitPos;
     public override Vector3Curve ExitRotationCurve => _exitRot;
 
-    public override float BlendThreshold => 0.4f;
+    public override float BlendThreshold => 0.2f;
     public override float BaseSpeed => 3.5f;
 
     private readonly Vector3Curve _enterPos;

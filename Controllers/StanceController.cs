@@ -309,7 +309,7 @@ namespace StanceOverhaul.Controllers
         public Spring PositionWiggleSpring { get; private set; }
         public Spring RotatationWiggleSpring { get; private set; }
 
-        private List<StanceBase> _stances2 = new List<StanceBase>();
+        private List<StanceBase> _stances = new List<StanceBase>();
         public PatrolStance PatrolStance { get; private set; }
         public LeftStance LeftShoulder { get; private set; }
         public LowReady LowReady { get; private set; }
@@ -387,7 +387,7 @@ namespace StanceOverhaul.Controllers
         private T InitStance<T>(Func<T> factory) where T : StanceBase
         {
             var instance = factory();
-            _stances2.Add(instance);
+            _stances.Add(instance);
             return instance;
         }
 
@@ -401,9 +401,6 @@ namespace StanceOverhaul.Controllers
 
         private void InitStateControllers()
         {
-            _stanceState =
-                InitStateController(() => new StanceState());
-
             _stanceState =
                 InitStateController(() => new StanceState());
 
@@ -458,7 +455,7 @@ namespace StanceOverhaul.Controllers
 
         private void RunStanceDispose() 
         {
-            foreach (StanceBase stance in _stances2)
+            foreach (StanceBase stance in _stances)
             {
                 stance.Dispose();
             }

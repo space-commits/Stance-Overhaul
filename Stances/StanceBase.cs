@@ -18,7 +18,7 @@ namespace StanceOverhaul.Stances
         public abstract Vector3Curve ExitPositionCurve { get; }
         public abstract Vector3Curve ExitRotationCurve { get; }
 
-        public virtual float BlendThreshold => 0.15f; //TODO should depend on incoming stance type
+        public virtual float BlendThreshold => 0.5f; //TODO should depend on incoming stance type
         public virtual float BaseSpeed => 2.5f; //TODO expose to config
 
         public StanceBase()

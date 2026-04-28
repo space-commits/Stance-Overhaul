@@ -39,7 +39,7 @@ internal class StanceSlot
         IsAtPose || IsHeadingToPose;
 
     public float IdleProximity =>
-        ActiveCurve == ECurveType.Enter ? Progress : 1f - Progress;
+        ActiveCurve == ECurveType.Exit ? Progress : 1f - Progress;
 
     public Vector3 EvaluatePosition()
     {

@@ -34,3 +34,4 @@ public class HighReady : StanceBase
         _exitRot = RealismCommonLib.Utils.CurveDrawer.GetCurve("high_ready_exit_rotation");
     }
 }
+ 

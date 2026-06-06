@@ -6,9 +6,9 @@ using static StanceOverhaul.Plugin;
 
 namespace StanceOverhaul.Stances;
 
-public class LowReady : StanceBase
+public class ActiveAim : StanceBase
 {
-    public override EStanceType StanceType => EStanceType.LowReady;
+    public override EStanceType StanceType => EStanceType.ActiveAiming;
 
     public override Vector3Curve EnterPositionCurve => _enterPos;
     public override Vector3Curve EnterRotationCurve => _enterRot;
@@ -20,16 +20,16 @@ public class LowReady : StanceBase
     {
         switch (nextStance)
         {
-            case EStanceType.ActiveAiming:
-                return PluginConfig.test1.Value;
+            case EStanceType.LowReady:
+                return PluginConfig.test7.Value;
             case EStanceType.HighReady:
-                return 0.3f;
+                return PluginConfig.test7.Value;
             case EStanceType.LeftShoulder:
-                return 0f;
+                return PluginConfig.test7.Value;
             case EStanceType.PatrolStance:
-                return PluginConfig.test1.Value;
+                return PluginConfig.test7.Value;
             case EStanceType.ShortStock:
-                return PluginConfig.test1.Value;
+                return PluginConfig.test7.Value;
             default:
                 return 0.2f;
         }
@@ -39,16 +39,16 @@ public class LowReady : StanceBase
     {
         switch (previousStance)
         {
-            case EStanceType.ActiveAiming:
-                return PluginConfig.test2.Value;
+            case EStanceType.LowReady:
+                return PluginConfig.test8.Value;
             case EStanceType.HighReady:
-                return PluginConfig.test2.Value;
+                return PluginConfig.test8.Value;
             case EStanceType.LeftShoulder:
-                return 2f;
+                return PluginConfig.test8.Value;
             case EStanceType.PatrolStance:
-                return PluginConfig.test2.Value;
+                return PluginConfig.test8.Value;
             case EStanceType.ShortStock:
-                return PluginConfig.test2.Value;
+                return PluginConfig.test8.Value;
             default:
                 return 3f;
         }
@@ -58,16 +58,16 @@ public class LowReady : StanceBase
     {
         switch (nextStance)
         {
-            case EStanceType.ActiveAiming:
-                return PluginConfig.test3.Value;
+            case EStanceType.LowReady:
+                return PluginConfig.test8.Value;
             case EStanceType.HighReady:
-                return PluginConfig.test3.Value;
+                return PluginConfig.test8.Value;
             case EStanceType.LeftShoulder:
-                return 2f;
+                return PluginConfig.test8.Value;
             case EStanceType.PatrolStance:
-                return PluginConfig.test3.Value;
+                return PluginConfig.test8.Value;
             case EStanceType.ShortStock:
-                return PluginConfig.test3.Value;
+                return PluginConfig.test8.Value;
             default:
                 return 1f;
         }
@@ -79,12 +79,13 @@ public class LowReady : StanceBase
     private readonly Vector3Curve _exitPos;
     private readonly Vector3Curve _exitRot;
 
-    public LowReady()
+    public ActiveAim()
     {
-        _enterPos = RealismCommonLib.Utils.CurveDrawer.GetCurve("low_ready_enter_position")!;
-        _enterRot = RealismCommonLib.Utils.CurveDrawer.GetCurve("low_ready_enter_rotation")!;
+        _enterPos = RealismCommonLib.Utils.CurveDrawer.GetCurve("active_enter_position")!;
+        _enterRot = RealismCommonLib.Utils.CurveDrawer.GetCurve("active_enter_rotation")!;
 
-        _exitPos = RealismCommonLib.Utils.CurveDrawer.GetCurve("low_ready_exit_position")!;
-        _exitRot = RealismCommonLib.Utils.CurveDrawer.GetCurve("low_ready_exit_rotation")!;
+        _exitPos = RealismCommonLib.Utils.CurveDrawer.GetCurve("active_exit_position")!;
+        _exitRot = RealismCommonLib.Utils.CurveDrawer.GetCurve("active_exit_rotation")!;
     }
 }
+

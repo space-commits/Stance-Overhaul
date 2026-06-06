@@ -6,9 +6,9 @@ using static StanceOverhaul.Plugin;
 
 namespace StanceOverhaul.Stances;
 
-public class LeftStance : StanceBase
+public class LeftShoulder : StanceBase
 {
-    public override EStance StanceType => EStance.LeftShoulder;
+    public override EStanceType StanceType => EStanceType.LeftShoulder;
 
     public override Vector3Curve EnterPositionCurve => _enterPos;
     public override Vector3Curve EnterRotationCurve => _enterRot;
@@ -16,8 +16,62 @@ public class LeftStance : StanceBase
     public override Vector3Curve ExitPositionCurve => _exitPos;
     public override Vector3Curve ExitRotationCurve => _exitRot;
 
-    public override float BlendThreshold => 0.6f;
-    public override float BaseSpeed => 3f;
+    public override float BlendThreshold(EStanceType nextStance)
+    {
+        switch (nextStance)
+        {
+            case EStanceType.ActiveAiming:
+                return PluginConfig.test4.Value;
+            case EStanceType.HighReady:
+                return PluginConfig.test4.Value;
+            case EStanceType.LowReady:
+                return 0.05f;
+            case EStanceType.PatrolStance:
+                return PluginConfig.test4.Value;
+            case EStanceType.ShortStock:
+                return PluginConfig.test4.Value;
+            default:
+                return 0.2f;
+        }
+    }
+
+    public override float BaseSpeed(EStanceType? previousStance)
+    {
+        switch (previousStance)
+        {
+            case EStanceType.ActiveAiming:
+                return PluginConfig.test5.Value;
+            case EStanceType.HighReady:
+                return PluginConfig.test5.Value;
+            case EStanceType.LowReady:
+                return 0.5f;
+            case EStanceType.PatrolStance:
+                return PluginConfig.test5.Value;
+            case EStanceType.ShortStock:
+                return PluginConfig.test5.Value;
+            default:
+                return 2.5f;
+        }
+    }
+
+    public override float TransitionSpeedModifier(EStanceType? nextStance)
+    {
+        switch (nextStance)
+        {
+            case EStanceType.ActiveAiming:
+                return PluginConfig.test6.Value;
+            case EStanceType.HighReady:
+                return PluginConfig.test6.Value;
+            case EStanceType.LowReady:
+                return 1.5f;
+            case EStanceType.PatrolStance:
+                return PluginConfig.test6.Value;
+            case EStanceType.ShortStock:
+                return PluginConfig.test6.Value;
+            default:
+                return 1f;
+        }
+    }
 
     private readonly Vector3Curve _enterPos;
     private readonly Vector3Curve _enterRot;
@@ -25,13 +79,13 @@ public class LeftStance : StanceBase
     private readonly Vector3Curve _exitPos;
     private readonly Vector3Curve _exitRot;
 
-    public LeftStance()
+    public LeftShoulder()
     {
-        _enterPos = RealismCommonLib.Utils.CurveDrawer.GetCurve("left_enter_position");
-        _enterRot = RealismCommonLib.Utils.CurveDrawer.GetCurve("left_enter_rotation");
+        _enterPos = RealismCommonLib.Utils.CurveDrawer.GetCurve("left_enter_position")!;
+        _enterRot = RealismCommonLib.Utils.CurveDrawer.GetCurve("left_enter_rotation")!;
 
-        _exitPos = RealismCommonLib.Utils.CurveDrawer.GetCurve("left_exit_position");
-        _exitRot = RealismCommonLib.Utils.CurveDrawer.GetCurve("left_exit_rotation");
+        _exitPos = RealismCommonLib.Utils.CurveDrawer.GetCurve("left_exit_position")!;
+        _exitRot = RealismCommonLib.Utils.CurveDrawer.GetCurve("left_exit_rotation")!;
     }
 }
 

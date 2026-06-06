@@ -101,29 +101,29 @@ namespace StanceOverhaul.Handlers.StanceInput
         {
             var current =  StanceControllerInstance.CurrentStanceType;
 
-            if (current == EStance.None)
-                current = EStance.None;
+            if (current == EStanceType.None)
+                current = EStanceType.None;
 
             if (direction < 0)
             {
                 ModLogger.LogWarning($"-1 {current}");
 
                 // Idle → LowReady
-                if (current == EStance.None)
+                if (current == EStanceType.None)
                 {
                     StanceInputEvents.RaiseToggleLowReady();
                     return;
                 }
 
                 // HighReady → LowReady (optional direct swap if already high)
-                if (current == EStance.HighReady)
+                if (current == EStanceType.HighReady)
                 {
                     StanceInputEvents.RaiseToggleHighReady();
                     return;
                 }
 
                 // LowReady → no-op
-                if (current == EStance.LowReady)
+                if (current == EStanceType.LowReady)
                     return;
 
                 return;
@@ -134,21 +134,21 @@ namespace StanceOverhaul.Handlers.StanceInput
                 ModLogger.LogWarning($"+1  {current}");
 
                 // LowReady → Idle
-                if (current == EStance.LowReady)
+                if (current == EStanceType.LowReady)
                 {
                     StanceInputEvents.RaiseToggleLowReady();
                     return;
                 }
 
                 // Idle → HighReady
-                if (current == EStance.None)
+                if (current == EStanceType.None)
                 {
                     StanceInputEvents.RaiseToggleHighReady();
                     return;
                 }
 
                 // HighReady → no-op
-                if (current == EStance.HighReady)
+                if (current == EStanceType.HighReady)
                     return;
 
                 return;
@@ -208,10 +208,10 @@ namespace StanceOverhaul.Handlers.StanceInput
             if (!PluginConfig.ToggleActiveAim.Value)
             {
                 if (!_activeAimWasTriggered && activeAimTriggered)
-                    StanceInputEvents.RaiseHoldActiveAimKeyDown();
+                    StanceInputEvents.RaiseToggleActiveAim();
 
                 if (_activeAimWasTriggered && !activeAimTriggered)
-                    StanceInputEvents.RaiseHoldActiveAimKeyUp();
+                    StanceInputEvents.RaiseToggleActiveAim();
             }
             else
             {

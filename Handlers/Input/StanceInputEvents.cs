@@ -13,8 +13,8 @@ namespace StanceOverhaul.Handlers.StanceInput
         public static event Action? ToggleActiveAim;
         public static event Action? TogglePatrolStance;
         public static event Action? ToggleMelee;
-        public static event Action? OnActiveAimKeyDown;
-        public static event Action? OnActiveAimKeyUp;
+/*        public static event Action? OnActiveAimKeyDown;
+        public static event Action? OnActiveAimKeyUp;*/
         public static event Action? ToggleOffAllStances;
         public static event Action? OnAttemptedToFireFromStance;
 
@@ -58,7 +58,7 @@ namespace StanceOverhaul.Handlers.StanceInput
             BaseEventHandler.RaiseEvent(ToggleMelee);
         }
 
-        internal static void RaiseHoldActiveAimKeyDown()
+/*        internal static void RaiseHoldActiveAimKeyDown()
         {
             BaseEventHandler.RaiseEvent(OnActiveAimKeyDown);
         }
@@ -66,6 +66,6 @@ namespace StanceOverhaul.Handlers.StanceInput
         internal static void RaiseHoldActiveAimKeyUp()
         {
             BaseEventHandler.RaiseEvent(OnActiveAimKeyUp);
-        }
+        }*/
     }
 }

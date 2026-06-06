@@ -23,14 +23,19 @@ namespace StanceOverhaul.State
         public Vector3 StancePosition { get; private set; }
         public Vector3 StanceRotation { get; private set; }
 
-        public EStance CurrentStanceType 
+        public EStanceType ActiveStanceType 
         {
             get
             {
-                return ActiveStance?.StanceType ?? EStance.None;
+                return ActiveStance?.StanceType ?? EStanceType.None;
             }
         }
 
+        /// <summary>
+        /// The stance that is active or being transitioned to.
+        /// Use this for checking if what the active or current stance is, not PrimaryStance, 
+        /// as PrimaryStance can be heading to idle or being blended out to another stance.
+        /// </summary>
         public IStance? ActiveStance 
         {
             get 
@@ -41,6 +46,19 @@ namespace StanceOverhaul.State
                 if (_primary != null && _primary.IsAtOrHeadingToPose)
                     return _primary.Stance;
                 return null;       
+            }
+        }
+
+        /// <summary>
+        /// The stance that is currently active, but can be heading to idle or belding to another stance.
+        /// Do not use this for checking if a stance is active, use ActiveStance instead. 
+        /// Use this if you need to know the stance that is currently being blended out of or heading to idle.
+        /// </summary>
+        public IStance? PrimaryStance
+        {
+            get
+            {
+                return _primary?.Stance;
             }
         }
 
@@ -75,13 +93,13 @@ namespace StanceOverhaul.State
                 }*/
 
                 if (_primary.IsHeadingToIdle
-                && _primary.IdleProximity >= _primary.Stance.BlendThreshold)
+                && _primary.IdleProximity >= _primary.Stance.BlendThreshold(_incoming.Stance.StanceType))
                 {
                     ModLogger.LogWarning("== threshold met");
                     _incomingPaused = false;
                 }
 
-                ModLogger.LogWarning($"IdleProximity {_primary.IdleProximity} BlendThreshold {_primary.Stance.BlendThreshold}");
+                ModLogger.LogWarning($"IdleProximity {_primary.IdleProximity} BlendThreshold {_primary.Stance.BlendThreshold(_incoming.Stance.StanceType)}");
             }
 
             //upate incoming if not paused
@@ -95,7 +113,7 @@ namespace StanceOverhaul.State
             if (_incoming != null && !_incomingPaused && _incoming.IsAtIdle)
                 _incoming = null;
 
-            //promooe incoming if primary is gone
+            //promote incoming if primary is gone
             if (_primary == null && _incoming != null)
             {
                 _primary = _incoming;
@@ -105,6 +123,11 @@ namespace StanceOverhaul.State
                 ModLogger.LogWarning("== incoming promoted to primary");
             }
 
+            UpdateTransforms(deltaTime);
+        }
+
+        public void UpdateTransforms(float deltaTime)
+        {
             //evaluate output from active slots
             var rawPos = Vector3.zero;
             var rawRot = Vector3.zero;
@@ -134,9 +157,13 @@ namespace StanceOverhaul.State
             StancePosition = _smoothedPosition;
             StanceRotation = _smoothedRotation;
 
-            //TODO: movre responsibility to controller or different class
-            Plugin.StanceControllerInstance.StancePositionSpring.Zero = StancePosition;
+/*            Plugin.StanceControllerInstance.StancePositionSpring.Zero = StancePosition;
             Plugin.StanceControllerInstance.StanceRotationSpring.Zero = StanceRotation;
+*/
+/*            Plugin.StanceControllerInstance.StancePositionSpring.AddZero();
+            Plugin.StanceControllerInstance.StanceRotationSpring.AddZero();*/
+
+
         }
 
         public void RequestStance(IStance stance)
@@ -145,7 +172,7 @@ namespace StanceOverhaul.State
             if (_primary == null && _incoming == null)
             {
                 ModLogger.LogWarning("toggle stance from no stance");
-                _primary = new StanceSlot(stance, ECurveType.Enter, 0f, +1);
+                _primary = new StanceSlot(stance, ECurveType.Enter, 0f, +1, this);
                 stance.OnEnter();
                 return;
             }
@@ -201,7 +228,7 @@ namespace StanceOverhaul.State
                 BeginExit(_primary);
             }
 
-            _incoming = new StanceSlot(stance, ECurveType.Enter, 0f, +1);
+            _incoming = new StanceSlot(stance, ECurveType.Enter, 0f, +1, this);
             _incomingPaused = true; //will be unpaused once blend threshold is met
             stance.OnEnter();
             ModLogger.LogWarning($"incoming queued and paused {stance.StanceType}");

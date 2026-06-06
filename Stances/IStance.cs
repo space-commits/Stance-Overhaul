@@ -8,7 +8,7 @@ namespace StanceOverhaul.Stances
 {
     public interface IStance
     {
-        public EStance StanceType { get; }
+        public EStanceType StanceType { get; }
 
         public abstract Vector3Curve EnterRotationCurve { get; }
         public abstract Vector3Curve EnterPositionCurve { get; }
@@ -16,8 +16,9 @@ namespace StanceOverhaul.Stances
         public abstract Vector3Curve ExitRotationCurve { get; }
         public abstract Vector3Curve ExitPositionCurve { get; }
 
-        public float BlendThreshold { get; }
-        public float BaseSpeed { get; }
+        float BlendThreshold(EStanceType nextStance);
+        float BaseSpeed(EStanceType? previousStance);
+        float TransitionSpeedModifier(EStanceType? nextStance);
 
         void OnEnter();
         void OnExit();

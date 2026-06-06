@@ -19,6 +19,160 @@ using ReloadClass = EFT.Player.FirearmController.GClass2037;
 
 namespace StanceOverhaul.Patches
 {
+    public class ApplyComplexRotationPatch : ModulePatch
+    {
+        private static FieldInfo _aimSpeedField;
+        private static FieldInfo _compensatoryField;
+        private static FieldInfo _displacementStrField;
+        private static FieldInfo _scopeRotationField;
+        private static FieldInfo _weapTempRotationField;
+        private static FieldInfo _weapTempPositionField;
+        private static FieldInfo _isAimingField;
+        private static FieldInfo _firearmControllerField;
+        private static FieldInfo _playerField;
+
+        static Vector3 _patrolPos = Vector3.zero;
+        static Vector3 _patrolRot = Vector3.zero;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            _aimSpeedField = AccessTools.Field(typeof(EFT.Animations.ProceduralWeaponAnimation), "_aimingSpeed");
+            _compensatoryField = AccessTools.Field(typeof(EFT.Animations.ProceduralWeaponAnimation), "_compensatoryScale");
+            _displacementStrField = AccessTools.Field(typeof(EFT.Animations.ProceduralWeaponAnimation), "_displacementStr");
+            _scopeRotationField = AccessTools.Field(typeof(EFT.Animations.ProceduralWeaponAnimation), "_targetScopeRotation");
+            _weapTempPositionField = AccessTools.Field(typeof(EFT.Animations.ProceduralWeaponAnimation), "_temporaryPosition");
+            _weapTempRotationField = AccessTools.Field(typeof(EFT.Animations.ProceduralWeaponAnimation), "_temporaryRotation");
+            _isAimingField = AccessTools.Field(typeof(EFT.Animations.ProceduralWeaponAnimation), "_isAiming");
+            _firearmControllerField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_firearmController");
+            _playerField = AccessTools.Field(typeof(FirearmController), "_player");
+
+            return typeof(EFT.Animations.ProceduralWeaponAnimation).GetMethod("ApplyComplexRotation", BindingFlags.Instance | BindingFlags.Public);
+        }
+
+        [PatchPostfix]
+        private static void Postfix(EFT.Animations.ProceduralWeaponAnimation __instance, float dt, Vector3 ____vCameraTarget)
+        {
+            FirearmController firearmController = (FirearmController)_firearmControllerField.GetValue(__instance);
+            if (firearmController == null)
+            {
+                return;
+            }
+            Player player = (Player)_playerField.GetValue(firearmController);
+            if (player != null && player.IsYourPlayer && player.MovementContext.CurrentState.Name != EPlayerState.Stationary)
+            {
+
+                float aimSpeed = (float)_aimSpeedField.GetValue(__instance);
+                float compensatoryScale = (float)_compensatoryField.GetValue(__instance);
+                float displacementStr = (float)_displacementStrField.GetValue(__instance);
+                Quaternion scopeRotation = (Quaternion)_scopeRotationField.GetValue(__instance);
+                Vector3 weapTempPosition = (Vector3)_weapTempPositionField.GetValue(__instance);
+                Quaternion weapTempRotation = (Quaternion)_weapTempRotationField.GetValue(__instance);
+                bool isAiming = (bool)_isAimingField.GetValue(__instance);
+
+
+                //this should be base position + stance position. PID would slot in more easily this way, as I'd modify the base position to align with camera.
+/*                __instance.HandsContainer.WeaponRoot.localPosition = Plugin.StanceControllerInstance.StancePositionSpring.Get();
+                __instance.HandsContainer.WeaponRoot.localRotation *= Quaternion.Euler(Plugin.StanceControllerInstance.StanceRotationSpring.Get());
+
+*/
+
+                /*       var stanceRot = Quaternion.Euler(Plugin.StanceControllerInstance.StanceRotationSpring.Get());*/
+
+                /*                __instance.HandsContainer.WeaponRootAnim.SetPositionAndRotation(weapTempPosition + Plugin.StanceControllerInstance.StancePositionSpring.Get(), weapTempRotation * stanceRot);
+                */
+
+
+                /*        var _riflelPos = new Vector3(PluginConfig.test1.Value, PluginConfig.test2.Value, PluginConfig.test3.Value);
+                        var _rifleRot = new Vector3(PluginConfig.test4.Value, PluginConfig.test5.Value, PluginConfig.test6.Value);
+
+                        bool isPatrol = Plugin.StanceControllerInstance.CurrentStanceType == EStanceType.LeftShoulder;
+                        Vector3 patrolPos = !isPatrol ? Vector3.zero : _riflelPos;
+                        _patrolPos = Vector3.Lerp(_patrolPos, patrolPos, 2f * Time.deltaTime);
+                        __instance.HandsContainer.WeaponRoot.localPosition = _patrolPos;
+
+                        Vector3 patrolRot = !isPatrol ? Vector3.zero : _rifleRot;
+                        _patrolRot = Vector3.Lerp(_patrolRot, patrolRot, 2f * Time.deltaTime);
+
+                        Quaternion newRot = Quaternion.identity;
+                        newRot.x = _patrolRot.x;
+                        newRot.y = _patrolRot.y;
+                        newRot.z = _patrolRot.z;
+                        __instance.HandsContainer.WeaponRoot.localRotation *= newRot;*/
+
+            }
+        }
+    }
+
+    public class CalibratePatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(ProceduralWeaponAnimation), nameof(ProceduralWeaponAnimation.Calibrate));
+        }
+
+        [PatchPrefix]
+        private static bool PatchPrefix(ProceduralWeaponAnimation __instance)
+        {
+            return false;
+        }
+    }
+
+    public class CalibrateLocalPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(ProceduralWeaponAnimation), nameof(ProceduralWeaponAnimation.CalculateLocalSightTarget));
+        }
+
+        [PatchPrefix]
+        private static bool PatchPrefix(ProceduralWeaponAnimation __instance)
+        {
+            return false;
+        }
+    }
+
+    public class SpringUpdatePatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(Spring), nameof(Spring.FixedUpdate));
+        }
+
+        [PatchPrefix]
+        private static void PatchPrefix(Spring __instance, float dt, int nFixedFrames)
+        {
+            if (Plugin.StanceControllerInstance == null || !Plugin.StanceControllerInstance.AwakeRan) return;
+
+            if (__instance == PlayerStateInstance.PWA.HandsContainer.HandsPosition)
+                Plugin.StanceControllerInstance.StancePositionSpring.FixedUpdate(dt, nFixedFrames);
+
+            if (__instance == PlayerStateInstance.PWA.HandsContainer.HandsRotation)
+                Plugin.StanceControllerInstance.StanceRotationSpring.FixedUpdate(dt, nFixedFrames);
+
+        }
+    }
+
+    public class SpringResetPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(Spring), nameof(Spring.Reset));
+        }
+
+        [PatchPostfix]
+        private static void PatchPostfix(Spring __instance)
+        {
+            if (Plugin.StanceControllerInstance == null || !Plugin.StanceControllerInstance.AwakeRan) return;
+
+            if (__instance == PlayerStateInstance.PWA.HandsContainer.HandsPosition)
+                Plugin.StanceControllerInstance.StancePositionSpring.Reset();
+
+            if (__instance == PlayerStateInstance.PWA.HandsContainer.HandsRotation)
+                Plugin.StanceControllerInstance.StanceRotationSpring.Reset();
+
+        }
+    }
+
     public class SpringGetPatch : ModulePatch
     {
         protected override MethodBase GetTargetMethod()
@@ -26,46 +180,792 @@ namespace StanceOverhaul.Patches
             return AccessTools.Method(typeof(Spring), nameof(Spring.Get));
         }
 
-        [PatchPrefix]
-        private static bool PatchPrefix(Spring __instance, ref Vector3 __result)
+        [PatchPostfix]
+        private static void Postfix(Spring __instance, ref Vector3 __result)
         {
-            if (Plugin.StanceControllerInstance == null || !Plugin.StanceControllerInstance.AwakeRan) return true;
+            if (Plugin.StanceControllerInstance == null || !Plugin.StanceControllerInstance.AwakeRan) return;
 
-            if (__instance == PlayerStateInstance.ProceduralWeaponAnimation.HandsContainer.HandsPosition)
+            if (__instance == PlayerStateInstance.PWA.HandsContainer.HandsPosition)
             {
-                __result = __instance.Zero + __instance.Current + Plugin.StanceControllerInstance.StancePositionSpring.Get() + Plugin.StanceControllerInstance.PositionWiggleSpring.Get();
-                return false;
+                __result += Plugin.StanceControllerInstance.StancePositionSpring.Get();
             }
 
-            if (__instance == PlayerStateInstance.ProceduralWeaponAnimation.HandsContainer.HandsRotation)
+            if (__instance == PlayerStateInstance.PWA.HandsContainer.HandsRotation)
             {
-                __result = __instance.Zero + __instance.Current + Plugin.StanceControllerInstance.StanceRotationSpring.Get() + Plugin.StanceControllerInstance.RotatationWiggleSpring.Get();
-                return false;
+                __result += Plugin.StanceControllerInstance.StanceRotationSpring.Get();
+            }
+        }
+    }
+
+    public class SpringGetRelativePatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(Spring), nameof(Spring.GetRelative));
+        }
+
+        [PatchPostfix]
+        private static void Postfix(Spring __instance, ref Vector3 __result)
+        {
+            if (Plugin.StanceControllerInstance == null || !Plugin.StanceControllerInstance.AwakeRan) return;
+
+            if (__instance == PlayerStateInstance.PWA.HandsContainer.HandsPosition)
+            {
+                __result += Plugin.StanceControllerInstance.StancePositionSpring.GetRelative();
             }
 
-            return true;
+            if (__instance == PlayerStateInstance.PWA.HandsContainer.HandsRotation)
+            {
+                __result += Plugin.StanceControllerInstance.StanceRotationSpring.GetRelative();
+            }
+        }
+    }
+
+    public class ProcessEffectorsPatch : ModulePatch
+    {
+        private static FieldInfo _playerField;
+        private static FieldInfo _fcField;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            _playerField = AccessTools.Field(typeof(FirearmController), "_player");
+            _fcField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_firearmController");
+            return AccessTools.Method(typeof(ProceduralWeaponAnimation), nameof(ProceduralWeaponAnimation.ProcessEffectors));
+        }
+
+        [PatchPrefix]
+        private static void PatchPrefix(ProceduralWeaponAnimation __instance, float deltaTime)
+        {
+            FirearmController firearmController = (FirearmController)_fcField.GetValue(__instance);
+            if (firearmController == null) return;
+            Player player = (Player)_playerField.GetValue(firearmController);
+            if (player != null && player.IsYourPlayer)
+            {
+                Plugin.StanceControllerInstance.ProceduralUpdate(deltaTime, 0);
+            }
+        }
+    }
+
+    public class ZeroAdjustmentsPatch : ModulePatch
+    {
+        private static FieldInfo _blindfireStrengthField;
+        private static FieldInfo _blindfireRotationField;
+        private static PropertyInfo _overlappingBlindfireField;
+        private static FieldInfo _blindfirePositionField;
+        private static FieldInfo _firearmControllerField;
+        private static FieldInfo _playerField;
+        private static FieldInfo _fcField;
+
+        private static Vector3 _targetPosition = Vector3.zero;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            _blindfireStrengthField = AccessTools.Field(typeof(EFT.Animations.ProceduralWeaponAnimation), "_blindfireStrength");
+            _blindfireRotationField = AccessTools.Field(typeof(EFT.Animations.ProceduralWeaponAnimation), "_blindFireRotation");
+            _overlappingBlindfireField = AccessTools.Property(typeof(EFT.Animations.ProceduralWeaponAnimation), "Single_3");
+            _blindfirePositionField = AccessTools.Field(typeof(EFT.Animations.ProceduralWeaponAnimation), "_blindFirePosition");
+            _firearmControllerField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_firearmController");
+            _playerField = AccessTools.Field(typeof(FirearmController), "_player");
+            _fcField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_firearmController");
+
+            return AccessTools.Method(typeof(ProceduralWeaponAnimation), nameof(ProceduralWeaponAnimation.ZeroAdjustments));
+        }
+
+        /*     [PatchPrefix]
+             private static bool PatchPrefix(ProceduralWeaponAnimation __instance, ref float ____blindfireStrength, ref Vector3 ____blindFirePosition, Vector3 ____blindFireRotation)
+             {
+                 FirearmController firearmController = (FirearmController)_fcField.GetValue(__instance);
+                 if (firearmController == null) return false;
+                 Player player = (Player)_playerField.GetValue(firearmController);
+                 if (player != null && player.IsYourPlayer)
+                 {
+
+                     __instance.PositionZeroSum = Plugin.StanceControllerInstance.StancePositionSpring.Get();
+                     __instance.RotationZeroSum = Plugin.StanceControllerInstance.StanceRotationSpring.Get();
+
+                     __instance.PositionZeroSum.y += (__instance._shouldMoveWeaponCloser ? 0.05f : 0f);
+                     __instance.RotationZeroSum.y += __instance.SmoothedTilt * __instance.PossibleTilt;
+
+                     float value = __instance.BlindfireBlender.Value;
+                     if (Mathf.Abs(value) > 0f)
+                     {
+                         ____blindfireStrength = ((Mathf.Abs(__instance.Pitch) < 45f) ? 1f : ((90f - Mathf.Abs(__instance.Pitch)) / 45f));
+                         __instance.BlindFireEndPosition = ((value > 0f) ? __instance.BlindFireOffset : __instance.SideFireOffset);
+                         __instance.BlindFireEndPosition *= ____blindfireStrength;
+                     }
+                     else
+                     {
+                         ____blindFirePosition = Vector3.zero;
+                         ____blindFireRotation = Vector3.zero;
+                     }
+                     __instance.HandsContainer.HandsPosition.Zero = __instance.PositionZeroSum + ____blindfireStrength * __instance.Single_3 * ____blindFirePosition;
+                     __instance.HandsContainer.HandsRotation.Zero = __instance.RotationZeroSum;
+
+                     Plugin.StanceControllerInstance.StancePositionSpring.Zero = Plugin.StanceControllerInstance.StancePosition + ____blindfireStrength * __instance.Single_3 * ____blindFirePosition;
+                     Plugin.StanceControllerInstance.StanceRotationSpring.Zero = Plugin.StanceControllerInstance.StanceRotation;
+
+                     return false;
+                 }
+
+                 return true;
+             }*/
+
+
+        /*   [PatchPrefix]
+           private static bool PatchPrefix(EFT.Animations.ProceduralWeaponAnimation __instance)
+           {
+               FirearmController firearmController = (FirearmController)_firearmControllerField.GetValue(__instance);
+               if (firearmController == null)
+               {
+                   return true;
+               }
+               Player player = (Player)_playerField.GetValue(firearmController);
+               if (player != null && player.IsYourPlayer) // player.MovementContext.CurrentState.Name != EPlayerState.Stationary && player.IsYourPlayer
+               {
+                   float collidingModifier = (float)_overlappingBlindfireField.GetValue(__instance);
+                   Vector3 blindfirePosition = (Vector3)_blindfirePositionField.GetValue(__instance);
+
+                   __instance.PositionZeroSum.y = (__instance._shouldMoveWeaponCloser ? 0.05f : 0f);
+                   __instance.RotationZeroSum.y = __instance.SmoothedTilt * __instance.PossibleTilt;
+                   float stanceBlendValue = PluginConfig.test17.Value;
+                   float blindFireBlendValue = __instance.BlindfireBlender.Value;
+                   if (Mathf.Abs(blindFireBlendValue) > 0f)
+                   {
+                       float strength = ((Mathf.Abs(__instance.Pitch) < 45f) ? 1f : ((90f - Mathf.Abs(__instance.Pitch)) / 45f));
+                       _blindfireStrengthField.SetValue(__instance, strength);
+                       __instance.BlindFireEndPosition = ((blindFireBlendValue > 0f) ? __instance.BlindFireOffset : __instance.SideFireOffset);
+                       __instance.BlindFireEndPosition *= strength;
+                   }
+                   else
+                   {
+                       _blindfirePositionField.SetValue(__instance, Vector3.zero);
+                       _blindfireRotationField.SetValue(__instance, Vector3.zero);
+                   }
+
+                   if (Mathf.Abs(stanceBlendValue) > 0f)
+                   {
+                       float strength = ((Mathf.Abs(__instance.Pitch) < 45f) ? 1f : ((90f - Mathf.Abs(__instance.Pitch)) / 45f));
+                       _blindfireStrengthField.SetValue(__instance, strength);
+                       _targetPosition = Plugin.StanceControllerInstance.StancePositionSpring.Get() * stanceBlendValue;
+                       __instance.HandsContainer.HandsPosition.Zero = __instance.PositionZeroSum + (float)_blindfireStrengthField.GetValue(__instance) * _targetPosition;
+                       __instance.HandsContainer.HandsRotation.Zero = __instance.RotationZeroSum;
+                       return false;
+                   }
+                   else
+                   {
+                       _targetPosition = Vector3.zero;
+                   }
+
+                   __instance.HandsContainer.HandsPosition.Zero = __instance.PositionZeroSum + _targetPosition + (Vector3)_blindfirePositionField.GetValue(__instance) * (float)_blindfireStrengthField.GetValue(__instance) * collidingModifier;
+                   __instance.HandsContainer.HandsRotation.Zero = __instance.RotationZeroSum;
+                   return false;
+               }
+               return true;
+           }*/
+
+        [PatchPostfix]
+        private static void PatchPostfix(ProceduralWeaponAnimation __instance)
+        {
+            FirearmController firearmController = (FirearmController)_fcField.GetValue(__instance);
+            if (firearmController == null) return;
+            Player player = (Player)_playerField.GetValue(firearmController);
+            if (player != null && player.IsYourPlayer)
+            {
+                Plugin.StanceControllerInstance.StancePositionSpring.Zero = Plugin.StanceControllerInstance.StancePosition;
+                Plugin.StanceControllerInstance.StanceRotationSpring.Zero = Plugin.StanceControllerInstance.StanceRotation;
+
+            }
 
         }
     }
 
+    public class TacticalReloadMethodPatch : ModulePatch
+    {
+        private static FieldInfo _playerField;
+        private static FieldInfo _fcField;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            _playerField = AccessTools.Field(typeof(FirearmController), "_player");
+            _fcField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_firearmController");
+            return AccessTools.Method(typeof(ProceduralWeaponAnimation), nameof(ProceduralWeaponAnimation.UpdateTacticalReload));
+        }
+
+        [PatchPrefix]
+        private static bool PatchPrefix(ProceduralWeaponAnimation __instance)
+        {
+            FirearmController firearmController = (FirearmController)_fcField.GetValue(__instance);
+            if (firearmController == null) return true;
+            Player player = (Player)_playerField.GetValue(firearmController);
+            if (player != null && player.IsYourPlayer)
+            {
+                return false;
+            }
+            return true;
+        }
+    }
+
+    public class ApplyPositionPatch : ModulePatch
+    {
+        private static FieldInfo _playerField;
+        private static FieldInfo _fcField;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            _playerField = AccessTools.Field(typeof(FirearmController), "_player");
+            _fcField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_firearmController");
+            return AccessTools.Method(typeof(ProceduralWeaponAnimation), nameof(ProceduralWeaponAnimation.ApplyPosition));
+        }
+
+        [PatchPrefix]
+        private static bool PatchPrefix(ProceduralWeaponAnimation __instance)
+        {
+            FirearmController firearmController = (FirearmController)_fcField.GetValue(__instance);
+            if (firearmController == null) return true;
+            Player player = (Player)_playerField.GetValue(firearmController);
+            if (player != null && player.IsYourPlayer)
+            {
+                __instance.HandsContainer.WeaponRootAnim.localPosition =
+                    __instance.HandsContainer.HandsPosition.Get() +
+                     Plugin.StanceControllerInstance.StancePositionSpring.Get() +
+                    __instance.Shootingg.CurrentRecoilEffect.GetHandPositionRecoil() +
+                    __instance.Shootingg.CurrentRecoilEffect.WeaponRecoilEffect.GetPositionRecoil();
+              
+                if (__instance.IsGrenadeLauncher)
+                {
+                    __instance.UpdateWeaponBoneByLauncherWeaponBone();
+                }
+
+                return false;
+            }
+            return true;
+        }
+    }
+
+    public class BlenderPatch : ModulePatch
+    {
+        private static FieldInfo _playerField;
+        private static FieldInfo _fcField;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            _playerField = AccessTools.Field(typeof(FirearmController), "_player");
+            _fcField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_firearmController");
+            return AccessTools.Method(typeof(ProceduralWeaponAnimation), nameof(ProceduralWeaponAnimation.BlendAnimatorPose));
+        }
+
+        [PatchPrefix]
+        private static bool PatchPrefix(ProceduralWeaponAnimation __instance, float dt)
+        {
+            FirearmController firearmController = (FirearmController)_fcField.GetValue(__instance);
+            if (firearmController == null) return true;
+            Player player = (Player)_playerField.GetValue(firearmController);
+            if (player != null && player.IsYourPlayer)
+            {
+                for (int i = __instance.ActiveBlends.Count - 1; i >= 0; i--)
+                {
+                    ValueTuple<AnimatorPose, float, bool> valueTuple = __instance.ActiveBlends[i];
+                    AnimatorPose item = valueTuple.Item1;
+                    float num = valueTuple.Item2;
+                    bool item2 = valueTuple.Item3;
+                    dt *= __instance.WeaponFlipSpeed;
+                    num += (item2 ? dt : (-dt));
+                    if (num < 0f)
+                    {
+                        __instance.ActiveBlends.RemoveAt(i);
+                        __instance.method_17();
+                    }
+                    else
+                    {
+                        float num2 = item.Blend.Evaluate(num);
+                        __instance.HandsContainer.HandsPosition.Zero += item.Position * num2;
+                        __instance.HandsContainer.HandsRotation.Zero += item.Rotation * num2;
+                        Plugin.StanceControllerInstance.StancePositionSpring.Zero += item.Position * num2;
+                        Plugin.StanceControllerInstance.StanceRotationSpring.Zero += item.Rotation * num2;
+                        __instance.ActiveBlends[i] = new ValueTuple<AnimatorPose, float, bool>(item, Mathf.Min(num, item.Blend.GetDuration()), item2);
+                    }
+                }
+
+                return false;
+            }
+
+            return true;
+        }
+    }
+
+    public class ApplyAimingAlignmentPatch : ModulePatch
+    {
+        private static FieldInfo _playerField;
+        private static FieldInfo _fcField;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            _playerField = AccessTools.Field(typeof(FirearmController), "_player");
+            _fcField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_firearmController");
+            return AccessTools.Method(typeof(ProceduralWeaponAnimation), nameof(ProceduralWeaponAnimation.ApplyAimingAlignment));
+        }
+
+        [PatchPrefix]
+        private static bool PatchPrefix(ProceduralWeaponAnimation __instance)
+        {
+            FirearmController firearmController = (FirearmController)_fcField.GetValue(__instance);
+            if (firearmController == null) return false;
+            Player player = (Player)_playerField.GetValue(firearmController);
+            if (player != null && player.IsYourPlayer)
+            {
+                return false;
+            }
+            return true;
+        }
+    }
+
+    public class FOVPatch : ModulePatch
+    {
+        private static FieldInfo _playerField;
+        private static FieldInfo _fcField;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            _playerField = AccessTools.Field(typeof(FirearmController), "_player");
+            _fcField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_firearmController");
+            return typeof(ProceduralWeaponAnimation).GetMethod("set_IsAiming", BindingFlags.Instance | BindingFlags.Public);
+        }
+
+        [PatchPrefix]
+        private static bool PatchPrefix(ProceduralWeaponAnimation __instance, ref int fov, ref bool ____isAiming, GInterface200 ____firearmAnimationData)
+        {
+            FirearmController firearmController = (FirearmController)_fcField.GetValue(__instance);
+            if (firearmController == null) return false;
+            Player player = (Player)_playerField.GetValue(firearmController);
+            if (player != null && player.IsYourPlayer)
+            {
+
+                if (__instance.PointOfView == EPointOfView.FirstPerson && ____firearmAnimationData != null)
+                {
+                    if (__instance.AimIndex < __instance.ScopeAimTransforms.Count && !____firearmAnimationData.MouseLookControl)
+                    {
+                        float x = __instance.Single_2;
+             /*           if (__instance.IsAiming)
+                        {
+                            x = (__instance.CurrentScope.IsOptic ? 35f : (__instance.Single_2 - 15f));
+                        }*/
+                        CameraClass.Instance.SetFov(x, 1f, true);
+                    }
+                    __instance.method_1();
+                    return false;
+                }
+
+                return false;
+            }
+            return true;
+        }
+    }
+
+    public class IsAimingPatch : ModulePatch
+    {
+        private static FieldInfo _playerField;
+        private static FieldInfo _fcField;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            _playerField = AccessTools.Field(typeof(FirearmController), "_player");
+            _fcField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_firearmController");
+            return typeof(ProceduralWeaponAnimation).GetMethod("set_IsAiming", BindingFlags.Instance | BindingFlags.Public);
+        }
+
+        [PatchPrefix]
+        private static bool PatchPrefix(ProceduralWeaponAnimation __instance, ref bool value, ref bool ____isAiming)
+        {
+            FirearmController firearmController = (FirearmController)_fcField.GetValue(__instance);
+            if (firearmController == null) return false;
+            Player player = (Player)_playerField.GetValue(firearmController);
+            if (player != null && player.IsYourPlayer)
+            {
+                ____isAiming = value;
+     /*           __instance.CameraSmoothBlender.ChangeValue(this.CameraSmoothSteady, 0f);
+                if (__instance._aimSwayStrength > 0f)
+                {
+                    __instance._aimSwayBlender.Value = 1f;
+                    __instance._aimSwayDirection = this._aimSwayStrength * this.IntensityByPoseLevel * new Vector3(Random.Range(this.AimSwayMin.x, this.AimSwayMax.x), Random.Range(this.AimSwayMin.y, this.AimSwayMax.y), Random.Range(this.AimSwayMin.z, this.AimSwayMax.z));
+                }
+                if (this._isAiming && this._buffInfo.StiffDraw)
+                {
+                    this.Breath.StiffUntill = Time.time + 3f;
+                }
+                this.method_23(false);
+                if (this._isAiming)
+                {
+                    this.method_13();
+                    this.method_14();
+                    this.method_2();
+                    return;
+                }*/
+                return false;
+            }
+            return true;
+        }
+    }
+
+    public class ScopeRotationPatch : ModulePatch
+    {
+        private static FieldInfo _playerField;
+        private static FieldInfo _fcField;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            _playerField = AccessTools.Field(typeof(FirearmController), "_player");
+            _fcField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_firearmController");
+            return AccessTools.Method(typeof(ProceduralWeaponAnimation), nameof(ProceduralWeaponAnimation.method_13));
+        }
+
+        [PatchPrefix]
+        private static bool PatchPrefix(ProceduralWeaponAnimation __instance)
+        {
+            FirearmController firearmController = (FirearmController)_fcField.GetValue(__instance);
+            if (firearmController == null) return false;
+            Player player = (Player)_playerField.GetValue(firearmController);
+            if (player != null && player.IsYourPlayer)
+            {
+                __instance.ResetScopeRotation();
+                return false;
+            }
+            return true;
+        }
+    }
+
+    
+
+    public class ShiftWeaponRootPatch : ModulePatch
+    {
+
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(PlayerBones), nameof(PlayerBones.ShiftWeaponRoot));
+        }
+
+        [PatchPrefix]
+        private static bool PatchPrefix()
+        {
+            return false;
+        }
+    }
+
+    public class HeadPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return AccessTools.Method(typeof(PlayerBones), nameof(PlayerBones.RotateHead));
+        }
+
+        [PatchPrefix]
+        private static bool PatchPrefix()
+        {
+            return false;
+        }
+    }
+
+    public class IsAimingPatch1 : ModulePatch
+    {
+        private static FieldInfo _playerField;
+        private static FieldInfo _fcField;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            _playerField = AccessTools.Field(typeof(FirearmController), "_player");
+            _fcField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_firearmController");
+            return AccessTools.Method(typeof(ProceduralWeaponAnimation), nameof(ProceduralWeaponAnimation.method_13));
+        }
+
+        [PatchPrefix]
+        private static bool PatchPrefix(ProceduralWeaponAnimation __instance)
+        {
+            FirearmController firearmController = (FirearmController)_fcField.GetValue(__instance);
+            if (firearmController == null) return false;
+            Player player = (Player)_playerField.GetValue(firearmController);
+            if (player != null && player.IsYourPlayer)
+            {
+                return false;
+            }
+            return true;
+        }
+    }
+
+    public class IsAimingPatch4 : ModulePatch
+    {
+        private static FieldInfo _playerField;
+        private static FieldInfo _fcField;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            _playerField = AccessTools.Field(typeof(FirearmController), "_player");
+            _fcField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_firearmController");
+            return AccessTools.Method(typeof(ProceduralWeaponAnimation), nameof(ProceduralWeaponAnimation.method_17));
+        }
+
+        [PatchPrefix]
+        private static bool PatchPrefix(ProceduralWeaponAnimation __instance)
+        {
+            FirearmController firearmController = (FirearmController)_fcField.GetValue(__instance);
+            if (firearmController == null) return false;
+            Player player = (Player)_playerField.GetValue(firearmController);
+            if (player != null && player.IsYourPlayer)
+            {
+                return false;
+            }
+            return true;
+        }
+    }
+
+    public class IsAimingPatch5 : ModulePatch
+    {
+        private static FieldInfo _playerField;
+        private static FieldInfo _fcField;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            _playerField = AccessTools.Field(typeof(FirearmController), "_player");
+            _fcField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_firearmController");
+            return AccessTools.Method(typeof(ProceduralWeaponAnimation), nameof(ProceduralWeaponAnimation.UpdateAimWeight));
+        }
+
+        [PatchPrefix]
+        private static bool PatchPrefix(ProceduralWeaponAnimation __instance, float deltaTime, float ____aimingWeight, float ____currentScopeWeight)
+        {
+            FirearmController firearmController = (FirearmController)_fcField.GetValue(__instance);
+            if (firearmController == null) return false;
+            Player player = (Player)_playerField.GetValue(firearmController);
+            if (player != null && player.IsYourPlayer)
+            {
+                float num = __instance.CameraSmoothOut;
+                int num2 = 0;
+                ____aimingWeight = Mathf.Lerp(____aimingWeight, (float)num2, num * deltaTime);
+                ____currentScopeWeight = Mathf.Lerp(____currentScopeWeight, 1f, num * deltaTime);
+                return false;
+            }
+            return true;
+        }
+    }
+
+    public class IsAimingPatch2 : ModulePatch
+    {
+        private static FieldInfo _playerField;
+        private static FieldInfo _fcField;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            _playerField = AccessTools.Field(typeof(FirearmController), "_player");
+            _fcField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_firearmController");
+            return AccessTools.Method(typeof(ProceduralWeaponAnimation), nameof(ProceduralWeaponAnimation.method_14));
+        }
+
+        [PatchPrefix]
+        private static bool PatchPrefix(ProceduralWeaponAnimation __instance)
+        {
+            FirearmController firearmController = (FirearmController)_fcField.GetValue(__instance);
+            if (firearmController == null) return false;
+            Player player = (Player)_playerField.GetValue(firearmController);
+            if (player != null && player.IsYourPlayer)
+            {
+                return false;
+            }
+            return true;
+        }
+    }
+
+    public class IsAimingPatch3 : ModulePatch
+    {
+        private static FieldInfo _playerField;
+        private static FieldInfo _fcField;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            _playerField = AccessTools.Field(typeof(FirearmController), "_player");
+            _fcField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_firearmController");
+            return AccessTools.Method(typeof(ProceduralWeaponAnimation), nameof(ProceduralWeaponAnimation.method_12));
+        }
+
+        [PatchPrefix]
+        private static bool PatchPrefix(ProceduralWeaponAnimation __instance)
+        {
+            FirearmController firearmController = (FirearmController)_fcField.GetValue(__instance);
+            if (firearmController == null) return false;
+            Player player = (Player)_playerField.GetValue(firearmController);
+            if (player != null && player.IsYourPlayer)
+            {
+                return false;
+            }
+            return true;
+        }
+    }
+
+    public class UpdateAimWeightPatch : ModulePatch
+    {
+        private static FieldInfo _playerField;
+        private static FieldInfo _fcField;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            _playerField = AccessTools.Field(typeof(FirearmController), "_player");
+            _fcField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_firearmController");
+            return AccessTools.Method(typeof(ProceduralWeaponAnimation), nameof(ProceduralWeaponAnimation.UpdateAimWeight));
+        }
+
+        [PatchPrefix]
+        private static bool PatchPrefix(ProceduralWeaponAnimation __instance, float deltaTime, ref float ____aimingWeight, ref float ____currentScopeWeight)
+        {
+            FirearmController firearmController = (FirearmController)_fcField.GetValue(__instance);
+            if (firearmController == null) return false;
+            Player player = (Player)_playerField.GetValue(firearmController);
+            if (player != null && player.IsYourPlayer)
+            {
+                float num = __instance.CameraSmoothOut;
+                int num2 = 0;
+                ____aimingWeight = Mathf.Lerp(____aimingWeight, (float)num2, num * deltaTime);
+                ____currentScopeWeight = Mathf.Lerp(____currentScopeWeight, 1f, num * deltaTime);
+                return false;
+            }
+            return true;
+        }
+    }
+
+    public class CamRecoilPatch : ModulePatch
+    {
+        private static FieldInfo _cameraRecoilField;
+        private static FieldInfo _cameraRecoilRotateField;
+        private static FieldInfo _prevCameraTargetField;
+        private static FieldInfo _headRotationField;
+        private static FieldInfo _playerField;
+        private static FieldInfo _fcField;
+        private static float _camRecoilLerpTempSpeed = 1f;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            _cameraRecoilField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_cameraRecoilLerpTempSpeed");
+            _cameraRecoilRotateField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_currentRecoilCameraRotate");
+            _prevCameraTargetField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_previousCameraTargetRotation");
+            _headRotationField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_headRotationVec");
+            _playerField = AccessTools.Field(typeof(FirearmController), "_player");
+            _fcField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_firearmController");
+            return typeof(ProceduralWeaponAnimation).GetMethod("method_19", BindingFlags.Instance | BindingFlags.Public);
+        }
+
+        [PatchPrefix]
+        private static bool PatchPrefix(ProceduralWeaponAnimation __instance, float deltaTime)
+        {
+            FirearmController firearmController = (FirearmController)_fcField.GetValue(__instance);
+            if (firearmController == null) return false;
+            Player player = (Player)_playerField.GetValue(firearmController);
+            if (player != null && player.IsYourPlayer && player.MovementContext.CurrentState.Name != EPlayerState.Stationary)
+            {
+                float _cameraRecoilLerpTempSpeed = (float)_cameraRecoilField.GetValue(__instance);
+                Quaternion _currentRecoilCameraRotate = (Quaternion)_cameraRecoilRotateField.GetValue(__instance);
+                Quaternion _previousCameraTargetRotation = (Quaternion)_prevCameraTargetField.GetValue(__instance);
+
+                __instance.HandsContainer.CameraRotation.ReturnSpeed = 0.2f;
+                __instance.HandsContainer.CameraRotation.Damping = 0.55f;
+
+                Vector3 _headRotationVec = (Vector3)_headRotationField.GetValue(__instance);
+                if (_headRotationVec != Vector3.zero)
+                {
+                    return false;
+                }
+                Vector3 current = __instance.Shootingg.CurrentRecoilEffect.HandRotationRecoilEffect.Current;
+                bool autoFireOn;
+                if (((autoFireOn = (__instance.Shootingg.CurrentRecoilEffect.HandRotationRecoilEffect as NewRotationRecoilProcess).AutoFireOn) & __instance.IsAiming) && current != Vector3.zero)
+                {
+                    if (!__instance.Shootingg.CurrentRecoilEffect.HandRotationRecoilEffect.StableOn)
+                    {
+                        Quaternion baseLocalRotation = __instance.HandsContainer.CameraTransform.localRotation;
+                        baseLocalRotation.y = 0f;
+                        /*               Quaternion rhs = Quaternion.Euler(current);*/
+                        Quaternion newLocalRotation = baseLocalRotation; // * rhs //bsg uses this mmodifer
+                        _camRecoilLerpTempSpeed = Mathf.Clamp(_camRecoilLerpTempSpeed + __instance.CameraToWeaponAngleStep * deltaTime, __instance.CameraToWeaponAngleSpeedRange.x, __instance.CameraToWeaponAngleSpeedRange.y) * 2f;
+                        Quaternion newRecoilRotation = Quaternion.Lerp(_currentRecoilCameraRotate, newLocalRotation, _camRecoilLerpTempSpeed);
+                        __instance.HandsContainer.CameraTransform.localRotation = newRecoilRotation;
+                        _prevCameraTargetField.SetValue(__instance, newLocalRotation);
+                        _cameraRecoilRotateField.SetValue(__instance, newRecoilRotation);
+                        return false;
+                    }
+                    Quaternion previousCameraTargetRotation = _previousCameraTargetRotation;
+                    previousCameraTargetRotation.z = __instance.HandsContainer.CameraTransform.localRotation.z;
+                    _camRecoilLerpTempSpeed = Mathf.Clamp(_camRecoilLerpTempSpeed + __instance.CameraToWeaponAngleStep * deltaTime, __instance.CameraToWeaponAngleSpeedRange.x, __instance.CameraToWeaponAngleSpeedRange.y) * 2f;
+                    Quaternion newCameraRotation = Quaternion.Lerp(_currentRecoilCameraRotate, previousCameraTargetRotation, _camRecoilLerpTempSpeed);
+                    __instance.HandsContainer.CameraTransform.localRotation = newCameraRotation;
+                    _cameraRecoilRotateField.SetValue(__instance, newCameraRotation);
+                    return false;
+                }
+                else
+                {
+                    /*     if (!autoFireOn & __instance.IsAiming)
+                         {
+                             Quaternion localCameraRotation = __instance.HandsContainer.CameraTransform.localRotation;
+                             localCameraRotation.y = 0f;
+                             *//*              Quaternion rhs = Quaternion.Euler(current);*//*
+                             Quaternion cameraLocalRotaitonModified = localCameraRotation; // * rhs //bsg uses this modifer
+                             _camRecoilLerpTempSpeed = Mathf.Clamp(_camRecoilLerpTempSpeed - __instance.CameraToWeaponAngleStep * deltaTime, __instance.CameraToWeaponAngleSpeedRange.x, __instance.CameraToWeaponAngleSpeedRange.y);
+                             Quaternion newCameraRotaiton = Quaternion.Lerp(_currentRecoilCameraRotate, cameraLocalRotaitonModified, _camRecoilLerpTempSpeed * 2f); //bsg does not multi by 2, can't remember why I do this :')
+                             __instance.HandsContainer.CameraTransform.localRotation = newCameraRotaiton;
+                             _prevCameraTargetField.SetValue(__instance, cameraLocalRotaitonModified);
+                             _cameraRecoilRotateField.SetValue(__instance, newCameraRotaiton);
+                             return false;
+                         }*/
+                    Quaternion localRotation3 = __instance.HandsContainer.CameraTransform.localRotation;
+                    var tempSpeed = Mathf.Clamp(_cameraRecoilLerpTempSpeed - __instance.CameraToWeaponAngleStep * deltaTime, __instance.CameraToWeaponAngleSpeedRange.x, __instance.CameraToWeaponAngleSpeedRange.y);
+                    _cameraRecoilField.SetValue(__instance, tempSpeed);
+                     Quaternion quaternion8 = Quaternion.Lerp(_currentRecoilCameraRotate, localRotation3, __instance.CameraToWeaponAngleSpeedRange.y);
+                    __instance.HandsContainer.CameraTransform.localRotation = quaternion8;
+                    _prevCameraTargetField.SetValue(__instance, localRotation3);
+                    _cameraRecoilRotateField.SetValue(__instance, quaternion8);
+                    return false;
+                }
+            }
+            return false;
+        }
+    }
+
+    public class IntensityByAimingPatch : ModulePatch
+    {
+        private static FieldInfo _playerField;
+        private static FieldInfo _fcField;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            _playerField = AccessTools.Field(typeof(FirearmController), "_player");
+            _fcField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_firearmController");
+            return typeof(ProceduralWeaponAnimation).GetMethod("get_IntensityByAiming", BindingFlags.Instance | BindingFlags.Public);
+        }
+
+        [PatchPrefix]
+        private static bool PatchPrefix(ProceduralWeaponAnimation __instance, ref float __result)
+        {
+            FirearmController firearmController = (FirearmController)_fcField.GetValue(__instance);
+            if (firearmController == null) return false;
+            Player player = (Player)_playerField.GetValue(firearmController);
+            if (player != null && player.IsYourPlayer)
+            {
+                __result = 1f;
+            }
+            return true;
+        }
+    }
 
     //TODO: move to common lib to allow other modules to patch this
     public class TacticalReloadPatch : ModulePatch
     {
         private static FieldInfo _playerField;
-        private static FieldInfo fcField;
+        private static FieldInfo _fcField;
 
         protected override MethodBase GetTargetMethod()
         {
             _playerField = AccessTools.Field(typeof(FirearmController), "_player");
-            fcField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_firearmController");
+            _fcField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_firearmController");
             return typeof(ProceduralWeaponAnimation).GetMethod("get_TacticalReload", BindingFlags.Instance | BindingFlags.Public);
         }
 
         [PatchPrefix]
         private static bool PatchPrefix(ProceduralWeaponAnimation __instance, ref bool __result)
         {
-            FirearmController firearmController = (FirearmController)fcField.GetValue(__instance);
+            FirearmController firearmController = (FirearmController)_fcField.GetValue(__instance);
             if (firearmController == null) return false;
             Player player = (Player)_playerField.GetValue(firearmController);
             if (player != null && player.IsYourPlayer)
@@ -549,7 +1449,7 @@ namespace StanceOverhaul.Patches
         private static bool Prefix(FirearmsAnimator __instance, Weapon.EFireMode fireMode, bool skipAnimation = false)
         {
             __instance.ResetLeftHand();
-            skipAnimation = Plugin.StanceControllerInstance.CurrentStanceType == EStance.HighReady && PlayerStateInstance.IsSprinting ? true : skipAnimation;
+            skipAnimation = Plugin.StanceControllerInstance.CurrentStanceType == EStanceType.HighReady && PlayerStateInstance.IsSprinting ? true : skipAnimation;
             WeaponAnimationSpeedControllerClass.SetFireMode(__instance.Animator, (float)fireMode);
             if (!skipAnimation)
             {
@@ -915,7 +1815,7 @@ namespace StanceOverhaul.Patches
             Player player = (Player)playerField.GetValue(__instance);
             if (player.IsYourPlayer)
             {
-                if (Plugin.StanceControllerInstance.CurrentStanceType == EStance.PatrolStance)
+                if (Plugin.StanceControllerInstance.CurrentStanceType == EStanceType.PatrolStance)
                 {
                     weaponLnField.SetValue(__instance, Plugin.StanceControllerInstance.StanceModifiedWeaponLength * 0.75f);
                     return;
@@ -932,17 +1832,17 @@ namespace StanceOverhaul.Patches
                         weaponLnField.SetValue(__instance, Plugin.StanceControllerInstance.StanceModifiedWeaponLength * 0.8f);
                         return;
                     }
-                    if (Plugin.StanceControllerInstance.CurrentStanceType == EStance.ShortStock)
+                    if (Plugin.StanceControllerInstance.CurrentStanceType == EStanceType.ShortStock)
                     {
                         weaponLnField.SetValue(__instance, Plugin.StanceControllerInstance.StanceModifiedWeaponLength * 0.9f);
                         return;
                     }
-                    if (Plugin.StanceControllerInstance.CurrentStanceType == EStance.HighReady)
+                    if (Plugin.StanceControllerInstance.CurrentStanceType == EStanceType.HighReady)
                     {
                         weaponLnField.SetValue(__instance, Plugin.StanceControllerInstance.StanceModifiedWeaponLength * 0.95f);
                         return;
                     }
-                    if (Plugin.StanceControllerInstance.CurrentStanceType == EStance.LowReady)
+                    if (Plugin.StanceControllerInstance.CurrentStanceType == EStanceType.LowReady)
                     {
                         weaponLnField.SetValue(__instance, Plugin.StanceControllerInstance.StanceModifiedWeaponLength * 0.98f);
                         return;

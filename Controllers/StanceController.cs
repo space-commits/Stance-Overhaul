@@ -3,6 +3,7 @@ using EFT;
 using EFT.Animations;
 using RealismCommonLib.Events;
 using RealismCommonLib.ModifierHandlers;
+using RealismCommonLib.StateControllers.InstanceState;
 using RealismCommonLib.Utils;
 using StanceOverhaul.Controllers.PatchHooks;
 using StanceOverhaul.Controllers.StateControllers;
@@ -54,7 +55,7 @@ namespace StanceOverhaul.Controllers
         private FloatMultiplierHandle _newMagReload;
         private FloatMultiplierHandle _internalMagReload;
 
-        private EStance _targetStance = EStance.None;
+        private EStanceType _targetStance = EStanceType.None;
 
         public Vector3 MountWeapPosition = Vector3.zero;
         public Vector3 CurrentVisualRecoil = Vector3.zero;
@@ -101,7 +102,7 @@ namespace StanceOverhaul.Controllers
         {
             get 
             {
-                return PlayerStateInstance.ProceduralWeaponAnimation.BlindfireBlender.Value > 0f;
+                return PlayerStateInstance.PWA.BlindfireBlender.Value > 0f;
             }
         }
 
@@ -116,10 +117,10 @@ namespace StanceOverhaul.Controllers
         /// <summary>
         /// Stores a stance to return to after doing active aim, melee or aiming
         /// </summary>
-        public EStance StoredStances { get; set; }
+        public EStanceType StoredStances { get; set; }
 
         //TODO: move ResetProceduralState to sub to StanceState events
-        public EStance TargetStances
+        public EStanceType TargetStances
         {
             get { return _targetStance; }
             set
@@ -137,7 +138,7 @@ namespace StanceOverhaul.Controllers
         {
             get
             {
-                return CurrentStanceType == EStance.HighReady && HealthConditionForcesLowReady;
+                return CurrentStanceType == EStanceType.HighReady && HealthConditionForcesLowReady;
             }
         }
 
@@ -173,7 +174,7 @@ namespace StanceOverhaul.Controllers
             get
             {
                 return
-                    CurrentStanceType == EStance.LeftShoulder ? LEFT_SHOULDER_SWAY_MULTI : 1f;
+                    CurrentStanceType == EStanceType.LeftShoulder ? LEFT_SHOULDER_SWAY_MULTI : 1f;
             }
         }
 
@@ -273,6 +274,22 @@ namespace StanceOverhaul.Controllers
             }
         }
 
+        public Vector3 StanceRotation
+        {
+            get
+            {
+                return _stanceState.StanceRotation;
+            }
+        }
+
+        public Vector3 StancePosition
+        {
+            get
+            {
+                return _stanceState.StancePosition;
+            }
+        }
+
         //TODO: this needs to move to FOV Fix and/or JSON file, or wherever weapon POS will be handled (common lib?)
         //Common lib can have functionality for it, but modules need to apply offsets themeselves
         //Common lib can then surface the starting weapon positions for PID
@@ -306,18 +323,17 @@ namespace StanceOverhaul.Controllers
 
         public Spring StancePositionSpring { get; private set; }
         public Spring StanceRotationSpring { get; private set; }
-        public Spring PositionWiggleSpring { get; private set; }
-        public Spring RotatationWiggleSpring { get; private set; }
 
         private List<StanceBase> _stances = new List<StanceBase>();
         public PatrolStance PatrolStance { get; private set; }
-        public LeftStance LeftShoulder { get; private set; }
+        public LeftShoulder LeftShoulder { get; private set; }
         public LowReady LowReady { get; private set; }
         public HighReady HighReady { get; private set; }
+        public ActiveAim ActiveAim { get; private set; }
 
         public bool AwakeRan { get; private set; } = false;
 
-        public EStance CurrentStanceType => _stanceState.CurrentStanceType;
+        public EStanceType CurrentStanceType => _stanceState.ActiveStanceType;
 
         void Awake()
         {
@@ -338,7 +354,7 @@ namespace StanceOverhaul.Controllers
             _fixedTime += Time.fixedDeltaTime;
         }
 
-        void LateUpdate()
+        void Update()
         {
             float regularTime = Time.deltaTime;
 
@@ -346,13 +362,16 @@ namespace StanceOverhaul.Controllers
 
             RunUpdates(regularTime);
 
-            if (_nFixedFrames > 0)
+            if (_nFixedFrames > 0 &&
+                PlayerStateInstance.PWA.HandsContainer.WeaponRootAnim != null &&
+                PlayerStateInstance.PWA.enabled &&
+                !Mathf.Approximately(_fixedTime, 0f))
             {
                 float fixedTime = _fixedTime / _nFixedFrames;
 
                 for (int i = 0; i < _nFixedFrames; i++)
                 {
-                    ProceduralUpdate(fixedTime);
+                    ProceduralUpdate(fixedTime, _nFixedFrames);
                 }
 
                 _nFixedFrames = 0;
@@ -375,13 +394,16 @@ namespace StanceOverhaul.Controllers
                 InitStance(() => new PatrolStance());
 
             LeftShoulder =
-                InitStance(() => new LeftStance());
+                InitStance(() => new LeftShoulder());
 
             HighReady =
                 InitStance(() => new HighReady());
 
             LowReady =
                 InitStance(() => new LowReady());
+
+            ActiveAim =
+                InitStance(() => new ActiveAim());
         }
 
         private T InitStance<T>(Func<T> factory) where T : StanceBase
@@ -393,10 +415,8 @@ namespace StanceOverhaul.Controllers
 
         private void InitSprings() 
         {
-            StancePositionSpring = Cloner.ShallowClone(PlayerStateInstance.ProceduralWeaponAnimation.HandsContainer.HandsPosition);
-            StanceRotationSpring = Cloner.ShallowClone(PlayerStateInstance.ProceduralWeaponAnimation.HandsContainer.HandsRotation);
-            PositionWiggleSpring = Cloner.ShallowClone(PlayerStateInstance.ProceduralWeaponAnimation.HandsContainer.HandsRotation);
-            RotatationWiggleSpring = Cloner.ShallowClone(PlayerStateInstance.ProceduralWeaponAnimation.HandsContainer.HandsRotation);
+            StancePositionSpring = Cloner.ShallowClone(PlayerStateInstance.PWA.HandsContainer.HandsPosition);
+            StanceRotationSpring = Cloner.ShallowClone(PlayerStateInstance.PWA.HandsContainer.HandsRotation);
         }
 
         private void InitStateControllers()
@@ -559,7 +579,7 @@ namespace StanceOverhaul.Controllers
             return PlayerStateInstance.Player.MovementContext.CurrentState.Name != EPlayerState.Stationary;
         }
 
-        private void ProceduralUpdate(float dt) 
+        public void ProceduralUpdate(float dt, int nFrames) 
         {
             //TODO: set these outside of update, and based on weapon stats
             StanceRotationSpring.ReturnSpeed = PluginConfig.test9.Value;
@@ -568,8 +588,12 @@ namespace StanceOverhaul.Controllers
             StanceRotationSpring.Damping = PluginConfig.test10.Value;
             StancePositionSpring.Damping = PluginConfig.test10.Value;
 
-            StanceRotationSpring.FixedUpdate(dt);
-            StancePositionSpring.FixedUpdate(dt);
+            /*            StancePositionSpring.AddAcceleration(StancePosition);
+                        StanceRotationSpring.AddAcceleration(StanceRotation);*/
+
+            Plugin.StanceControllerInstance.StancePositionSpring.FixedUpdate(dt, nFrames);
+            Plugin.StanceControllerInstance.StanceRotationSpring.FixedUpdate(dt, nFrames);
+            // _stanceState.UpdateTransforms(dt);
         }
 
         //TODO: move reload bonuses to a reload controller class
@@ -578,8 +602,8 @@ namespace StanceOverhaul.Controllers
             float bonus = 1f;
             if (!ReloadStateInstance.IsAttemptingRevolverReload) 
             {
-                if (CurrentStanceType == EStance.LowReady == true && !WeaponStateInstance.IsShotgun) bonus = LOW_READY_RELOAD_SPEED_BUFF;
-                else if (CurrentStanceType == EStance.HighReady == true && WeaponStateInstance.IsShotgun) bonus = HIGH_READY_RELOAD_SPEED_BUFF;
+                if (CurrentStanceType == EStanceType.LowReady == true && !WeaponStateInstance.IsShotgun) bonus = LOW_READY_RELOAD_SPEED_BUFF;
+                else if (CurrentStanceType == EStanceType.HighReady == true && WeaponStateInstance.IsShotgun) bonus = HIGH_READY_RELOAD_SPEED_BUFF;
             }
             _internalMagReload.Multiplier = bonus;
         }
@@ -587,29 +611,29 @@ namespace StanceOverhaul.Controllers
         private void ApplyMagReloadSpeedBonuses() 
         {
             _magReload.Multiplier =
-               CurrentStanceType == EStance.ActiveAiming && ShouldAllowActiveOnReload ? ACTIVE_AIM_RECHAMBER_SPEED_BUFF :
-               CurrentStanceType == EStance.HighReady ? HIGH_READY_RELOAD_SPEED_BUFF :
+               CurrentStanceType == EStanceType.ActiveAiming && ShouldAllowActiveOnReload ? ACTIVE_AIM_RECHAMBER_SPEED_BUFF :
+               CurrentStanceType == EStanceType.HighReady ? HIGH_READY_RELOAD_SPEED_BUFF :
                1f;
         }
 
         private void ApplyCheckAmmoSpeedBonus() 
         {
-            _checkAmmo.Multiplier = CurrentStanceType == EStance.HighReady ? HIGH_READY_CHECK_AMMO_SPEED_BUFF : 1f;
+            _checkAmmo.Multiplier = CurrentStanceType == EStanceType.HighReady ? HIGH_READY_CHECK_AMMO_SPEED_BUFF : 1f;
         }
 
         private void ApplyChamberSpeedBonus()
         {
             _rechamber.Multiplier =
-                CurrentStanceType == EStance.ActiveAiming ? ACTIVE_AIM_RECHAMBER_SPEED_BUFF :
-                CurrentStanceType == EStance.HighReady ? HIGH_READY_RECHAMBER_SPEED_BUFF :
+                CurrentStanceType == EStanceType.ActiveAiming ? ACTIVE_AIM_RECHAMBER_SPEED_BUFF :
+                CurrentStanceType == EStanceType.HighReady ? HIGH_READY_RECHAMBER_SPEED_BUFF :
                 1f;
         }
 
         private void ApplyChamberCheckSpeedBonus()
         {
             _checkChamber.Multiplier =
-                CurrentStanceType == EStance.ActiveAiming ? ACTIVE_AIM_RECHAMBER_SPEED_BUFF :
-                CurrentStanceType == EStance.HighReady ? HIGH_READY_RECHAMBER_SPEED_BUFF :
+                CurrentStanceType == EStanceType.ActiveAiming ? ACTIVE_AIM_RECHAMBER_SPEED_BUFF :
+                CurrentStanceType == EStanceType.HighReady ? HIGH_READY_RECHAMBER_SPEED_BUFF :
                 1f;
         }
 
@@ -941,7 +965,7 @@ namespace StanceOverhaul.Controllers
             float stanceMulti = Mathf.Clamp(ergoMulti * HealthStateInstance.StanceInjuryMulti * HealthStateInstance.AdrenalineStanceBonus * (Mathf.Max(PlayerStateInstance.RemainingArmStamFactor, 0.65f)), lowerSpeedLimit, 1.18f); //move to property + const, calculate once
             float resetErgoMulti = (1f - stanceMulti) + 1f;
 
-            bool pauseStance = PlayerStateInstance.IsInventoryOpen || IsBlindFiring || CurrentStanceType == EStance.LeftShoulder;
+            bool pauseStance = PlayerStateInstance.IsInventoryOpen || IsBlindFiring || CurrentStanceType == EStanceType.LeftShoulder;
              
             float wiggleErgoMulti = Mathf.Clamp((ErgoStanceSpeed * 0.5f), 0.1f, 1f);
             float stocklessModifier = WeaponStateInstance.HasShoulderContact ? 1f : 0.5f;

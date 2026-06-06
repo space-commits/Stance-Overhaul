@@ -1,6 +1,6 @@
 ﻿namespace StanceOverhaul.Enums;
 
-public enum EStance
+public enum EStanceType
 {
     None,
     LowReady,

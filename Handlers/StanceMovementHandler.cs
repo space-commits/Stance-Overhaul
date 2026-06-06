@@ -52,17 +52,17 @@ namespace StanceOverhaul.Controllers.StateControllers
             _walkSpeed.Multiplier = stanceFactor;
         }
 
-        private float GetStanceWalkSpeedFactor(EStance stance)
+        private float GetStanceWalkSpeedFactor(EStanceType stance)
         {
             switch (stance)
             {
-                case EStance.PatrolStance:
+                case EStanceType.PatrolStance:
                     return PATROL_STANCE_WALK_SPEED;
-                case EStance.LowReady:
+                case EStanceType.LowReady:
                     return LOW_READY_WALK_SPEED;
-                case EStance.HighReady:
+                case EStanceType.HighReady:
                     return HIGH_READY_WALK_SPEED;
-                case EStance.ShortStock:
+                case EStanceType.ShortStock:
                     return SHORT_STOCK_WALK_SPEED;
                 default:
                     return 1f;
@@ -83,17 +83,17 @@ namespace StanceOverhaul.Controllers.StateControllers
             _sprintAccelSpeed.Multiplier = stanceAccelBonus;*/
         }
 
-        private float GetStanceSprintAccelBonus(EStance stance, bool isTacSprint)
+        private float GetStanceSprintAccelBonus(EStanceType stance, bool isTacSprint)
         {
-            if (stance == EStance.PatrolStance)
+            if (stance == EStanceType.PatrolStance)
                 return PATROL_STANCE_SPRINT_ACCEL;
-            if (stance == EStance.ShortStock)
+            if (stance == EStanceType.ShortStock)
                 return SHORT_STOCK_SPRINT_ACCEL;
-            if (stance == EStance.LowReady)
+            if (stance == EStanceType.LowReady)
                 return LOW_READY_SPRINT_ACCEL;
             if (isTacSprint)
                 return TAC_SPRINT_ACCEL;
-            if (stance == EStance.HighReady)
+            if (stance == EStanceType.HighReady)
                 return HIGH_READY_SPRINT_ACCEL;
             return 1f;
         }

@@ -6,17 +6,19 @@ namespace StanceOverhaul.State;
 
 internal class StanceSlot
 {
+    private StanceState _stanceState;
     public IStance Stance;
     public ECurveType ActiveCurve { get; set; }
     public float Progress { get; set; } // 0..1
     public int Direction { get; set; } // +1 or -1
 
-    internal StanceSlot(IStance stance, ECurveType activeCurve, float progress, int direction)
+    internal StanceSlot(IStance stance, ECurveType activeCurve, float progress, int direction, StanceState stanceState)
     {
         Stance = stance;
         ActiveCurve = activeCurve;
         Direction = direction;
         Progress = progress;
+        _stanceState = stanceState;
     }
 
     public bool IsAtIdle =>
@@ -59,7 +61,11 @@ internal class StanceSlot
     {
         if (Direction == 0) return; // holding
 
-        Progress = Mathf.Clamp01(Progress + deltaTime * Stance.BaseSpeed * PluginConfig.test20.Value * Direction);
+        Progress = Mathf.Clamp01(
+            Progress + deltaTime * 
+            Stance.BaseSpeed(_stanceState.PrimaryStance?.StanceType) *
+            Stance.TransitionSpeedModifier(_stanceState.ActiveStanceType) *
+            PluginConfig.test20.Value * Direction);
 
         // reached pose end -> enter holding
         if (IsAtPose)

@@ -10,7 +10,7 @@ namespace StanceOverhaul.Stances
 {
     public abstract class StanceBase : IStance, IDisposable
     {
-        public virtual EStance StanceType => EStance.None;
+        public virtual EStanceType StanceType => EStanceType.None;
 
         public abstract Vector3Curve EnterPositionCurve { get; }
         public abstract Vector3Curve EnterRotationCurve { get; }
@@ -18,8 +18,9 @@ namespace StanceOverhaul.Stances
         public abstract Vector3Curve ExitPositionCurve { get; }
         public abstract Vector3Curve ExitRotationCurve { get; }
 
-        public virtual float BlendThreshold => 0.5f; //TODO should depend on incoming stance type
-        public virtual float BaseSpeed => 2.5f; //TODO expose to config
+        public virtual float BlendThreshold(EStanceType nextStance) { return 0.5f; }
+        public virtual float BaseSpeed(EStanceType? previousStance) { return 1f; }
+        public virtual float TransitionSpeedModifier(EStanceType? nextStance) { return 1f; }
 
         public StanceBase()
         {

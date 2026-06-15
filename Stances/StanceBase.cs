@@ -14,9 +14,32 @@ namespace StanceOverhaul.Stances
 
         public abstract Vector3Curve EnterPositionCurve { get; }
         public abstract Vector3Curve EnterRotationCurve { get; }
-
         public abstract Vector3Curve ExitPositionCurve { get; }
         public abstract Vector3Curve ExitRotationCurve { get; }
+
+        public virtual AnimationCurve ExitAimSpeedCurve { get; }
+            = new AnimationCurve
+            (
+                new Keyframe { time = 0f, value = 0f },
+                new Keyframe { time = 0.25f, value = 0f },
+                new Keyframe { time = 0.5f, value = 0.1f },
+                new Keyframe { time = 0.7f, value = 0.25f },
+                new Keyframe { time = 0.85f, value = 0.5f },
+                new Keyframe { time = 0.95f, value = 0.8f },
+                new Keyframe { time = 1f, value = 1f }
+            );
+
+        public virtual AnimationCurve EnterAimSpeedCurve { get; }
+            = new AnimationCurve
+            (
+                new Keyframe { time = 0f, value = 0f },
+                new Keyframe { time = 0.25f, value = 0f },
+                new Keyframe { time = 0.5f, value = 0.1f },
+                new Keyframe { time = 0.7f, value = 0.25f },
+                new Keyframe { time = 0.85f, value = 0.5f },
+                new Keyframe { time = 0.95f, value = 0.8f },
+                new Keyframe { time = 1f, value = 1f }
+            );
 
         public virtual float BlendThreshold(EStanceType nextStance) { return 0.5f; }
         public virtual float BaseSpeed(EStanceType? previousStance) { return 1f; }
@@ -62,10 +85,10 @@ namespace StanceOverhaul.Stances
 
         protected virtual void OnQuickMagReload() { }
 
-        public virtual void OnEnter() {}
+        public virtual void OnEnter() { }
 
-        public virtual void OnExit() {}
+        public virtual void OnExit() { }
 
-        public virtual void OnHoldUpdate(float deltaTime) {} //TODO: implement
+        public virtual void OnHoldUpdate(float deltaTime) { } //TODO: implement
     }
 }

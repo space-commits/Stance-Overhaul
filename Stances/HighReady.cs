@@ -23,7 +23,7 @@ public class HighReady : StanceBase
             case EStanceType.ActiveAiming:
                 return PluginConfig.test3.Value;
             case EStanceType.LowReady:
-                return 0.6f;
+                return 0.75f;
             case EStanceType.LeftShoulder:
                 return PluginConfig.test3.Value;
             case EStanceType.PatrolStance:
@@ -42,7 +42,7 @@ public class HighReady : StanceBase
             case EStanceType.ActiveAiming:
                 return PluginConfig.test4.Value;
             case EStanceType.LowReady:
-                return 0.6f;
+                return 3f;
             case EStanceType.LeftShoulder:
                 return PluginConfig.test4.Value;
             case EStanceType.PatrolStance:

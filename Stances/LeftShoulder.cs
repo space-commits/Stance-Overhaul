@@ -25,7 +25,7 @@ public class LeftShoulder : StanceBase
             case EStanceType.HighReady:
                 return PluginConfig.test4.Value;
             case EStanceType.LowReady:
-                return 0.05f;
+                return 0.65f;
             case EStanceType.PatrolStance:
                 return PluginConfig.test4.Value;
             case EStanceType.ShortStock:
@@ -44,13 +44,13 @@ public class LeftShoulder : StanceBase
             case EStanceType.HighReady:
                 return PluginConfig.test5.Value;
             case EStanceType.LowReady:
-                return 0.5f;
+                return 3f;
             case EStanceType.PatrolStance:
                 return PluginConfig.test5.Value;
             case EStanceType.ShortStock:
                 return PluginConfig.test5.Value;
             default:
-                return 2.5f;
+                return 2.2f;
         }
     }
 

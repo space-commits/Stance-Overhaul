@@ -1,4 +1,5 @@
-﻿using StanceOverhaul.Enums;
+﻿using RealismCommonLib.StateControllers.InstanceState;
+using StanceOverhaul.Enums;
 using StanceOverhaul.Handlers;
 using StanceOverhaul.Stances;
 using System.Text;
@@ -23,7 +24,7 @@ namespace StanceOverhaul.State
         public Vector3 StancePosition { get; private set; }
         public Vector3 StanceRotation { get; private set; }
 
-        public EStanceType ActiveStanceType 
+        public EStanceType ActiveStanceType
         {
             get
             {
@@ -36,16 +37,16 @@ namespace StanceOverhaul.State
         /// Use this for checking if what the active or current stance is, not PrimaryStance, 
         /// as PrimaryStance can be heading to idle or being blended out to another stance.
         /// </summary>
-        public IStance? ActiveStance 
+        public IStance? ActiveStance
         {
-            get 
+            get
             {
                 if (_incoming != null && !_incomingPaused && _incoming.IsAtOrHeadingToPose)
                     return _incoming.Stance;
 
                 if (_primary != null && _primary.IsAtOrHeadingToPose)
                     return _primary.Stance;
-                return null;       
+                return null;
             }
         }
 
@@ -62,8 +63,8 @@ namespace StanceOverhaul.State
             }
         }
 
-        public bool IsIdle => ActiveStance == null ;
-  
+        public bool IsIdle => ActiveStance == null;
+
         public void RunOnAwake()
         {
         }
@@ -85,12 +86,12 @@ namespace StanceOverhaul.State
             //check blend threshold - unpause incoming if met
             if (_incoming != null && _incomingPaused && _primary != null)
             {
-          /*      if (_primary.Direction != 0
-                    && _primary.IdleProximity <= _primary.Stance.BlendThreshold)
-                {
-                    ModLogger.LogWarning("== threshold met");
-                    _incomingPaused = false;
-                }*/
+                /*      if (_primary.Direction != 0
+                          && _primary.IdleProximity <= _primary.Stance.BlendThreshold)
+                      {
+                          ModLogger.LogWarning("== threshold met");
+                          _incomingPaused = false;
+                      }*/
 
                 if (_primary.IsHeadingToIdle
                 && _primary.IdleProximity >= _primary.Stance.BlendThreshold(_incoming.Stance.StanceType))
@@ -122,6 +123,9 @@ namespace StanceOverhaul.State
 
                 ModLogger.LogWarning("== incoming promoted to primary");
             }
+
+            UpdateAimSpeed();
+            //UpdateAimState();
 
             UpdateTransforms(deltaTime);
         }
@@ -156,15 +160,59 @@ namespace StanceOverhaul.State
 
             StancePosition = _smoothedPosition;
             StanceRotation = _smoothedRotation;
-
-/*            Plugin.StanceControllerInstance.StancePositionSpring.Zero = StancePosition;
-            Plugin.StanceControllerInstance.StanceRotationSpring.Zero = StanceRotation;
-*/
-/*            Plugin.StanceControllerInstance.StancePositionSpring.AddZero();
-            Plugin.StanceControllerInstance.StanceRotationSpring.AddZero();*/
-
-
         }
+
+        //Move to StanceAimHandler
+        public void UpdateAimSpeed()
+        {
+            float aimSpeedModifier = 1f;
+
+            if (_incoming != null && PlayerStateInstance.PWA.IsAiming)
+            {
+                aimSpeedModifier = _incoming.EvaluateAimSpeed();
+            }
+
+            if (_primary != null && PlayerStateInstance.PWA.IsAiming)
+            {
+                aimSpeedModifier = _primary.EvaluateAimSpeed();
+            }
+
+            Plugin.StanceControllerInstance.PwaAimSpeed = Plugin.StanceControllerInstance.PwaOriginalAimSpeed * aimSpeedModifier;
+        }
+
+        //Move to StanceAimHandler
+   /*     public bool AimingInterrupted { get; private set; }*/
+
+        //Move to StanceAimHandler
+ /*       public void UpdateAimState()
+        {
+            if (_primary == null || !_primary.Stance.InterruptsAiming) return;
+
+            bool isAnimating = _primary.IsHeadingToIdle || _primary.IsHeadingToPose;
+
+            // Only interrupt if aiming AND heading AND not already interrupted
+            if (!AimingInterrupted && isAnimating && AimStateInstance.IsAiming)
+            {
+                InterruptAim();
+                return;
+            }
+
+            if (!AimStateInstance.IsAiming && _primary.IsCloseToTerminalState(PluginConfig.test1.Value)) //_primary.Stance.AimResumeThreshold
+            {
+                UnInterruptAim();
+            }
+        }*/
+
+    /*    public void InterruptAim()
+        {
+            PlayerStateInstance.FirearmController.ToggleAim();
+            AimingInterrupted = true;
+        }
+        public void UnInterruptAim()
+        {
+            PlayerStateInstance.FirearmController.ToggleAim();
+            AimingInterrupted = false;
+        }*/
 
         public void RequestStance(IStance stance)
         {
@@ -193,19 +241,19 @@ namespace StanceOverhaul.State
                 {
                     ModLogger.LogWarning("reverse direction towards pose");
                     _primary.Direction *= -1; //should this be +1 or -1?
-                    /*stance.OnEnter();*/ 
+                    /*stance.OnEnter();*/
                 }
                 else // heading to pose -> reverse toward idle
                 {
                     ModLogger.LogWarning("reverse direction towards idle");
                     _primary.Direction *= -1; //should this be +1 or -1?
-                    stance.OnExit(); 
+                    stance.OnExit();
                 }
-                return;      
+                return;
             }
 
             //cancel incoming during blend
-            if (_incoming?.Stance == stance) 
+            if (_incoming?.Stance == stance)
             {
                 ModLogger.LogWarning($"cancel incoming during blend");
                 BeginExit(_incoming);
@@ -266,7 +314,7 @@ namespace StanceOverhaul.State
                 BeginExit(_primary);
 
             if (_incoming == null) return;
- 
+
             if (_incomingPaused)
             {
                 _incoming = null;

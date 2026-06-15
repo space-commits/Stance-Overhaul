@@ -25,9 +25,9 @@ namespace StanceOverhaul
 
         void EnablePatches() 
         {
-           /* new TacticalReloadPatch().Enable();*/
-/*            new SprintPatch().Enable();
-            new DisableAimOnReloadPatch().Enable();*/
+            //new TacticalReloadPatch().Enable();
+            /*            new SprintPatch().Enable();
+                        new DisableAimOnReloadPatch().Enable();*/
             /*            new ChangeScopePatch().Enable();*/
             /*        new MountingAndCollisionPatch().Enable();
                     new CollisionPatch().Enable();*/
@@ -41,43 +41,54 @@ namespace StanceOverhaul
             /*       new ChangePosePatch().Enable();
                    new SetTiltPatch().Enable();*/
 
-            /*new ProcessEffectorsPatch().Enable();*/
+            //new ProcessEffectorsPatch().Enable();
+
+
             new ZeroAdjustmentsPatch().Enable();
             new SpringResetPatch().Enable();
-            /*            new ApplyPositionPatch().Enable();*/
-            /*     new SpringUpdatePatch().Enable();*/
+
             new SpringGetPatch().Enable();
             new SpringGetRelativePatch().Enable();
 
+            new UpdateWeaponVariablesPatch().Enable();
 
 
-            new ShiftWeaponRootPatch().Enable();
-            new HeadPatch().Enable();
 
-            new ApplyComplexRotationPatch().Enable();
+            /*            new ShiftWeaponRootPatch().Enable();
+                        new HeadPatch().Enable();*/
 
-            new CalibrateLocalPatch().Enable();
-            new CalibratePatch().Enable();
+            //new ApplyComplexRotationPatch().Enable();
 
 
-            new BlenderPatch().Enable();
-            new ProcessEffectorsPatch().Enable();
+            //new CameraPatch().Enable();
+            /*
+                        new CalibrateLocalPatch().Enable();
+                        new CalibratePatch().Enable();
+            */
 
-            new ScopeRotationPatch().Enable();
+            //new BlenderPatch().Enable();
 
-          /*  new TacticalReloadMethodPatch().Enable();*/
 
-            new ApplyAimingAlignmentPatch().Enable();
-            new FOVPatch().Enable();
-            new IsAimingPatch().Enable();
-            new IsAimingPatch1().Enable();
-            new IsAimingPatch2().Enable();
-            new IsAimingPatch3().Enable();
-            new IsAimingPatch4().Enable();
-            new IsAimingPatch5().Enable();
-            new CamRecoilPatch().Enable();
-            new IntensityByAimingPatch().Enable();
-            new UpdateAimWeightPatch().Enable();
+            /*            new ScopeRotationPatch().Enable();
+
+
+
+                        new ApplyAimingAlignmentPatch().Enable();*/
+
+
+            //new ApplyPositionPatch().Enable();
+            new SpringUpdatePatch().Enable();
+            //new TacticalReloadMethodPatch().Enable();
+            /*           new FOVPatch().Enable();
+                       new IsAimingPatch().Enable();
+                       new IsAimingPatch1().Enable();
+                       new IsAimingPatch2().Enable();
+                       new IsAimingPatch3().Enable();
+                       new IsAimingPatch4().Enable();
+                       new IsAimingPatch5().Enable();
+                       new CamRecoilPatch().Enable();
+                       new IntensityByAimingPatch().Enable();
+                       new UpdateAimWeightPatch().Enable();*/
         }
 
         void SubscribeToEvents() 

@@ -43,6 +43,27 @@ internal class StanceSlot
     public float IdleProximity =>
         ActiveCurve == ECurveType.Exit ? Progress : 1f - Progress;
 
+    public float DistanceToPose =>
+        1f - IdleProximity;
+
+    /// <summary>
+    /// Returns true if close to the terminal state stance is heading toward.
+    /// Prevents triggering at the opposite terminal.
+    /// </summary>
+/*    public bool IsCloseToTerminalState(float threshold)
+    {
+        if (IsHeadingToPose)
+            return IsCloseToPose(threshold) && !IsAtPose;   // not already there
+        else
+            return IsCloseToIdle(threshold) && !IsAtIdle;   // was: !IsAtPose (wrong terminal)
+    }
+
+    public bool IsCloseToIdle(float threshold) =>
+        IdleProximity <= threshold;
+
+    public bool IsCloseToPose(float threshold) =>
+        DistanceToPose <= threshold;*/
+
     public Vector3 EvaluatePosition()
     {
         return ActiveCurve == ECurveType.Exit
@@ -57,12 +78,21 @@ internal class StanceSlot
             : Stance.EnterRotationCurve.Evaluate(Progress);
     }
 
+    public float EvaluateAimSpeed()
+    {
+        return ActiveCurve == ECurveType.Exit
+            ? Stance.ExitAimSpeedCurve.Evaluate(Progress)
+            : ActiveCurve == ECurveType.Enter ? 
+            Stance.EnterAimSpeedCurve.Evaluate(Progress)
+            : 1f;
+    }
+
     public void SlotUpdate(float deltaTime)
     {
         if (Direction == 0) return; // holding
 
         Progress = Mathf.Clamp01(
-            Progress + deltaTime * 
+            Progress + deltaTime *
             Stance.BaseSpeed(_stanceState.PrimaryStance?.StanceType) *
             Stance.TransitionSpeedModifier(_stanceState.ActiveStanceType) *
             PluginConfig.test20.Value * Direction);

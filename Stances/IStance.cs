@@ -16,6 +16,9 @@ namespace StanceOverhaul.Stances
         public abstract Vector3Curve ExitRotationCurve { get; }
         public abstract Vector3Curve ExitPositionCurve { get; }
 
+        public abstract AnimationCurve ExitAimSpeedCurve { get; }
+        public abstract AnimationCurve EnterAimSpeedCurve { get; }
+
         float BlendThreshold(EStanceType nextStance);
         float BaseSpeed(EStanceType? previousStance);
         float TransitionSpeedModifier(EStanceType? nextStance);

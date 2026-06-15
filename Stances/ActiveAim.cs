@@ -21,7 +21,7 @@ public class ActiveAim : StanceBase
         switch (nextStance)
         {
             case EStanceType.LowReady:
-                return PluginConfig.test7.Value;
+                return 0.25f;
             case EStanceType.HighReady:
                 return PluginConfig.test7.Value;
             case EStanceType.LeftShoulder:
@@ -40,7 +40,7 @@ public class ActiveAim : StanceBase
         switch (previousStance)
         {
             case EStanceType.LowReady:
-                return PluginConfig.test8.Value;
+                return 0.6f;
             case EStanceType.HighReady:
                 return PluginConfig.test8.Value;
             case EStanceType.LeftShoulder:

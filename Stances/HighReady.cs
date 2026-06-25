@@ -29,7 +29,7 @@ public class HighReady : StanceBase
             case EStanceType.PatrolStance:
                 return PluginConfig.test1.Value;
             case EStanceType.ShortStock:
-                return PluginConfig.test1.Value;
+                return 0f;
             default:
                 return 0.2f;
         }
@@ -48,7 +48,7 @@ public class HighReady : StanceBase
             case EStanceType.PatrolStance:
                 return PluginConfig.test2.Value;
             case EStanceType.ShortStock:
-                return PluginConfig.test2.Value;
+                return 2f;
             default:
                 return 3f;
         }
@@ -67,7 +67,7 @@ public class HighReady : StanceBase
             case EStanceType.PatrolStance:
                 return PluginConfig.test3.Value;
             case EStanceType.ShortStock:
-                return PluginConfig.test3.Value;
+                return 0.8f;
             default:
                 return 1f;
         }

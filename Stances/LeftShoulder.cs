@@ -29,7 +29,7 @@ public class LeftShoulder : StanceBase
             case EStanceType.PatrolStance:
                 return PluginConfig.test1.Value;
             case EStanceType.ShortStock:
-                return PluginConfig.test1.Value;
+                return 0f;
             default:
                 return 0.2f;
         }
@@ -48,7 +48,7 @@ public class LeftShoulder : StanceBase
             case EStanceType.PatrolStance:
                 return PluginConfig.test2.Value;
             case EStanceType.ShortStock:
-                return PluginConfig.test2.Value;
+                return 1.5f;
             default:
                 return 2.2f;
         }
@@ -67,7 +67,7 @@ public class LeftShoulder : StanceBase
             case EStanceType.PatrolStance:
                 return PluginConfig.test3.Value;
             case EStanceType.ShortStock:
-                return PluginConfig.test3.Value;
+                return 0.9f;
             default:
                 return 1f;
         }

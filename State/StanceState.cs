@@ -94,13 +94,11 @@ namespace StanceOverhaul.State
                       }*/
 
                 if (_primary.IsHeadingToIdle
-                && _primary.IdleProximity >= _primary.Stance.BlendIntoThreshold(_incoming.Stance.StanceType))
+                && _primary.IdleProximity >= _incoming.Stance.BlendIntoThreshold(_primary.Stance.StanceType))
                 {
                     ModLogger.LogWarning("== threshold met");
                     _incomingPaused = false;
                 }
-
-                ModLogger.LogWarning($"IdleProximity {_primary.IdleProximity} BlendThreshold {_primary.Stance.BlendIntoThreshold(_incoming.Stance.StanceType)}");
             }
 
             //upate incoming if not paused
@@ -181,38 +179,38 @@ namespace StanceOverhaul.State
         }
 
         //Move to StanceAimHandler
-   /*     public bool AimingInterrupted { get; private set; }*/
+        /*     public bool AimingInterrupted { get; private set; }*/
 
         //Move to StanceAimHandler
- /*       public void UpdateAimState()
-        {
-            if (_primary == null || !_primary.Stance.InterruptsAiming) return;
+        /*       public void UpdateAimState()
+               {
+                   if (_primary == null || !_primary.Stance.InterruptsAiming) return;
 
-            bool isAnimating = _primary.IsHeadingToIdle || _primary.IsHeadingToPose;
+                   bool isAnimating = _primary.IsHeadingToIdle || _primary.IsHeadingToPose;
 
-            // Only interrupt if aiming AND heading AND not already interrupted
-            if (!AimingInterrupted && isAnimating && AimStateInstance.IsAiming)
+                   // Only interrupt if aiming AND heading AND not already interrupted
+                   if (!AimingInterrupted && isAnimating && AimStateInstance.IsAiming)
+                   {
+                       InterruptAim();
+                       return;
+                   }
+
+                   if (!AimStateInstance.IsAiming && _primary.IsCloseToTerminalState(PluginConfig.test1.Value)) //_primary.Stance.AimResumeThreshold
+                   {
+                       UnInterruptAim();
+                   }
+               }*/
+
+        /*    public void InterruptAim()
             {
-                InterruptAim();
-                return;
+                PlayerStateInstance.FirearmController.ToggleAim();
+                AimingInterrupted = true;
             }
-
-            if (!AimStateInstance.IsAiming && _primary.IsCloseToTerminalState(PluginConfig.test1.Value)) //_primary.Stance.AimResumeThreshold
+            public void UnInterruptAim()
             {
-                UnInterruptAim();
-            }
-        }*/
-
-    /*    public void InterruptAim()
-        {
-            PlayerStateInstance.FirearmController.ToggleAim();
-            AimingInterrupted = true;
-        }
-        public void UnInterruptAim()
-        {
-            PlayerStateInstance.FirearmController.ToggleAim();
-            AimingInterrupted = false;
-        }*/
+                PlayerStateInstance.FirearmController.ToggleAim();
+                AimingInterrupted = false;
+            }*/
 
         public void RequestStance(IStance stance)
         {
@@ -256,7 +254,10 @@ namespace StanceOverhaul.State
             if (_incoming?.Stance == stance)
             {
                 ModLogger.LogWarning($"cancel incoming during blend");
-                BeginExit(_incoming);
+                _primary = _incoming;
+                _incoming = null;
+                _incomingPaused = false;
+                BeginExit(_primary);
                 return;
             }
 

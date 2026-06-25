@@ -40,7 +40,7 @@ public class ActiveAim : StanceBase
         switch (previousStance)
         {
             case EStanceType.LowReady:
-                return 1.15f;
+                return 1.25f;
             case EStanceType.HighReady:
                 return 3f;
             case EStanceType.LeftShoulder:
@@ -67,7 +67,7 @@ public class ActiveAim : StanceBase
             case EStanceType.PatrolStance:
                 return PluginConfig.test6.Value;
             case EStanceType.ShortStock:
-                return 0.1f;
+                return 0.2f;
             default:
                 return 1f;
         }

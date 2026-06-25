@@ -61,7 +61,7 @@ public class LowReady : StanceBase
             case EStanceType.ActiveAiming:
                 return 1.5f;
             case EStanceType.HighReady:
-                return 2f;
+                return 1.25f;
             case EStanceType.LeftShoulder:
                 return 1.8f;
             case EStanceType.PatrolStance:

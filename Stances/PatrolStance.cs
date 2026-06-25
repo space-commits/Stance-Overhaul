@@ -21,15 +21,15 @@ public class PatrolStance : StanceBase
         switch (nextStance)
         {
             case EStanceType.ActiveAiming:
-                return PluginConfig.test4.Value;
-            case EStanceType.HighReady:
-                return PluginConfig.test4.Value;
-            case EStanceType.LeftShoulder:
-                return PluginConfig.test4.Value;
+                return PluginConfig.test1.Value;
             case EStanceType.LowReady:
-                return PluginConfig.test4.Value;
+                return PluginConfig.test1.Value;
+            case EStanceType.LeftShoulder:
+                return PluginConfig.test1.Value;
+            case EStanceType.PatrolStance:
+                return PluginConfig.test1.Value;
             case EStanceType.ShortStock:
-                return PluginConfig.test4.Value;
+                return PluginConfig.test1.Value;
             default:
                 return 0.2f;
         }
@@ -40,17 +40,36 @@ public class PatrolStance : StanceBase
         switch (previousStance)
         {
             case EStanceType.ActiveAiming:
-                return PluginConfig.test4.Value;
-            case EStanceType.HighReady:
-                return PluginConfig.test4.Value;
-            case EStanceType.LeftShoulder:
-                return PluginConfig.test4.Value;
+                return PluginConfig.test2.Value;
             case EStanceType.LowReady:
-                return PluginConfig.test4.Value;
+                return PluginConfig.test2.Value;
+            case EStanceType.LeftShoulder:
+                return PluginConfig.test2.Value;
+            case EStanceType.PatrolStance:
+                return PluginConfig.test2.Value;
             case EStanceType.ShortStock:
-                return PluginConfig.test4.Value;
+                return PluginConfig.test2.Value;
             default:
                 return 3f;
+        }
+    }
+
+    public override float TransitionToSpeedModifier(EStanceType? nextStance)
+    {
+        switch (nextStance)
+        {
+            case EStanceType.ActiveAiming:
+                return PluginConfig.test3.Value;
+            case EStanceType.LowReady:
+                return PluginConfig.test3.Value;
+            case EStanceType.LeftShoulder:
+                return PluginConfig.test3.Value;
+            case EStanceType.PatrolStance:
+                return PluginConfig.test3.Value;
+            case EStanceType.ShortStock:
+                return PluginConfig.test3.Value;
+            default:
+                return 1f;
         }
     }
 

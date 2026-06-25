@@ -23,13 +23,13 @@ public class ShortStock : StanceBase
             case EStanceType.ActiveAiming:
                 return 0f;
             case EStanceType.HighReady:
-                return PluginConfig.test4.Value;
+                return 0f;
             case EStanceType.LowReady:
                 return 0f;
             case EStanceType.PatrolStance:
                 return PluginConfig.test4.Value;
             case EStanceType.LeftShoulder:
-                return PluginConfig.test4.Value;
+                return 0f;
             default:
                 return 0.4f;
         }
@@ -42,13 +42,13 @@ public class ShortStock : StanceBase
             case EStanceType.ActiveAiming:
                 return 2.25f;
             case EStanceType.HighReady:
-                return PluginConfig.test5.Value;
+                return 0.65f;
             case EStanceType.LowReady:
                 return 2.5f;
             case EStanceType.PatrolStance:
                 return PluginConfig.test5.Value;
             case EStanceType.LeftShoulder:
-                return PluginConfig.test5.Value;
+                return 1.55f;
             default:
                 return 2.25f;
         }
@@ -61,13 +61,13 @@ public class ShortStock : StanceBase
             case EStanceType.ActiveAiming:
                 return 0.1f;
             case EStanceType.HighReady:
-                return PluginConfig.test6.Value;
+                return 1.35f;
             case EStanceType.LowReady:
                 return 0.8f;
             case EStanceType.PatrolStance:
                 return PluginConfig.test6.Value;
             case EStanceType.LeftShoulder:
-                return PluginConfig.test6.Value;
+                return 0.5f;
             default:
                 return 1f;
         }

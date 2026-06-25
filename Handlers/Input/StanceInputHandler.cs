@@ -231,7 +231,7 @@ namespace StanceOverhaul.Handlers.StanceInput
 
         private void ToggleShortStock()
         {
-            //ToggleStance(StanceControllerInstance.ShortStock, true);
+            ToggleStance(StanceControllerInstance.ShortStock, false);
         }
 
         public void ToggleActiveAim()

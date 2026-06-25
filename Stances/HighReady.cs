@@ -16,58 +16,58 @@ public class HighReady : StanceBase
     public override Vector3Curve ExitPositionCurve => _exitPos;
     public override Vector3Curve ExitRotationCurve => _exitRot;
 
-    public override float BlendThreshold(EStanceType nextStance)
+    public override float BlendIntoThreshold(EStanceType nextStance)
     {
         switch (nextStance)
         {
             case EStanceType.ActiveAiming:
-                return PluginConfig.test3.Value;
+                return 0.2f;
             case EStanceType.LowReady:
-                return 0.75f;
+                return 0.5f;
             case EStanceType.LeftShoulder:
-                return PluginConfig.test3.Value;
+                return 0.2f;
             case EStanceType.PatrolStance:
-                return PluginConfig.test3.Value;
+                return PluginConfig.test1.Value;
             case EStanceType.ShortStock:
-                return PluginConfig.test3.Value;
+                return PluginConfig.test1.Value;
             default:
                 return 0.2f;
         }
     }
 
-    public override float BaseSpeed(EStanceType? previousStance)
+    public override float TransitionFromModifier(EStanceType? previousStance)
     {
         switch (previousStance)
         {
             case EStanceType.ActiveAiming:
-                return PluginConfig.test4.Value;
+                return 2.5f;
             case EStanceType.LowReady:
                 return 3f;
             case EStanceType.LeftShoulder:
-                return PluginConfig.test4.Value;
+                return 1.85f;
             case EStanceType.PatrolStance:
-                return PluginConfig.test4.Value;
+                return PluginConfig.test2.Value;
             case EStanceType.ShortStock:
-                return PluginConfig.test4.Value;
+                return PluginConfig.test2.Value;
             default:
                 return 3f;
         }
     }
 
-    public override float TransitionSpeedModifier(EStanceType? nextStance)
+    public override float TransitionToSpeedModifier(EStanceType? nextStance)
     {
         switch (nextStance)
         {
             case EStanceType.ActiveAiming:
-                return PluginConfig.test4.Value;
+                return 1f;
             case EStanceType.LowReady:
                 return 0.6f;
             case EStanceType.LeftShoulder:
-                return PluginConfig.test4.Value;
+                return 1.75f;
             case EStanceType.PatrolStance:
-                return PluginConfig.test4.Value;
+                return PluginConfig.test3.Value;
             case EStanceType.ShortStock:
-                return PluginConfig.test4.Value;
+                return PluginConfig.test3.Value;
             default:
                 return 1f;
         }

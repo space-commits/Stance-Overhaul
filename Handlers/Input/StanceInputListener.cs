@@ -99,33 +99,25 @@ namespace StanceOverhaul.Handlers.StanceInput
 
         private void HandleScrollInput(float direction)
         {
-            var current =  StanceControllerInstance.CurrentStanceType;
-
-            if (current == EStanceType.None)
-                current = EStanceType.None;
+            var current = StanceControllerInstance.CurrentStanceType;
 
             if (direction < 0)
             {
                 ModLogger.LogWarning($"-1 {current}");
 
-                // Idle → LowReady
-                if (current == EStanceType.None)
-                {
-                    StanceInputEvents.RaiseToggleLowReady();
+                // LowReady → no-op
+                if (current == EStanceType.LowReady)
                     return;
-                }
 
-                // HighReady → LowReady (optional direct swap if already high)
+                // HighReady → toggle off (back to idle)
                 if (current == EStanceType.HighReady)
                 {
                     StanceInputEvents.RaiseToggleHighReady();
                     return;
                 }
 
-                // LowReady → no-op
-                if (current == EStanceType.LowReady)
-                    return;
-
+                // Idle or any other stance → LowReady
+                StanceInputEvents.RaiseToggleLowReady();
                 return;
             }
 
@@ -133,24 +125,19 @@ namespace StanceOverhaul.Handlers.StanceInput
             {
                 ModLogger.LogWarning($"+1  {current}");
 
-                // LowReady → Idle
+                // HighReady → no-op
+                if (current == EStanceType.HighReady)
+                    return;
+
+                // LowReady → toggle off (back to idle)
                 if (current == EStanceType.LowReady)
                 {
                     StanceInputEvents.RaiseToggleLowReady();
                     return;
                 }
 
-                // Idle → HighReady
-                if (current == EStanceType.None)
-                {
-                    StanceInputEvents.RaiseToggleHighReady();
-                    return;
-                }
-
-                // HighReady → no-op
-                if (current == EStanceType.HighReady)
-                    return;
-
+                // Idle or any other stance → HighReady
+                StanceInputEvents.RaiseToggleHighReady();
                 return;
             }
         }

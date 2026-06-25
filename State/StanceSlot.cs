@@ -93,8 +93,8 @@ internal class StanceSlot
 
         Progress = Mathf.Clamp01(
             Progress + deltaTime *
-            Stance.BaseSpeed(_stanceState.PrimaryStance?.StanceType) *
-            Stance.TransitionSpeedModifier(_stanceState.ActiveStanceType) *
+            Stance.TransitionFromModifier(_stanceState.PrimaryStance?.StanceType) *
+            Stance.TransitionToSpeedModifier(_stanceState.ActiveStanceType) *
             PluginConfig.test20.Value * Direction);
 
         // reached pose end -> enter holding

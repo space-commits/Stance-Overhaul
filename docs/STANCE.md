@@ -1,168 +1,286 @@
 # Stance-Overhaul Project Instructions
 
 ## Purpose
-Implements procedural stance system for SPT - adds animated offsets to player weapon positioning and aiming. Stances enable tactical variety (high/low ready, active aim/canted) with gameplay benefits to enhance depth. Procedurally animates offsets via the game's existing ProceduralWeaponAnimations and Player.FirearmController systems.
+Implements procedural stance system for SPT — adds animated weapon position/rotation offsets to the player's first-person view. Stances enable tactical variety (high/low ready, active aim/canted, left shoulder, short stock, patrol) with gameplay benefits. Animation is driven by injecting into the game's existing `Spring` system inside `ProceduralWeaponAnimations`.
 
 ## Key Features
-- **Multiple stance types**: High ready, low ready, active aim (canting), bracing, etc.
-- **Procedural animation**: Smooth animated transitions between stances using spring animators
-- **Gameplay benefits**: Stances confer benefits (faster ADS, stability, ergonomics) to incentivize usage
-- **Bracing system**: Different bracing directions with collision detection
-- **Health/stamina effects**: Stances interact with player health and stamina states
-- **Integration with common library**: Uses RealismCommonLib events, state, patches, and modifiers
+- **Multiple stance types**: High ready, low ready, active aim (canting), left shoulder, short stock, patrol
+- **Curve-driven animation**: Each stance defines Enter/Exit `Vector3Curve` for position and rotation; a `StanceSlot` drives progress 0→1 along the curve
+- **Dual-slot blend system**: `StanceState` manages a `_primary` and `_incoming` slot, blending smoothly when transitioning between stances
+- **Spring injection**: Clones the game's `HandsPosition`/`HandsRotation` `Spring` objects, patches `Spring.Get`, `Spring.GetRelative`, `Spring.FixedUpdate`, and `Spring.Reset` to inject stance offsets
+- **Gameplay benefits**: Per-stance walk speed, sprint accel, ADS speed, and reload speed modifiers applied via `StatModifiers`
+- **ADS gating**: `StanceAimHandler` registers a `BoolGateHandle` on `BoolHandlers.CanAim` to optionally block ADS
+- **Input pipeline integration**: `InputHookPipeline` registers with `Pipelines.InputVetoPipeline` and `Pipelines.InputOverridePipeline` to intercept EFT input commands
+- **Health/hazard awareness**: `HealthConditionForcesLowReady` checks for toxicity, radiation, injuries, overdose, dehydration
 
 ## Project Structure
 ```
 Stance-Overhaul/
-├── Plugin.cs                    # BepInEx entry point
-├── PluginConfig.cs              # Stance system configuration
+├── Plugin.cs                        # BepInEx entry point; adds StanceController to player.gameObject
+├── PluginConfig.cs                  # Stance system configuration
 ├── Controllers/
-│   └── StanceController.cs      # Main stance system controller, state machine
+│   └── StanceController.cs          # MonoBehaviour coordinator; owns all handlers, stances, springs
 ├── Enums/
-│   ├── EStanceType.cs           # Stance types: HighReady, LowReady, ActiveAim, etc.
-│   ├── EStanceState.cs          # State machine: Idle, Transitioning, Active
-│   ├── EBracingDirection.cs     # Bracing directions: Left, Right, Front, etc.
-│   └── ECurveType.cs            # Animation curve types
+│   ├── EStanceType.cs               # None, HighReady, LowReady, ActiveAiming, LeftShoulder, ShortStock, PatrolStance, Melee, Mounting, PistolCompressed
+│   ├── EStanceState.cs              # Idle, Transitioning, Active (used in older code, superseded by StanceState logic)
+│   ├── EBracingDirection.cs         # Bracing directions
+│   └── ECurveType.cs                # Enter, Exit (determines which curve a StanceSlot evaluates)
 ├── Handlers/
-│   ├── StanceMovementHandler.cs # Movement speed and handling per stance
-│   ├── StanceHealthHandler.cs   # Health/damage interaction with stances
-│   ├── StanceStaminaHandler.cs  # Stamina cost per stance
-│   ├── CollisionHandler.cs      # Collision detection for bracing
-│   ├── MountingHandler.cs       # Mounting surfaces (bracing surfaces)
-│   ├── PositionOffsetHandler.cs # Position offset calculations
-│   └── IControllerHelper.cs     # Interface for handler lifecycle
+│   ├── IControllerHelper.cs         # Interface: RunOnAwake, RunOnDestroy, RunOnUpdate(deltaTime)
+│   ├── Aiming/
+│   │   ├── StanceAimHandler.cs      # Manages BoolGateHandle on BoolHandlers.CanAim; blocks ADS when needed
+│   │   └── AimPIDHandler.cs         # TODO/stub
+│   ├── Input/
+│   │   ├── StanceInputEvents.cs     # Stance-specific input events (ToggleHighReady, ToggleLowReady, etc.)
+│   │   ├── StanceInputHandler.cs    # Subscribes to events, manages _storedStance, ADS restore logic, calls StanceState.RequestStance
+│   │   ├── StanceInputListener.cs   # Reads raw Unity Input each frame, raises StanceInputEvents
+│   │   └── InputHookPipeline.cs     # Registers with RealismCommonLib Pipelines for input veto/override
+│   ├── CollisionHandler.cs          # Collision detection for bracing (in-progress)
+│   ├── MountingHandler.cs           # Mounting/bracing surface detection (in-progress)
+│   ├── PositionOffsetHandler.cs     # Per-weapon position offset adjustments
+│   ├── StanceHealthHandler.cs       # Health/damage interaction (in-progress)
+│   ├── StanceMovementHandler.cs     # Registers FloatMultiplierHandles on StatModifiers for walk/sprint speed
+│   ├── StanceStaminaHandler.cs      # Stamina cost/recovery per stance (in-progress)
+│   └── TacSprintHandler.cs          # Tactical sprint handling
 ├── Patches/
-│   └── *Patch.cs                # Stance-related Harmony patches
-├── PatchHooks/
-│   └── *.cs                     # Patch hook implementations
+│   └── StancePatches.cs         # Spring patches (SpringUpdatePatch, SpringGetPatch, SpringGetRelativePatch, SpringResetPatch, UpdateWeaponVariablesPatch, ZeroAdjustmentsPatch, SetFireModePatch, OperateStationaryWeaponPatch)
+├── PatchHooks/                      # (empty — future patch hook implementations)
 ├── SpringAnimators/
-│   ├── SpringAnimator.cs        # Base spring physics animator
-│   └── *SpringAnimator.cs       # Specific spring animator implementations
+│   ├── ISpringAnimator.cs           # Marker interface
+│   ├── AdsAnimator.cs               # TODO/stub
+│   ├── ExtraDetailsAnimator.cs      # TODO/stub
+│   ├── IdleAnimator.cs              # TODO/stub — planned idle animations
+│   └── WiggleAnimator.cs            # TODO/stub
 ├── Stances/
-│   ├── StanceBase.cs            # Base stance class
-│   ├── HighReadyStance.cs       # High ready stance implementation
-│   ├── LowReadyStance.cs        # Low ready stance implementation
-│   ├── ActiveAimStance.cs       # Active aim (canting) stance implementation
-│   └── ...                      # Other stance implementations
+│   ├── IStance.cs                   # Interface: curves, aim speed curves, blend/transition modifiers, OnEnter/OnExit/OnHoldUpdate
+│   ├── StanceBase.cs                # Abstract base; subscribes to ReloadEvents, provides virtual override hooks
+│   ├── ActiveAim.cs                 # Active aim / canting stance
+│   ├── HighReady.cs                 # High ready stance
+│   ├── LowReady.cs                  # Low ready stance
+│   ├── LeftShoulder.cs              # Left shoulder / blind fire stance
+│   ├── ShortStock.cs                # Short stock stance
+│   ├── PatrolStance.cs              # Patrol (relaxed carry) stance
+│   ├── Melee.cs                     # Melee stance (stub/TODO)
+│   └── Mounting.cs                  # Mounting stance (stub/TODO)
 └── State/
-    ├── StanceState.cs           # Per-player stance state
-    └── ...                      # State management
+    ├── StanceState.cs               # Dual-slot animation state machine (primary + incoming)
+    └── StanceSlot.cs                # Single stance slot: progress, direction, curve evaluation
 ```
 
 ## Core Systems
 
-### Stance Controller (Main State Machine)
-- **StanceController.cs**: Attached to player.gameObject, manages stance transitions and active stance
-- Implements IControllerHelper for lifecycle (RunOnAwake, RunOnDestroy, RunOnUpdate)
-- Manages state transitions (Idle → Transitioning → Active)
-- Applies stance benefits (movement speed, ADS speed, stability)
-- Integrates with RealismCommonLib events and state via event subscriptions
-- Updates spring animators each frame to animate stance transitions
+### IControllerHelper — Lifecycle Interface
+All handlers implement this interface. `StanceController` owns a `List<IControllerHelper>` and drives them all:
+- `RunOnAwake()` — called from `StanceController.Awake()`, used to subscribe to events, register modifier handles
+- `RunOnDestroy()` — called from `StanceController.OnDestroy()`, used to unsubscribe and unregister handles
+- `RunOnUpdate(float deltaTime)` — called every frame from `StanceController.Update()`
 
-### Stance Types (Enumerations)
-- **EStanceType**: High ready, low ready, active aim, braced, etc. - defines available stances
-- **EStanceState**: Idle (no stance), Transitioning (animating between stances), Active (stance engaged)
-- **EBracingDirection**: Left, right, front, rear for bracing direction when applicable
-- **ECurveType**: Animation easing curves for smooth transitions
+> **Important**: Handlers are NOT MonoBehaviours. They are plain C# classes instantiated and driven by `StanceController`.
 
-### Stance Implementations
-Each stance inherits from `StanceBase` and defines:
-- Position offset (relative to weapon/body) - X/Y/Z offset vector
-- Rotation offset for weapon canting - Euler angles
-- Animation curves and timing - smoothing curves for transitions
-- Gameplay benefits - movement multiplier, ADS speed modifier, stability bonus, etc.
-- Stance-specific logic - e.g., bracing checks for braced stance
-- Transition in/out behavior - entry/exit animations
+### StanceController (MonoBehaviour Coordinator)
+`StanceController` is a `MonoBehaviour` added to `player.gameObject` on player init. It owns everything:
+- **Springs**: Clones `PWA.HandsContainer.HandsPosition` and `PWA.HandsContainer.HandsRotation` via `Cloner.ShallowClone()`, stored as `StancePositionSpring` and `StanceRotationSpring`. The Spring patches inject these into the game's animation system.
+- **Stances**: Instantiates and owns all `StanceBase` objects (`PatrolStance`, `LeftShoulder`, `HighReady`, `LowReady`, `ActiveAim`, `ShortStock`)
+- **Handlers**: Creates and manages all `IControllerHelper` instances (`StanceState`, `InputHookPipeline`, `StanceMovementHandler`, `StanceAimHandler`, `StanceInputHandler`, `StanceInputListener`)
+- **Gameplay state**: Exposes `CurrentStanceType`, `StancePosition`, `StanceRotation`, `PwaAimSpeed` (via reflection into `_aimingSpeed` field), `PwaOriginalAimSpeed`
+- **Constants**: ADS speed multipliers, reload speed buffs, weight limits defined as `const float`
+- **Reload multiplier handles**: Holds `FloatMultiplierHandle` references for each reload type, registers them via `AssignReloadHandlers()`
 
-### Animation System (Spring Animators)
-**SpringAnimators**: Physics-based smooth animation for stance transitions
-- Base class `SpringAnimator` implements spring physics (Hooke's law differential equation)
-- Separate animators for: position X/Y/Z, rotation, aim offset, etc.
-- Each animator smoothly interpolates current value toward target value
-- Used to animate weapon offset during stance transitions
-- Configurable spring stiffness and damping for feel
-- Applied via ProceduralWeaponAnimations patching
+### StanceState (Dual-Slot Animation State Machine)
+The actual state machine for stance transitions. Not a MonoBehaviour — driven by `StanceController` via `IControllerHelper`.
+
+Uses two slots:
+- `_primary`: The currently active or exiting stance
+- `_incoming`: The next stance, paused until `_primary` reaches its blend threshold
+
+**Transition logic** in `RequestStance(IStance)`:
+1. No active stance → create `_primary` on Enter curve, call `stance.OnEnter()`
+2. Same stance as `_primary`, no incoming → toggle exit or reverse direction
+3. Same stance as `_incoming` during blend → cancel incoming (BeginExit)
+4. Third stance during blend → collapse (drop primary, promote incoming, BeginExit), queue new as incoming
+5. Normal A→B → `BeginExit(_primary)`, create `_incoming` paused
+
+**Blend threshold**: `_incoming` is unpaused when `_primary.IsHeadingToIdle && _primary.IdleProximity >= _primary.Stance.BlendIntoThreshold(incomingType)`
+
+**Output**: `StancePosition` and `StanceRotation` — Lerped between slot evaluations and then smoothed with `Mathf.Lerp` using `PluginConfig.test19.Value` as speed.
+
+### StanceSlot (Animation Cursor)
+Tracks a single stance's animation progress:
+- `Progress` (0..1): Position along the curve
+- `Direction` (+1 / -1 / 0): 0 = holding at pose, +1 = forward, -1 = reverse
+- `ActiveCurve` (`ECurveType.Enter` or `ECurveType.Exit`): Which curve to evaluate
+- `IsAtIdle`, `IsAtPose`, `IsHeadingToIdle`, `IsHeadingToPose`, `IsAtOrHeadingToPose`
+- `IdleProximity`: How close to idle (0 = at pose, 1 = at idle)
+- `EvaluatePosition()` / `EvaluateRotation()` / `EvaluateAimSpeed()`: Sample the active curve at `Progress`
+- `SlotUpdate(deltaTime)`: Advances `Progress` using `TransitionFromModifier` × `TransitionToSpeedModifier` × `PluginConfig.test20.Value`
+
+### IStance / StanceBase (Stance Definition)
+`IStance` defines what a stance provides:
+- `EnterPositionCurve`, `EnterRotationCurve` — `Vector3Curve` played when entering
+- `ExitPositionCurve`, `ExitRotationCurve` — `Vector3Curve` played when exiting
+- `EnterAimSpeedCurve`, `ExitAimSpeedCurve` — `AnimationCurve` controlling ADS speed multiplier during transition
+- `BlendIntoThreshold(EStanceType nextStance)` — idle proximity at which incoming is unpaused (default 0.5)
+- `TransitionFromModifier(EStanceType? previousStance)` — speed modifier based on what stance we came from
+- `TransitionToSpeedModifier(EStanceType? nextStance)` — speed modifier based on where we are going
+- `OnEnter()`, `OnExit()`, `OnHoldUpdate(float deltaTime)` — lifecycle hooks
+
+`StanceBase` provides:
+- Subscribes to `ReloadEvents` in constructor; unsubscribes in `Dispose()`
+- Override `OnMagReload()`, `OnCheckAmmo()`, `OnRechamber()`, etc. for per-stance reload behavior
+
+### Spring Injection System
+Stance offsets are applied by piggybacking on the game's `Spring` system:
+
+1. `InitSprings()`: `StancePositionSpring = Cloner.ShallowClone(PWA.HandsContainer.HandsPosition)` — shallow clone preserves spring settings but is a separate instance
+2. **`SpringUpdatePatch`** (prefix on `Spring.FixedUpdate`): When the game updates `HandsPosition` or `HandsRotation`, also calls `FixedUpdate` on the cloned spring
+3. **`SpringResetPatch`** (postfix on `Spring.Reset`): Resets the cloned spring when the game resets
+4. **`SpringGetPatch`** (postfix on `Spring.Get`): Adds the cloned spring's value to the result → position/rotation offset applied
+5. **`SpringGetRelativePatch`**: Same for `Spring.GetRelative`
+6. **`UpdateWeaponVariablesPatch`** (postfix on `PWA.UpdateWeaponVariables`): Captures `_aimingSpeed` into `PwaOriginalAimSpeed` each frame
+
+`StanceState.UpdateAimSpeed()` applies the aim speed multiplier from the active slot's curve to `StanceController.PwaAimSpeed` each frame.
+
+### Input System
+**Two-layer input architecture**:
+
+1. **`StanceInputListener`** (reads raw input): Polls `UnityEngine.Input` every frame. Raises `StanceInputEvents` (e.g., `StanceInputEvents.RaiseToggleHighReady()`). Also handles scroll-wheel stance cycling. Blocks input when `AimStateInstance.IsAiming || PlayerStateInstance.IsSprinting || PlayerStateInstance.IsInventoryOpen`.
+
+2. **`StanceInputHandler`** (responds to events): Subscribes to `StanceInputEvents` and `PlayerEvents`/`InputEvents`. Manages `_storedStance` (the stance to restore after ADS), `_wasInterruptedByADS`, `_aimedFromActiveAim`. Calls `_stanceState.RequestStance()` or `_stanceState.CancelAll()`.
+
+3. **`InputHookPipeline`** (intercepts EFT input): Registers with `Pipelines.InputVetoPipeline` to suppress EFT's default fire/scroll commands when appropriate. Registers with `Pipelines.InputOverridePipeline` to override `ECommand.LeftStanceToggle` (routing it through `StanceInputEvents` instead of EFT's default) and optionally `ECommand.WeaponMounting`.
+
+**`StanceInputEvents`** (in `Handlers/Input/`): Stance-specific static events separate from `RealismCommonLib.Events.InputEvents`:
+- `ToggleHighReady`, `ToggleLowReady`, `ToggleShortStock`, `ToggleActiveAim`, `TogglePatrolStance`, `ToggleMelee`
+- `ToggleOffAllStances`, `OnAttemptedToFireFromStance`
 
 ### Handler System (Gameplay Integration)
-Handlers apply stance effects and check conditions - inherit from IControllerHelper:
-- **StanceMovementHandler**: Applies movement speed multiplier based on active stance
-- **StanceHealthHandler**: Prevents stance changes if player is injured, adjusts aiming stability
-- **StanceStaminaHandler**: Applies stamina cost or recovery bonus per stance
-- **CollisionHandler**: Detects terrain/obstacles for bracing validation
-- **MountingHandler**: Detects valid bracing surfaces (sandbags, windows, etc.)
-- **PositionOffsetHandler**: Calculates final weapon offset from stance + other factors
-- Each handler implements RunOnAwake, RunOnDestroy, RunOnUpdate(deltaTime) interface
+All handlers implement `IControllerHelper` and are owned by `StanceController`:
+
+| Handler | Purpose |
+|---------|---------|
+| `StanceMovementHandler` | Registers `FloatMultiplierHandle`s on `StatModifiers.MaxWalkSpeedModifier` and sprint modifiers; updates multipliers each frame based on `CurrentStanceType` |
+| `StanceAimHandler` | Registers a `BoolGateHandle` on `BoolHandlers.CanAim`; blocks ADS via NVG/thermal/collision/health conditions |
+| `StanceInputHandler` | Manages stored stance, ADS interrupt/restore, firing cancellation logic |
+| `StanceInputListener` | Raw input polling and scroll-wheel stance cycle |
+| `InputHookPipeline` | Input veto/override registration with RealismCommonLib pipelines |
+| `StanceHealthHandler` | (In-progress) Health interaction |
+| `StanceStaminaHandler` | (In-progress) Stamina cost per stance |
+| `CollisionHandler` | (In-progress) Weapon collision detection for bracing |
+| `MountingHandler` | (In-progress) Surface detection for mounting/bracing |
+| `PositionOffsetHandler` | Per-weapon-ID position offset adjustments |
+| `TacSprintHandler` | Tactical sprint acceleration handling |
 
 ## Integration with RealismCommonLib
 
-### Events Used
-- **PlayerEvents.OnPlayerInitArgs**: Create StanceController on player spawn
-- **InputEvents.ChangeStanceInput**: Change stance on player input (keybind)
-- **PlayerEvents.AimStateChanged**: Adjust stances based on ADS state
-- **ReloadEvents**: May restrict stances during reloads
+### Events Subscribed (by StanceInputHandler)
+- `PlayerEvents.OnWeaponDraw` → cancel stances on weapon swap
+- `PlayerEvents.AimStateChanged` → interrupt/restore stance on ADS toggle
+- `PlayerEvents.OnShotFired` → cancel stance or keep based on `RememberStanceFiring` config
+
+### Events Subscribed (by StanceBase)
+- All `ReloadEvents` (`WeaponStateReset`, `CheckAmmo`, `ChamberCheck`, `MagReload`, etc.)
+- Each stance can override the virtual handler methods for per-stance reload behavior
 
 ### State Accessed
 ```csharp
-var player = Plugin.PlayerStateInstance.Player;
-var weapon = Plugin.WeaponStateInstance;  // IsPistol, IsShotgun, IsManuallyOperated
-var health = Plugin.HealthStateInstance;  // health, injuries, etc.
+using static RealismCommonLib.Plugin;
+
+bool isAiming      = AimStateInstance.IsAiming;
+bool canAim        = AimStateInstance.PlayerCanAim;
+bool isSprinting   = PlayerStateInstance.IsSprinting;
+bool weaponReady   = PlayerStateInstance.WeaponIsReady;
+bool treatAsPistol = WeaponStateInstance.TreatAsPistol;
+float weaponWeight = WeaponStateInstance.TotalWeaponWeight;
+bool armsInjured   = HealthStateInstance.ArmsAreIncapacitated;
+float toxicity     = HazardsStateInstance.TotalToxicity;
 ```
 
-### Patches Created
-- **Input patches**: Detect stance change input (keybind) → raise InputEvents.ChangeStanceInput
-- **Animation patches**: Intercept ProceduralWeaponAnimations for offset injection
-- **FirearmController patches**: Apply stance benefits to aiming speed and movement
+### Modifiers Applied
+- `StatModifiers.MaxWalkSpeedModifier` — walk speed per stance
+- `StatModifiers.MaxSprintSpeedModifier`, `SprintAccelModifier`, `PreSprintAccelModifier` — sprint per stance
+- `StatModifiers.MagReloadSpeed`, `QuickMagReloadSpeed`, `CheckAmmoSpeed`, etc. — registered in `StanceController.AssignReloadHandlers()`
+- `BoolHandlers.CanAim` — gate handle managed by `StanceAimHandler`
 
-### Configuration Integration
-- Uses PluginConfig.cs for all stance parameters
-- Configurable per-stance: speed multipliers, ADS times, stamina costs, gameplay benefits
-- Configurable global: stance smoothing, transition timing, input delay, etc.
-- Access pattern: `PluginConfig.ConfigName.Value`
-
-## Key Integration Points with Game
-
-### ProceduralWeaponAnimations Integration
-- **Target class**: Player.FirearmController.ProceduralWeaponAnimations
-- **Target properties**: Position offset, rotation offset, aim offset
-- **Method**: Patches intercept animation calculation methods
-- **Strategy**: Inject stance-based position/rotation offsets into existing animation system
-- **Result**: Weapon appears in different positions while maintaining game's procedural animations
-
-### Player.FirearmController Integration
-- **Target class**: Player.FirearmController (weapon aiming and firing controller)
-- **Patched methods**: ADS speed calculations, weapon offset, firing checks
-- **Strategy**: Modify animation speed and offset values based on active stance
-- **Result**: Different stances feel distinct with different aiming/firing speeds and weapon positions
-
-### Input System Integration
-- Detect stance change keybind input (patches on input detection)
-- Raise InputEvents.ChangeStanceInput event
-- StanceController listens to event and triggers state transition
+### Patches (in StancePatches.cs)
+- `UpdateWeaponVariablesPatch`: Captures `_aimingSpeed` from PWA on each frame
+- `SpringUpdatePatch`: Drives cloned springs in `FixedUpdate`
+- `SpringResetPatch`: Resets cloned springs
+- `SpringGetPatch`: Adds stance offset to `Spring.Get()` result
+- `SpringGetRelativePatch`: Adds stance offset to `Spring.GetRelative()` result
+- `ZeroAdjustmentsPatch`: Zero adjustment handling
+- `SetFireModePatch`, `OperateStationaryWeaponPatch`: Stance interaction with fire mode and stationary weapons
 
 ## Common Development Tasks
-1. **Add new stance**: Create class inheriting StanceBase in Stances/, define offset/curves/benefits, register in StanceController
-2. **Add stance benefit**: Create handler inheriting IControllerHelper in Handlers/, implement RunOnUpdate to apply effect
-3. **Add animation**: Add SpringAnimator in SpringAnimators/, update StanceController update loop to animate it
-4. **Add config option**: Add ConfigEntry in PluginConfig.cs, reference in stance/handler logic
-5. **Debug stance transitions**: Check EStanceState enum and StanceController transition state machine
-6. **Tweak animations**: Modify spring stiffness, damping, target offsets in SpringAnimator or stance definitions
+1. **Add new stance**: Create class inheriting `StanceBase` in `Stances/`, define `EnterPositionCurve`/`EnterRotationCurve`/`ExitPositionCurve`/`ExitRotationCurve`, override `StanceType`, add property + `InitStance(() => new MyStance())` in `StanceController.InitStances()`
+2. **Add per-stance reload modifier**: Add a `FloatMultiplierHandle` field in `StanceController`, register it in `AssignReloadHandlers()`, update its `.Multiplier` based on `CurrentStanceType` on reload events
+3. **Add stance gameplay handler**: Create class implementing `IControllerHelper` in `Handlers/`, instantiate via `InitStateController()` in `StanceController.InitStateControllers()`
+4. **Add config option**: Add `ConfigEntry<T>` in `PluginConfig.cs`, reference via `PluginConfig.Name.Value`
+5. **Debug stance transitions**: Log `_stanceState.ActiveStanceType`, check `_primary`/`_incoming` slot states, `IdleProximity`, `Direction`, `IsHeadingToIdle`
+6. **Tweak animation feel**: Adjust `StancePositionSpring.ReturnSpeed`, `StancePositionSpring.Damping` (set from config in `StanceController.Update()`), or modify the `Vector3Curve` keyframes in the stance class
+7. **Block ADS**: Get a `BoolGateHandle` from `BoolHandlers.CanAim.Add(true)`, set `.Allowed = false` to block
 
-## State Machine
-StanceController maintains state transitions:
-- **Idle**: No stance active
-- **Transitioning**: Currently animating from one stance to another
-- **Active**: Stance is fully engaged and active
+## State Machine Detail (StanceState)
 
-Transitions triggered by:
-- Player input (InputEvents.ChangeStanceInput)
-- Game state changes (health, aiming state, reload)
-- Animation completion
+```
+No stance:
+  RequestStance(A)  →  _primary = new StanceSlot(A, Enter, progress=0, dir=+1)
+                        A.OnEnter()
+
+Single stance holding:
+  RequestStance(A)  →  switch to Exit curve, progress=0, dir=+1
+                        A.OnExit()
+
+Single stance heading to pose:
+  RequestStance(A)  →  reverse Direction
+                        A.OnExit()
+
+Single stance heading to idle:
+  RequestStance(A)  →  reverse Direction (heading back to pose)
+
+Transition A→B (primary=A, no incoming):
+  BeginExit(A)  →  A heads to idle
+  _incoming = new StanceSlot(B, Enter, paused=true)
+  B.OnEnter()
+  [wait until A.IdleProximity >= A.BlendIntoThreshold(B)]
+  _incoming unpaused → B begins entering
+  [A reaches idle]  →  _primary = null, B promoted to primary
+
+Third stance during blend (primary=A, incoming=B):
+  _primary = B (incoming promoted), BeginExit(B)
+  _incoming = new StanceSlot(C, Enter, paused=true)
+  C.OnEnter()
+
+CancelAll():
+  BeginExit(_primary)
+  If _incoming is paused → discard it
+  If _incoming is active → BeginExit(_incoming)
+```
+
+## Stance Constants (StanceController)
+```
+STANCE_WEIGHT_LIMIT_KG = 8f        // "Chonker" threshold — heavy weapon modifier
+IDLE_ADS_MULTI         = 1.5f      // ADS speed when no stance active
+ACTIVE_AIM_ADS_MULTI   = 1.35f
+HIGH_ADS_MULTI         = 1.25f
+LOW_ADS_MULTI          = 1.25f
+SHORT_STOCK_ADS_MULTI  = 0.9f
+LEFT_SHOULDER_ADS_MULTI= 0.85f
+PATROL_ADS_MULTI       = 0.9f
+LEFT_SHOULDER_SWAY_MULTI = 1.3f
+HIGH_READY_RELOAD_SPEED_BUFF      = 1.18f
+ACTIVE_AIM_RELOAD_SPEED_BUFF      = 1.16f
+LOW_READY_RELOAD_SPEED_BUFF       = 1.21f
+ACTIVE_AIM_RECHAMBER_SPEED_BUFF   = 1.11f
+HIGH_READY_RECHAMBER_SPEED_BUFF   = 1.15f
+HIGH_READY_CHECK_AMMO_SPEED_BUFF  = 1.15f
+```
 
 ## Known Limitations & TODOs
-- Still work in progress
-- Placeholder implementations for some stances
-- Bracing detection may need refinement for complex terrain
-- Stance benefits not fully balanced between stance types
-- Animation curves may need tweaking for feel
-- Performance impact during stance transitions not yet optimized
-- Some handlers have TODO comments for future features
+- Several `TODO` comments throughout for refactoring into stance classes or dedicated controllers
+- `SpringAnimators/` classes (`AdsAnimator`, `WiggleAnimator`, `IdleAnimator`, `ExtraDetailsAnimator`) are stubs
+- `PatchHooks/` is currently empty
+- ADS speed modifier per stance (commented-out `StanceADSSpeedMulti` in `StanceAimHandler`) not yet implemented
+- `EStanceState` enum exists but the state machine has moved into `StanceState` / `StanceSlot` logic
+- `Melee` and `Mounting` stances are stubs
+- Forced low ready / health-based stance forcing is TODO
+- Bracing/collision/mounting handlers are in-progress

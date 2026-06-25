@@ -94,13 +94,13 @@ namespace StanceOverhaul.State
                       }*/
 
                 if (_primary.IsHeadingToIdle
-                && _primary.IdleProximity >= _primary.Stance.BlendThreshold(_incoming.Stance.StanceType))
+                && _primary.IdleProximity >= _primary.Stance.BlendIntoThreshold(_incoming.Stance.StanceType))
                 {
                     ModLogger.LogWarning("== threshold met");
                     _incomingPaused = false;
                 }
 
-                ModLogger.LogWarning($"IdleProximity {_primary.IdleProximity} BlendThreshold {_primary.Stance.BlendThreshold(_incoming.Stance.StanceType)}");
+                ModLogger.LogWarning($"IdleProximity {_primary.IdleProximity} BlendThreshold {_primary.Stance.BlendIntoThreshold(_incoming.Stance.StanceType)}");
             }
 
             //upate incoming if not paused

@@ -19,9 +19,9 @@ namespace StanceOverhaul.Stances
         public abstract AnimationCurve ExitAimSpeedCurve { get; }
         public abstract AnimationCurve EnterAimSpeedCurve { get; }
 
-        float BlendThreshold(EStanceType nextStance);
-        float BaseSpeed(EStanceType? previousStance);
-        float TransitionSpeedModifier(EStanceType? nextStance);
+        float BlendIntoThreshold(EStanceType nextStance);
+        float TransitionFromModifier(EStanceType? previousStance);
+        float TransitionToSpeedModifier(EStanceType? nextStance);
 
         void OnEnter();
         void OnExit();

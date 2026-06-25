@@ -344,6 +344,7 @@ namespace StanceOverhaul.Controllers
         public LowReady LowReady { get; private set; }
         public HighReady HighReady { get; private set; }
         public ActiveAim ActiveAim { get; private set; }
+        public ShortStock ShortStock { get; private set; }
 
         public bool AwakeRan { get; private set; } = false;
 
@@ -402,6 +403,10 @@ namespace StanceOverhaul.Controllers
 
             ActiveAim =
                 InitStance(() => new ActiveAim());
+
+            ShortStock = 
+                InitStance(() => new ShortStock());
+           
         }
 
         private T InitStance<T>(Func<T> factory) where T : StanceBase

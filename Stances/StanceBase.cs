@@ -41,9 +41,22 @@ namespace StanceOverhaul.Stances
                 new Keyframe { time = 1f, value = 1f }
             );
 
-        public virtual float BlendThreshold(EStanceType nextStance) { return 0.5f; }
-        public virtual float BaseSpeed(EStanceType? previousStance) { return 1f; }
-        public virtual float TransitionSpeedModifier(EStanceType? nextStance) { return 1f; }
+        /// <summary>
+        /// Blend threshold for this stance when transitioning to another stance.
+        /// Value of 0 means it will immediately let the next stance's animation take over, 
+        /// while a value of 1 means it will fully play this stance's animation before transitioning.
+        /// </summary>
+        public virtual float BlendIntoThreshold(EStanceType nextStance) { return 0.5f; }
+
+        ///<summary>
+        ///Speed of this stance when transitioning from another stance.
+        ///</summary>
+        public virtual float TransitionFromModifier(EStanceType? previousStance) { return 1f; }
+
+        ///<summary>
+        ///Speed of this stance when transitioning to another stance. Should be 1 if there is no next stance.
+        ///</summary>
+        public virtual float TransitionToSpeedModifier(EStanceType? nextStance) { return 1f; }
 
         public StanceBase()
         {

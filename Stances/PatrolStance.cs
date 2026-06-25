@@ -16,7 +16,7 @@ public class PatrolStance : StanceBase
     public override Vector3Curve ExitPositionCurve => _exitPos;
     public override Vector3Curve ExitRotationCurve => _exitRot;
 
-    public override float BlendThreshold(EStanceType nextStance)
+    public override float BlendIntoThreshold(EStanceType nextStance)
     {
         switch (nextStance)
         {
@@ -35,7 +35,7 @@ public class PatrolStance : StanceBase
         }
     }
 
-    public override float BaseSpeed(EStanceType? previousStance)
+    public override float TransitionFromModifier(EStanceType? previousStance)
     {
         switch (previousStance)
         {

@@ -1544,8 +1544,14 @@
             "outTangent": 0.0
           },
           {
-            "time": 1.0,
+            "time": 0.2,
             "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.01,
             "inTangent": 0.0,
             "outTangent": 0.0
           }
@@ -1560,8 +1566,20 @@
             "outTangent": 0.0
           },
           {
+            "time": 0.25,
+            "value": -0.04,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.5,
+            "value": -0.02,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
             "time": 1.0,
-            "value": 0.0,
+            "value": -0.035,
             "inTangent": 0.0,
             "outTangent": 0.0
           }
@@ -1576,8 +1594,14 @@
             "outTangent": 0.0
           },
           {
-            "time": 1.0,
+            "time": 0.2,
             "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.01,
             "inTangent": 0.0,
             "outTangent": 0.0
           }
@@ -1594,8 +1618,14 @@
             "outTangent": 0.0
           },
           {
+            "time": 0.2,
+            "value": 2.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
             "time": 1.0,
-            "value": 0.0,
+            "value": 8.0,
             "inTangent": 0.0,
             "outTangent": 0.0
           }
@@ -1610,8 +1640,26 @@
             "outTangent": 0.0
           },
           {
+            "time": 0.1,
+            "value": 2.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.25,
+            "value": 1.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.8,
+            "value": -16.5,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
             "time": 1.0,
-            "value": 0.0,
+            "value": -16.0,
             "inTangent": 0.0,
             "outTangent": 0.0
           }
@@ -1626,8 +1674,14 @@
             "outTangent": 0.0
           },
           {
-            "time": 1.0,
+            "time": 0.2,
             "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": -18.0,
             "inTangent": 0.0,
             "outTangent": 0.0
           }

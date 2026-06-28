@@ -20,18 +20,12 @@ public class LeftShoulder : StanceBase
     {
         switch (nextStance)
         {
-            case EStanceType.ActiveAiming:
-                return 0f;
-            case EStanceType.HighReady:
-                return 0f;
-            case EStanceType.LowReady:
-                return 0.55f;
-            case EStanceType.PatrolStance:
-                return PluginConfig.test1.Value;
-            case EStanceType.ShortStock:
-                return 0f;
-            default:
-                return 0.2f;
+            case EStanceType.ActiveAiming: return PluginConfig.LeftShoulderBlendThresholdActiveAim.Value;
+            case EStanceType.HighReady: return PluginConfig.LeftShoulderBlendThresholdHighReady.Value;
+            case EStanceType.LowReady: return PluginConfig.LeftShoulderBlendThresholdLowReady.Value;
+            case EStanceType.PatrolStance: return PluginConfig.LeftShoulderBlendThresholdPatrol.Value;
+            case EStanceType.ShortStock: return PluginConfig.LeftShoulderBlendThresholdShortStock.Value;
+            default: return 0.2f;
         }
     }
 
@@ -39,18 +33,12 @@ public class LeftShoulder : StanceBase
     {
         switch (previousStance)
         {
-            case EStanceType.ActiveAiming:
-                return 2f;
-            case EStanceType.HighReady:
-                return 1.3f;
-            case EStanceType.LowReady:
-                return 3.1f;
-            case EStanceType.PatrolStance:
-                return PluginConfig.test2.Value;
-            case EStanceType.ShortStock:
-                return 1.5f;
-            default:
-                return 2.2f;
+            case EStanceType.ActiveAiming: return PluginConfig.LeftShoulderTransitionFromActiveAim.Value;
+            case EStanceType.HighReady: return PluginConfig.LeftShoulderTransitionFromHighReady.Value;
+            case EStanceType.LowReady: return PluginConfig.LeftShoulderTransitionFromLowReady.Value;
+            case EStanceType.PatrolStance: return PluginConfig.LeftShoulderTransitionFromPatrol.Value;
+            case EStanceType.ShortStock: return PluginConfig.LeftShoulderTransitionFromShortStock.Value;
+            default: return 2.2f;
         }
     }
 
@@ -58,18 +46,12 @@ public class LeftShoulder : StanceBase
     {
         switch (nextStance)
         {
-            case EStanceType.ActiveAiming:
-                return 1f;
-            case EStanceType.HighReady:
-                return 1.15f;
-            case EStanceType.LowReady:
-                return 1.45f;
-            case EStanceType.PatrolStance:
-                return PluginConfig.test3.Value;
-            case EStanceType.ShortStock:
-                return 0.9f;
-            default:
-                return 1f;
+            case EStanceType.ActiveAiming: return PluginConfig.LeftShoulderTransitionToActiveAim.Value;
+            case EStanceType.HighReady: return PluginConfig.LeftShoulderTransitionToHighReady.Value;
+            case EStanceType.LowReady: return PluginConfig.LeftShoulderTransitionToLowReady.Value;
+            case EStanceType.PatrolStance: return PluginConfig.LeftShoulderTransitionToPatrol.Value;
+            case EStanceType.ShortStock: return PluginConfig.LeftShoulderTransitionToShortStock.Value;
+            default: return 1f;
         }
     }
 

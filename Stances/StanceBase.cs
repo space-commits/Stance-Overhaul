@@ -2,6 +2,7 @@
 using RealismCommonLib.Utils;
 using StanceOverhaul.Controllers.StateControllers;
 using StanceOverhaul.Enums;
+using StanceOverhaul.Events;
 using System;
 using UnityEngine;
 using static RealismCommonLib.Plugin;
@@ -11,6 +12,8 @@ namespace StanceOverhaul.Stances
     public abstract class StanceBase : IStance, IDisposable
     {
         public virtual EStanceType StanceType => EStanceType.None;
+        public virtual EStaminaMode StaminaMode => EStaminaMode.Neutral;
+        public virtual float StaminaRate => 0f;
 
         public abstract Vector3Curve EnterPositionCurve { get; }
         public abstract Vector3Curve EnterRotationCurve { get; }
@@ -98,9 +101,15 @@ namespace StanceOverhaul.Stances
 
         protected virtual void OnQuickMagReload() { }
 
-        public virtual void OnEnter() { }
+        public virtual void OnEnter()
+        {
+            StanceEvents.RaiseOnStanceEntered(this);
+        }
 
-        public virtual void OnExit() { }
+        public virtual void OnExit()
+        {
+            StanceEvents.RaiseOnStanceExited();
+        }
 
         public virtual void OnHoldUpdate(float deltaTime) { } //TODO: implement
     }

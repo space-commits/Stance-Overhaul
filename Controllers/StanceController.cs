@@ -331,7 +331,8 @@ namespace StanceOverhaul.Controllers
         private InputHookPipeline _inputHookPipeline;
         private StanceInputHandler _inputHandler;
         private StanceInputListener _inputListener;
-        private StanceMovementHandler _movementState;
+        private StanceStaminaHandler _staminaHandler;
+        private StanceMovementHandler _movementHandler;
         private StanceAimHandler _aimState;
         private StanceState _stanceState;
 
@@ -404,9 +405,9 @@ namespace StanceOverhaul.Controllers
             ActiveAim =
                 InitStance(() => new ActiveAim());
 
-            ShortStock = 
+            ShortStock =
                 InitStance(() => new ShortStock());
-           
+
         }
 
         private T InitStance<T>(Func<T> factory) where T : StanceBase
@@ -430,7 +431,10 @@ namespace StanceOverhaul.Controllers
             _inputHookPipeline =
                 InitStateController(() => new InputHookPipeline());
 
-            _movementState =
+            _staminaHandler =
+                InitStateController(() => new StanceStaminaHandler());
+
+            _movementHandler =
                 InitStateController(() => new StanceMovementHandler());
 
             _aimState =

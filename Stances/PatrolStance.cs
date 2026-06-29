@@ -9,6 +9,8 @@ namespace StanceOverhaul.Stances;
 public class PatrolStance : StanceBase
 {
     public override EStanceType StanceType => EStanceType.PatrolStance;
+    public override EStaminaMode StaminaMode => EStaminaMode.Regen;
+    public override float StaminaRate => 4.0f;
 
     public override Vector3Curve EnterPositionCurve => _enterPos;
     public override Vector3Curve EnterRotationCurve => _enterRot;
@@ -38,7 +40,7 @@ public class PatrolStance : StanceBase
             case EStanceType.LowReady: return PluginConfig.PatrolTransitionFromLowReady.Value;
             case EStanceType.LeftShoulder: return PluginConfig.PatrolTransitionFromLeftShoulder.Value;
             case EStanceType.ShortStock: return PluginConfig.PatrolTransitionFromShortStock.Value;
-            default: return 3f;
+            default: return 1.65f;
         }
     }
 

@@ -119,35 +119,35 @@ namespace StanceOverhaul
         public static ConfigEntry<float> LeftShoulderBlendThresholdHighReady { get; set; }
         public static ConfigEntry<float> LeftShoulderBlendThresholdLowReady { get; set; }
         public static ConfigEntry<float> LeftShoulderBlendThresholdPatrol { get; set; }
-        public static ConfigEntry<float> LeftShoulderBlendThresholdShortStock { get; set; }
-        public static ConfigEntry<float> LeftShoulderTransitionFromActiveAim { get; set; }
-        public static ConfigEntry<float> LeftShoulderTransitionFromHighReady { get; set; }
-        public static ConfigEntry<float> LeftShoulderTransitionFromLowReady { get; set; }
-        public static ConfigEntry<float> LeftShoulderTransitionFromPatrol { get; set; }
-        public static ConfigEntry<float> LeftShoulderTransitionFromShortStock { get; set; }
-        public static ConfigEntry<float> LeftShoulderTransitionToActiveAim { get; set; }
-        public static ConfigEntry<float> LeftShoulderTransitionToHighReady { get; set; }
-        public static ConfigEntry<float> LeftShoulderTransitionToLowReady { get; set; }
-        public static ConfigEntry<float> LeftShoulderTransitionToPatrol { get; set; }
-        public static ConfigEntry<float> LeftShoulderTransitionToShortStock { get; set; }
+        public static ConfigEntry<float>? LeftShoulderBlendThresholdShortStock { get; set; }
+        public static ConfigEntry<float>? LeftShoulderTransitionFromActiveAim { get; set; }
+        public static ConfigEntry<float>? LeftShoulderTransitionFromHighReady { get; set; }
+        public static ConfigEntry<float>? LeftShoulderTransitionFromLowReady { get; set; }
+        public static ConfigEntry<float>? LeftShoulderTransitionFromPatrol { get; set; }
+        public static ConfigEntry<float>? LeftShoulderTransitionFromShortStock { get; set; }
+        public static ConfigEntry<float>? LeftShoulderTransitionToActiveAim { get; set; }
+        public static ConfigEntry<float>? LeftShoulderTransitionToHighReady { get; set; }
+        public static ConfigEntry<float>? LeftShoulderTransitionToLowReady { get; set; }
+        public static ConfigEntry<float>? LeftShoulderTransitionToPatrol { get; set; }
+        public static ConfigEntry<float>? LeftShoulderTransitionToShortStock { get; set; }
 
         public static ConfigEntry<KeyboardShortcut> ActiveAimKeybind { get; set; }
         public static ConfigEntry<KeyboardShortcut> LowReadyKeybind { get; set; }
         public static ConfigEntry<KeyboardShortcut> HighReadyKeybind { get; set; }
         public static ConfigEntry<KeyboardShortcut> ShortStockKeybind { get; set; }
         public static ConfigEntry<KeyboardShortcut> PatrolKeybind { get; set; }
-        public static ConfigEntry<KeyboardShortcut> MeleeKeybind { get; set; }
-        public static ConfigEntry<KeyboardShortcut> StanceWheelComboKeyBind { get; set; }
-        public static ConfigEntry<float> StanceSfxModifier { get; set; }
-        public static ConfigEntry<bool> EnableAnimationFixes { get; set; }
-        public static ConfigEntry<bool> OverrideCollision { get; set; }
-        public static ConfigEntry<bool> OverrideMounting { get; set; }
-        public static ConfigEntry<bool> UseMouseWheelStance { get; set; }
-        public static ConfigEntry<bool> UseMouseWheelPlusKey { get; set; }
+        public static ConfigEntry<KeyboardShortcut> MeleeKeybind { get; set; } = null!;
+        public static ConfigEntry<KeyboardShortcut> StanceWheelComboKeyBind { get; set; } = null!;
+        public static ConfigEntry<float> StanceSfxModifier { get; set; } = null!;
+        public static ConfigEntry<bool> EnableAnimationFixes { get; set; } = null!;
+        public static ConfigEntry<bool> OverrideCollision { get; set; } = null!;
+        public static ConfigEntry<bool> OverrideMounting { get; set; } = null!;
+        public static ConfigEntry<bool> UseMouseWheelStance { get; set; } = null!;
+        public static ConfigEntry<bool> UseMouseWheelPlusKey { get; set; } = null!;
 
-        public static ConfigEntry<bool> EnableFSAimBlock { get; set; }
-        public static ConfigEntry<bool> EnableNVGAimBlock { get; set; }
-        public static ConfigEntry<bool> EnableThermalAimBlock { get; set; }
+        public static ConfigEntry<bool> EnableFSAimBlock { get; set; } = null!;
+        public static ConfigEntry<bool> EnableNVGAimBlock { get; set; } = null!;
+        public static ConfigEntry<bool> EnableThermalAimBlock { get; set; }  = null!;
 
         public static ConfigEntry<bool> EnableMountUI { get; set; }
         public static ConfigEntry<bool> ToggleActiveAim { get; set; }
@@ -218,10 +218,7 @@ namespace StanceOverhaul
             EnableStanceStamChanges = config.Bind<bool>(weapAimAndPos, "Enable Stance Stamina And Movement Effects",true, new ConfigDescription("Enabled Stances And Mounting To Affect Stamina And Movement Speed. Stamina Drain May Not Work Correctly If Disabled. High + Low Ready, Short-Stocking And Pistol Idle Will Regenerate Stamina Faster And Optionally Idle With Rifles Drains Stamina. High Ready Has Faster Sprint Speed And Sprint Accel, Low Ready Has Faster Sprint Accel. Arm Stamina Won't Drain Regular Stamina If It Reaches 0.", null, new ConfigurationManagerAttributes { Order = 183, Browsable =true }));
             AllowActiveAimReload = config.Bind<bool>(weapAimAndPos, "Allow Reload From Active Aim", false, new ConfigDescription("Allows Reload From Magazine While In Active Aim With Speed Bonus.", null, new ConfigurationManagerAttributes { Order = 190, Browsable =true }));
             EnableMountUI = config.Bind<bool>(weapAimAndPos, "Enable Mounting UI",true, new ConfigDescription("If Enabled, An Icon On Screen Will Indicate If Player Is Bracing, Mounting And What Side Of Cover They Are On.", null, new ConfigurationManagerAttributes { Order = 179, Browsable =true }));
-            LeftShoulderOffset = config.Bind<float>(weapAimAndPos, "Left Shoulder Offset", -0.13f, new ConfigDescription("", new AcceptableValueRange<float>(-0.2f, 0.1f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 153, Browsable =true }));
             WeapOffset = config.Bind<Vector3>(weapAimAndPos, "Rifle Position Offset", new Vector3(-0.04f, -0.015f, 0f), new ConfigDescription("Config option 'alt rife' is required. Adjusts The Starting Position Of Rifle On Screen.", null, new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 152, IsAdvanced = true, Browsable =true }));
-            StanceRotationSpeedMulti = config.Bind<float>(weapAimAndPos, "Stance Rotation Speed Multi", 1f, new ConfigDescription("Adjusts The Speed Of Stance Rotation Changes.", new AcceptableValueRange<float>(0.1f, 10f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 146, IsAdvanced = true, Browsable =true }));
-            StanceTransitionSpeedMulti = config.Bind<float>(weapAimAndPos, "Stance Transition Speed.", 15.0f, new ConfigDescription("Adjusts The Position Change Speed Between Stances", new AcceptableValueRange<float>(1f, 35f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 145, IsAdvanced = true, Browsable =true }));
             StanceSfxModifier = config.Bind<float>(weapAimAndPos, "Stance Sfx Volume Modifier", 2f, new ConfigDescription("Gear rattle volume modifer when doing stance related things", new AcceptableValueRange<float>(0.1f, 20f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 153, Browsable =true }));
             StanceBlendSpeed = config.Bind<float>(weapAimAndPos, "Stance Blend Speed", 18f, new ConfigDescription("Speed of stance blending transitions", new AcceptableValueRange<float>(0.1f, 100f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 151, IsAdvanced = true, Browsable = true }));
             GlobalStanceSpeed = config.Bind<float>(weapAimAndPos, "Global Stance Speed", 1f, new ConfigDescription("Global multiplier for all stance speeds", new AcceptableValueRange<float>(0.1f, 10f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 150, IsAdvanced = true, Browsable = true }));
@@ -240,24 +237,6 @@ namespace StanceOverhaul
             UseMouseWheelStance = config.Bind<bool>(stanceBinds, "Enable Mouse Wheel Stance Switching",true, new ConfigDescription("Switches Between High And Low Ready Via Mouse Wheel.", null, new ConfigurationManagerAttributes { Order = 160, Browsable =true }));
             UseMouseWheelPlusKey = config.Bind<bool>(stanceBinds, "Require Key + Mouse Wheel",true, new ConfigDescription("Require Keybind + Mouse Wheel To Change Stance.", null, new ConfigurationManagerAttributes { Order = 170, Browsable =true }));
             StanceWheelComboKeyBind = config.Bind(stanceBinds, "Keybind To Use With Mouse Wheel", new KeyboardShortcut(KeyCode.LeftControl), new ConfigDescription("Key Used In Combination With Mouse Wheel If Enabled ", null, new ConfigurationManagerAttributes { Order = 180, Browsable =true }));
-
-            ThirdPersonRotationSpeed = config.Bind<float>(thirdPerson, "Third Person Rotation Speed Multi", 1.5f, new ConfigDescription("Speed Of Stance Rotation Change In Third Person.", new AcceptableValueRange<float>(0.1f, 20f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 1000, IsAdvanced = true, Browsable =true }));
-            ThirdPersonPositionSpeed = config.Bind<float>(thirdPerson, "Third Person Position Speed Multi", 1.0f, new ConfigDescription("Speed Of Stance Position Change In Third Person.", new AcceptableValueRange<float>(0.1f, 20f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 1100, IsAdvanced = true, Browsable =true }));
-
-            PistolThirdPersonPosition = config.Bind<Vector3>(thirdPerson, "Pistol Third Person Position", new Vector3(-0.03f, 0.04f, -0.05f), new ConfigDescription("", null, new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 260, IsAdvanced = true, Browsable =true }));
-            PistolThirdPersonRotation = config.Bind<Vector3>(thirdPerson, "Pistol Third Person Rotation", new Vector3(0f, 15f, 0f), new ConfigDescription("", null, new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 230, IsAdvanced = true, Browsable =true }));
-
-            ShortStockThirdPersonPosition = config.Bind<Vector3>(thirdPerson, "Short-Stock Third Person Position", new Vector3(0.03f, 0.065f, -0.075f), new ConfigDescription("", null, new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 200, IsAdvanced = true, Browsable =true }));
-            ShortStockThirdPersonRotation = config.Bind<Vector3>(thirdPerson, "Short-Stock Third Person Rotation", new Vector3(0f, -15f, 0f), new ConfigDescription("", null, new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 170, IsAdvanced = true, Browsable =true }));
-
-            ActiveThirdPersonPosition = config.Bind<Vector3>(thirdPerson, "Active Aim Third Person Position", new Vector3(-0.02f, -0.02f, 0.02f), new ConfigDescription("", null, new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 140, IsAdvanced = true, Browsable =true }));
-            ActiveThirdPersonRotation = config.Bind<Vector3>(thirdPerson, "Active Aim Third Person Rotation", new Vector3(0f, -35f, 0f), new ConfigDescription("", null, new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 110, IsAdvanced = true, Browsable =true }));
-
-            HighReadyThirdPersonPosition = config.Bind<Vector3>(thirdPerson, "High Ready Third Person Position", new Vector3(0.02f, 0.05f, -0.045f), new ConfigDescription("", null, new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 80, IsAdvanced = true, Browsable =true }));
-            HighReadyThirdPersonRotation = config.Bind<Vector3>(thirdPerson, "High Ready Third Person Rotation", new Vector3(-8f, -25f, 0f), new ConfigDescription("", null, new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 50, IsAdvanced = true, Browsable =true }));
-
-            LowReadyThirdPersonPosition = config.Bind<Vector3>(thirdPerson, "Low Ready Third Person Position", new Vector3(0.01f, -0.025f, 0f), new ConfigDescription("", null, new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 20, IsAdvanced = true, Browsable =true }));
-            LowReadyThirdPersonRotation = config.Bind<Vector3>(thirdPerson, "Low Ready Third Person Rotation", new Vector3(24f, 10f, -1f), new ConfigDescription("", null, new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 8, IsAdvanced = true, Browsable =true }));
 
             ActiveAimBlendThresholdLowReady = config.Bind<float>(activeAim, "Active Aim Blend Threshold: Low Ready", 0.15f, new ConfigDescription("", new AcceptableValueRange<float>(0f, 1f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 99, IsAdvanced = true, Browsable = true }));
             ActiveAimBlendThresholdHighReady = config.Bind<float>(activeAim, "Active Aim Blend Threshold: High Ready", 0f, new ConfigDescription("", new AcceptableValueRange<float>(0f, 1f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 98, IsAdvanced = true, Browsable = true }));
@@ -306,17 +285,6 @@ namespace StanceOverhaul
             LowReadyTransitionToLeftShoulder = config.Bind<float>(lowReady, "Low Ready Transition To Speed: Left Shoulder", 1.8f, new ConfigDescription("", new AcceptableValueRange<float>(0f, 50f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 22, IsAdvanced = true, Browsable = true }));
             LowReadyTransitionToPatrol = config.Bind<float>(lowReady, "Low Ready Transition To Speed: Patrol", 1f, new ConfigDescription("", new AcceptableValueRange<float>(0f, 50f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 21, IsAdvanced = true, Browsable = true }));
             LowReadyTransitionToShortStock = config.Bind<float>(lowReady, "Low Ready Transition To Speed: Short-Stock", 1f, new ConfigDescription("", new AcceptableValueRange<float>(0f, 50f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 20, IsAdvanced = true, Browsable = true }));
-
-            PistolAdditionalRotationSpeedMulti = config.Bind<float>(pistol, "Pistol Additional Rotation Speed Multi", 0.1f, new ConfigDescription("How Fast The Weapon Rotates.", new AcceptableValueRange<float>(0.0f, 20f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 35, IsAdvanced = true, Browsable =true }));
-            PistolResetRotationSpeedMulti = config.Bind<float>(pistol, "Pistol Reset Rotation Speed Multi", 0.5f, new ConfigDescription("How Fast The Weapon Rotates.", new AcceptableValueRange<float>(0.0f, 20f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 34, IsAdvanced = true, Browsable =true }));
-            PistolRotationSpeedMulti = config.Bind<float>(pistol, "Pistol Rotation Speed Multi", 1f, new ConfigDescription("How Fast The Weapon Rotates.", new AcceptableValueRange<float>(0.0f, 20f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 33, IsAdvanced = true, Browsable =true }));
-            PistolPosSpeedMulti = config.Bind<float>(pistol, "Pistol Position Speed Multi", 6.0f, new ConfigDescription("", new AcceptableValueRange<float>(1.0f, 100.0f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 32, IsAdvanced = true, Browsable =true }));
-            PistolPosResetSpeedMulti = config.Bind<float>(pistol, "Pistol Position Reset Speed Multi", 8.0f, new ConfigDescription("", new AcceptableValueRange<float>(1.0f, 100.0f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 30, IsAdvanced = true, Browsable =true }));
-
-            PistolOffset = config.Bind<Vector3>(pistol, "Pistol Position", new Vector3(0f, 0.04f, -0.015f), new ConfigDescription("Weapon Position When In Stance.", null, new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 25, IsAdvanced = true, Browsable =true }));
-            PistolRotation = config.Bind<Vector3>(pistol, "Pistol Rotation", new Vector3(0.0f, -5f, 0f), new ConfigDescription("Weapon Rotation When In Stance.", null, new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 12, IsAdvanced = true, Browsable =true }));
-            PistolAdditionalRotation = config.Bind<Vector3>(pistol, "Pistol Ready Additional Rotation", new Vector3(0.0f, 0f, 0f), new ConfigDescription("Additional Seperate Weapon Rotation When Going Into Stance.", null, new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 6, IsAdvanced = true, Browsable =true }));
-            PistolResetRotation = config.Bind<Vector3>(pistol, "Pistol Ready Reset Rotation", new Vector3(-5f, 0f, 0f), new ConfigDescription("Weapon Rotation When Going Out Of Stance.", null, new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 3, IsAdvanced = true, Browsable =true }));
 
             ShortStockBlendThresholdActiveAim = config.Bind<float>(shortStock, "Short-Stock Blend Threshold: Active Aim", 0f, new ConfigDescription("", new AcceptableValueRange<float>(0f, 1f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 2, IsAdvanced = true, Browsable = true }));
             ShortStockBlendThresholdHighReady = config.Bind<float>(shortStock, "Short-Stock Blend Threshold: High Ready", 0f, new ConfigDescription("", new AcceptableValueRange<float>(0f, 1f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 1, IsAdvanced = true, Browsable = true }));

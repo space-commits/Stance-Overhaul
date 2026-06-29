@@ -9,6 +9,8 @@ namespace StanceOverhaul.Stances;
 public class ActiveAim : StanceBase
 {
     public override EStanceType StanceType => EStanceType.ActiveAiming;
+    public override EStaminaMode StaminaMode => EStaminaMode.Drain;
+    public override float StaminaRate => 0.075f;
 
     public override Vector3Curve EnterPositionCurve => _enterPos;
     public override Vector3Curve EnterRotationCurve => _enterRot;

@@ -9,6 +9,8 @@ namespace StanceOverhaul.Stances;
 public class HighReady : StanceBase
 {
     public override EStanceType StanceType => EStanceType.HighReady;
+    public override EStaminaMode StaminaMode => EStaminaMode.Regen;
+    public override float StaminaRate => 1.85f;
 
     public override Vector3Curve EnterPositionCurve => _enterPos;
     public override Vector3Curve EnterRotationCurve => _enterRot;

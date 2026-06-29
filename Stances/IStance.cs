@@ -9,6 +9,8 @@ namespace StanceOverhaul.Stances
     public interface IStance
     {
         public EStanceType StanceType { get; }
+        public EStaminaMode StaminaMode { get; }
+        public float StaminaRate { get; }
 
         public abstract Vector3Curve EnterRotationCurve { get; }
         public abstract Vector3Curve EnterPositionCurve { get; }

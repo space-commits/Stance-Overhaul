@@ -46,6 +46,7 @@ namespace StanceOverhaul.State
 
                 if (_primary != null && _primary.IsAtOrHeadingToPose)
                     return _primary.Stance;
+                    
                 return null;
             }
         }

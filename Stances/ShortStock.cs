@@ -9,6 +9,8 @@ namespace StanceOverhaul.Stances;
 public class ShortStock : StanceBase
 {
     public override EStanceType StanceType => EStanceType.ShortStock;
+    public override EStaminaMode StaminaMode => EStaminaMode.Regen;
+    public override float StaminaRate => 1.3f;
 
     public override Vector3Curve EnterPositionCurve => _enterPos;
     public override Vector3Curve EnterRotationCurve => _enterRot;

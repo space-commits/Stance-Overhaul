@@ -37,7 +37,7 @@ namespace StanceOverhaul.Handlers.StanceInput
 
         public void SubscribeToEvents()
         {
-            RealismCommonLib.Events.PlayerEvents.OnWeaponDraw += OnWeaponSwap;
+            RealismCommonLib.Events.PlayerEvents.OnWeaponDraw += OnWeaponDraw;
             RealismCommonLib.Events.PlayerEvents.AimStateChanged += OnADSToggled;
             RealismCommonLib.Events.PlayerEvents.OnShotFired += OnShotFired;
             StanceInputEvents.TogglePatrolStance += TogglePatrolStance;
@@ -55,7 +55,7 @@ namespace StanceOverhaul.Handlers.StanceInput
 
         public void UnSubscribeToEvents()
         {
-            RealismCommonLib.Events.PlayerEvents.OnWeaponDraw -= OnWeaponSwap;
+            RealismCommonLib.Events.PlayerEvents.OnWeaponDraw -= OnWeaponDraw;
             RealismCommonLib.Events.PlayerEvents.AimStateChanged -= OnADSToggled;
             RealismCommonLib.Events.PlayerEvents.OnShotFired -= OnShotFired;
             StanceInputEvents.TogglePatrolStance -= TogglePatrolStance;
@@ -74,7 +74,7 @@ namespace StanceOverhaul.Handlers.StanceInput
         {
         }
 
-        public void OnWeaponSwap()
+        public void OnWeaponDraw()
         {
             if (!PluginConfig.RememberStanceItem.Value && !PlayerStateInstance.WeaponIsReady)
                 _stanceState.CancelAll();

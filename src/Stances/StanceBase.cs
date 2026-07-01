@@ -14,6 +14,9 @@ namespace StanceOverhaul.Stances
         public virtual EStanceType StanceType => EStanceType.None;
         public virtual EStaminaMode StaminaMode => EStaminaMode.Neutral;
         public virtual float StaminaRate => 0f;
+        public virtual float WalkSpeedBonus => 1f;
+        public virtual float SprintAccelBonus => 1f;
+        public virtual bool DoesTacSprint => false;
 
         public abstract Vector3Curve EnterPositionCurve { get; }
         public abstract Vector3Curve EnterRotationCurve { get; }

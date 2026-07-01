@@ -10,13 +10,16 @@ public class ActiveAim : StanceBase
 {
     public override EStanceType StanceType => EStanceType.ActiveAiming;
     public override EStaminaMode StaminaMode => EStaminaMode.Drain;
-    public override float StaminaRate => 0.075f;
 
     public override Vector3Curve EnterPositionCurve => _enterPos;
     public override Vector3Curve EnterRotationCurve => _enterRot;
 
     public override Vector3Curve ExitPositionCurve => _exitPos;
     public override Vector3Curve ExitRotationCurve => _exitRot;
+
+    public override float StaminaRate => PluginConfig.ActiveAimStaminaRate.Value;
+    public override float WalkSpeedBonus => PluginConfig.ActiveAimWalkSpeedBonus.Value;
+    public override float SprintAccelBonus => PluginConfig.ActiveAimSprintAccelBonus.Value;
 
     public override float BlendIntoThreshold(EStanceType nextStance)
     {
@@ -40,7 +43,7 @@ public class ActiveAim : StanceBase
             case EStanceType.LeftShoulder: return PluginConfig.ActiveAimTransitionFromLeftShoulder.Value;
             case EStanceType.PatrolStance: return PluginConfig.ActiveAimTransitionFromPatrol.Value;
             case EStanceType.ShortStock: return PluginConfig.ActiveAimTransitionFromShortStock.Value;
-            default: return 3f;
+            default: return PluginConfig.ActiveAimTransitionFromIdle.Value;
         }
     }
 

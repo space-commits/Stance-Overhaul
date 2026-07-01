@@ -88,7 +88,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Resources\curves.json">
+    <Content Include="src\Resources\curves.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
@@ -98,7 +98,7 @@
   </ItemGroup>
 
   <Target Name="PostBuildCopy" AfterTargets="Build">
-    <Copy SourceFiles="$(ProjectDir)Resources\curves.json" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(ProjectDir)src\Resources\curves.json" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
     <Copy SourceFiles="$(TargetDir)$(TargetFileName)" DestinationFolder="F:\SP EFT\SPT-406\BepInEx\plugins\Realism" />
     <Copy SourceFiles="$(TargetDir)curves.json" DestinationFolder="F:\SP EFT\SPT-406\BepInEx\plugins\Realism" />
   </Target>

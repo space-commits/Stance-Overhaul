@@ -10,13 +10,16 @@ public class LowReady : StanceBase
 {
     public override EStanceType StanceType => EStanceType.LowReady;
     public override EStaminaMode StaminaMode => EStaminaMode.Regen;
-    public override float StaminaRate => 2.4f;
 
     public override Vector3Curve EnterPositionCurve => _enterPos;
     public override Vector3Curve EnterRotationCurve => _enterRot;
 
     public override Vector3Curve ExitPositionCurve => _exitPos;
     public override Vector3Curve ExitRotationCurve => _exitRot;
+
+    public override float StaminaRate => PluginConfig.LowReadyStaminaRate.Value;
+    public override float WalkSpeedBonus => PluginConfig.LowReadyWalkSpeedBonus.Value;
+    public override float SprintAccelBonus => PluginConfig.LowReadySprintAccelBonus.Value;
 
     public override float BlendIntoThreshold(EStanceType nextStance)
     {
@@ -40,7 +43,7 @@ public class LowReady : StanceBase
             case EStanceType.LeftShoulder: return PluginConfig.LowReadyTransitionFromLeftShoulder.Value;
             case EStanceType.PatrolStance: return PluginConfig.LowReadyTransitionFromPatrol.Value;
             case EStanceType.ShortStock: return PluginConfig.LowReadyTransitionFromShortStock.Value;
-            default: return 3f;
+            default: return PluginConfig.LowReadyTransitionFromIdle.Value;
         }
     }
 

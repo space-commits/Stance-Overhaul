@@ -153,7 +153,7 @@ namespace StanceOverhaul.State
             }
 
             //output smoothing
-            float smoothFactor = Mathf.Clamp01(deltaTime * PluginConfig.test19.Value);
+            float smoothFactor = Mathf.Clamp01(deltaTime * PluginConfig.StanceBlendSpeed.Value);
             _smoothedPosition = Vector3.Lerp(_smoothedPosition, rawPos, smoothFactor);
             _smoothedRotation = Vector3.Lerp(_smoothedRotation, rawRot, smoothFactor);
 
@@ -271,7 +271,7 @@ namespace StanceOverhaul.State
                 _incoming = null;
                 BeginExit(_primary);
             }
-            else // if (_primary != null)
+            else if (_primary != null)
             {
                 ModLogger.LogWarning($"normal transition A -> B {stance.StanceType}");
                 //normal transition A -> B

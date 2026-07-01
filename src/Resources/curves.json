@@ -1698,6 +1698,12 @@
             "outTangent": 0.0
           },
           {
+            "time": 0.75,
+            "value": 0.01,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
             "time": 1.0,
             "value": 0.0,
             "inTangent": 0.0,
@@ -1714,6 +1720,12 @@
             "outTangent": 0.0
           },
           {
+            "time": 0.5,
+            "value": -0.035,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
             "time": 1.0,
             "value": 0.0,
             "inTangent": 0.0,
@@ -1725,6 +1737,12 @@
         "keys": [
           {
             "time": 0.0,
+            "value": 0.01,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.65,
             "value": 0.01,
             "inTangent": 0.0,
             "outTangent": 0.0
@@ -1748,6 +1766,12 @@
             "outTangent": 0.0
           },
           {
+            "time": 0.45,
+            "value": 4.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
             "time": 1.0,
             "value": 0.0,
             "inTangent": 0.0,
@@ -1760,6 +1784,18 @@
           {
             "time": 0.0,
             "value": -16.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.5,
+            "value": -10.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.9,
+            "value": 1.0,
             "inTangent": 0.0,
             "outTangent": 0.0
           },

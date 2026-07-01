@@ -16,6 +16,10 @@ public class LeftShoulder : StanceBase
     public override Vector3Curve ExitPositionCurve => _exitPos;
     public override Vector3Curve ExitRotationCurve => _exitRot;
 
+    public override float StaminaRate => PluginConfig.LeftShoulderStaminaRate.Value;
+    public override float WalkSpeedBonus => PluginConfig.LeftShoulderWalkSpeedBonus.Value;
+    public override float SprintAccelBonus => PluginConfig.LeftShoulderSprintAccelBonus.Value;
+
     public override float BlendIntoThreshold(EStanceType nextStance)
     {
         switch (nextStance)
@@ -38,7 +42,7 @@ public class LeftShoulder : StanceBase
             case EStanceType.LowReady: return PluginConfig.LeftShoulderTransitionFromLowReady.Value;
             case EStanceType.PatrolStance: return PluginConfig.LeftShoulderTransitionFromPatrol.Value;
             case EStanceType.ShortStock: return PluginConfig.LeftShoulderTransitionFromShortStock.Value;
-            default: return 2.2f;
+            default: return PluginConfig.LeftShoulderTransitionFromIdle.Value;
         }
     }
 

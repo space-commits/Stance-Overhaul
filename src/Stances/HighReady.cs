@@ -10,13 +10,17 @@ public class HighReady : StanceBase
 {
     public override EStanceType StanceType => EStanceType.HighReady;
     public override EStaminaMode StaminaMode => EStaminaMode.Regen;
-    public override float StaminaRate => 1.85f;
 
     public override Vector3Curve EnterPositionCurve => _enterPos;
     public override Vector3Curve EnterRotationCurve => _enterRot;
 
     public override Vector3Curve ExitPositionCurve => _exitPos;
     public override Vector3Curve ExitRotationCurve => _exitRot;
+
+    public override float StaminaRate => PluginConfig.HighReadyStaminaRate.Value;
+    public override float WalkSpeedBonus => PluginConfig.HighReadyWalkSpeedBonus.Value;
+    public override float SprintAccelBonus => PluginConfig.HighReadySprintAccelBonus.Value;
+    public override bool DoesTacSprint => true;
 
     public override float BlendIntoThreshold(EStanceType nextStance)
     {
@@ -40,7 +44,7 @@ public class HighReady : StanceBase
             case EStanceType.LeftShoulder: return PluginConfig.HighReadyTransitionFromLeftShoulder.Value;
             case EStanceType.PatrolStance: return PluginConfig.HighReadyTransitionFromPatrol.Value;
             case EStanceType.ShortStock: return PluginConfig.HighReadyTransitionFromShortStock.Value;
-            default: return 3f;
+            default: return PluginConfig.HighReadyTransitionFromIdle.Value;
         }
     }
 
@@ -72,4 +76,3 @@ public class HighReady : StanceBase
         _exitRot = RealismCommonLib.Utils.CurveDrawer.GetCurve("high_ready_exit_rotation")!;
     }
 }
- 

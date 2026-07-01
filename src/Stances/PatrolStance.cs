@@ -10,13 +10,16 @@ public class PatrolStance : StanceBase
 {
     public override EStanceType StanceType => EStanceType.PatrolStance;
     public override EStaminaMode StaminaMode => EStaminaMode.Regen;
-    public override float StaminaRate => 4.0f;
 
     public override Vector3Curve EnterPositionCurve => _enterPos;
     public override Vector3Curve EnterRotationCurve => _enterRot;
 
     public override Vector3Curve ExitPositionCurve => _exitPos;
     public override Vector3Curve ExitRotationCurve => _exitRot;
+
+    public override float StaminaRate => PluginConfig.PatrolStaminaRate.Value;
+    public override float WalkSpeedBonus => PluginConfig.PatrolWalkSpeedBonus.Value;
+    public override float SprintAccelBonus => PluginConfig.PatrolSprintAccelBonus.Value;
 
     public override float BlendIntoThreshold(EStanceType nextStance)
     {
@@ -40,7 +43,7 @@ public class PatrolStance : StanceBase
             case EStanceType.LowReady: return PluginConfig.PatrolTransitionFromLowReady.Value;
             case EStanceType.LeftShoulder: return PluginConfig.PatrolTransitionFromLeftShoulder.Value;
             case EStanceType.ShortStock: return PluginConfig.PatrolTransitionFromShortStock.Value;
-            default: return 1.65f;
+            default: return PluginConfig.PatrolTransitionFromIdle.Value;
         }
     }
 
@@ -63,7 +66,7 @@ public class PatrolStance : StanceBase
     private readonly Vector3Curve _exitPos;
     private readonly Vector3Curve _exitRot;
 
-    public PatrolStance() 
+    public PatrolStance()
     {
         _enterPos = RealismCommonLib.Utils.CurveDrawer.GetCurve("patrol_enter_position")!;
         _enterRot = RealismCommonLib.Utils.CurveDrawer.GetCurve("patrol_enter_rotation")!;
@@ -72,4 +75,4 @@ public class PatrolStance : StanceBase
         _exitRot = RealismCommonLib.Utils.CurveDrawer.GetCurve("patrol_exit_rotation")!;
     }
 }
- 
+

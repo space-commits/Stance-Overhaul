@@ -11,6 +11,9 @@ namespace StanceOverhaul.Stances
         public EStanceType StanceType { get; }
         public EStaminaMode StaminaMode { get; }
         public float StaminaRate { get; }
+        public float WalkSpeedBonus { get; }
+        public float SprintAccelBonus { get; }
+        public bool DoesTacSprint { get; }
 
         public abstract Vector3Curve EnterRotationCurve { get; }
         public abstract Vector3Curve EnterPositionCurve { get; }

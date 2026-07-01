@@ -278,9 +278,10 @@ The handler needs `Player` at event-response time. Cache it from `PlayerStateIns
 | **3** | *(complete — see below)* `EStaminaMode` enum; `StaminaMode`/`StaminaRate` on `IStance`/`StanceBase`; per-stance overrides |
 | **4** | *(complete — see below)* `StanceEvents` static class; raise events from `StanceBase.OnEnter()`/`OnExit()` |
 | **5** | *(complete — see below)* Rewrite `StanceStaminaHandler` |
-| **6** | Config integration (`EnableIdleStamDrain`, `IdleStamDrainModi`); ergo scaling — **already wired in Phase 5** |
-| **7** | Health and skill rate scaling — stubs marked in `StanceStaminaHandler` |
-| **8** | Testing, tuning of base rates; cleanup of old dead code in `StanceStaminaHandler` |
+| **6** | *(complete)* Config integration (`EnableIdleStamDrain`, `IdleStamDrainModi`); ergo scaling — wired in Phase 5 |
+| **7** | *(see below)* Drain/regen balance: suppress `SelfRestoration` during drain states so configured rate is the net drain |
+| **8** | Health and skill rate scaling — stubs marked in `StanceStaminaHandler` |
+| **9** | Testing, tuning of base rates; cleanup of old dead code in `StanceStaminaHandler` |
 
 ---
 
@@ -548,3 +549,84 @@ public class StanceStaminaHandler : IControllerHelper
 | `StanceInputHandler.cs` | `CancelAll()` → `OnExit()` → `OnStanceExited` fires automatically |
 | `StanceState.cs` | Already wires stance lifecycle hooks |
 | `PluginConfig.cs` | `EnableStanceStamChanges`, `EnableIdleStamDrain`, `IdleStamDrainModi` all exist |
+
+### Known Limitation in Phase 5 — Drain vs. Natural Regen
+
+Direct `Current` subtraction does not suppress the game's natural `SelfRestoration`. Every frame, `GClass774.Process(dt)` adds `SelfRestoration * dt * Multiplier` to `Current` (when `DisableRestoration` has expired). Our subtraction of `rate * dt` only produces a **net drain** if `|rate| > SelfRestoration`. At low drain rates, stamina still regenerates — just slowly. This is addressed in Phase 7.
+
+---
+
+## Phase 7 — Drain/Regen Balance
+
+### The Problem
+
+`GClass774.Process(dt)` always adds `SelfRestoration * dt * Multiplier` to `Current` after applying consumptions (when `Time.time > DisableRestoration`). Our direct subtraction in `RunOnUpdate` runs alongside this — the two are additive. The net change to `Current` per frame is:
+
+$$\Delta = (\text{SelfRestoration} - |\text{rate}|) \times dt$$
+
+If `|rate| < SelfRestoration`, the result is still positive — stamina **increases** despite being in a drain state. Since `SelfRestoration` in vanilla is roughly 7–12 pts/sec (varies with energy, pose, endurance skill), the current `ActiveAiming` base rate of `0.075` is far too low to produce a net drain without suppression. The same applies to idle drain.
+
+### Option A — Suppress `SelfRestoration` via `DisableRestoration` *(recommended)*
+
+Extend `_freeze = true` to all `_rate < 0` states. The `DisableRestoration` write already in `RunOnUpdate` will then suppress `SelfRestoration` during drain and idle-drain states:
+
+```csharp
+case EStaminaMode.Drain:
+    _rate   = -ComputeDrainRate(stance.StaminaRate);
+    _freeze = true;   // suppress SelfRestoration so configured rate is net drain
+    break;
+```
+
+And in `OnStanceExited` when idle drain is enabled:
+```csharp
+_rate   = -ComputeIdleDrainRate();
+_freeze = true;
+```
+
+**Pros:**
+- One-line change per case — minimal code impact
+- Configured rate is exactly the net drain — straightforward to balance
+- Consistent with how the game itself handles drain (ADS sets `DisableRestoration` via `AllowsRestoration = false`)
+- `BuffRestoration` (always `0f` in vanilla) and one-shot `Consume()` drains (vault, melee) are unaffected
+
+**Cons:**
+- When a drain state ends and `_freeze` becomes `false`, there is approximately a 1-second delay before `SelfRestoration` resumes (the lingering `DisableRestoration` window). This mirrors the post-ADS regen delay and is arguably realistic.
+- If a future buff sets `BuffRestoration > 0f`, it would still add to `Current` during drain — `BuffRestoration` is not gated by `DisableRestoration`. In vanilla this is never an issue.
+
+### Option B — Read `SelfRestoration.Value` and Offset the Rate
+
+`HandsStamina.SelfRestoration` is a `GClass848<float>` with an implicit `float` cast. The live regen rate can be read each frame and subtracted along with the drain rate:
+
+```csharp
+if (_rate < 0f)
+{
+    float naturalRegen = physical.HandsStamina.SelfRestoration; // lazy func
+    float netSubtract  = _rate - naturalRegen;
+    hs.Current = Mathf.Max(hs.Current + netSubtract * deltaTime, 0f);
+}
+```
+
+**Pros:**
+- Natural regen is still conceptually active; `DisableRestoration` is not touched
+- The player's physical state (energy, endurance, pose) dynamically influences the balance
+
+**Cons:**
+- **Execution order is ambiguous.** `HandsStamina.Process(dt)` is called from `PlayerPhysicalClass.Update()`. If this runs before our `RunOnUpdate`, we are cancelling regen that was added in the same frame; if after, we are cancelling regen that will be added next frame — a 1-frame phase error that makes the offset imprecise.
+- `SelfRestoration` changes dynamically (energy drain, pose change, endurance level-ups all call `SetDirty()` on it). The felt drain rate varies with player state, making numerical tuning harder.
+- More complex reasoning during testing.
+
+### Option C — Minimal `GClass773` Consumption *(not recommended)*
+
+Register a custom `GClass773` consumption on `HandsStamina` with `AllowsRestoration = false` and a tiny `Delta > 0`. Its side effect is that `Process()` sets `DisableRestoration` automatically. Actual drain amount still comes from direct `Current` modification.
+
+**Rejected because:**
+- `DisableRestoration` is only written when `Delta > 0f && !AllowsRestoration` — a zero-delta consumption does nothing. A non-zero delta would double-drain on top of direct subtraction.
+- Requires instantiating and managing a `GClass773` lifecycle, which the plan already decided against.
+
+### Decision: Option A
+
+Set `_freeze = true` alongside all `_rate < 0` assignments in `OnStanceEntered` and `OnStanceExited`. The 1-second post-drain regen delay is acceptable and mirrors game behaviour. Change is confined to two locations in `StanceStaminaHandler.cs`.
+
+## Phase 8 — UI update
+
+Typically the game shows/unhides the stamina UI panel when stamina state changes (drain/regen started). Changing stamina rate should also do this.

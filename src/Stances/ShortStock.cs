@@ -10,13 +10,25 @@ public class ShortStock : StanceBase
 {
     public override EStanceType StanceType => EStanceType.ShortStock;
     public override EStaminaMode StaminaMode => EStaminaMode.Regen;
-    public override float StaminaRate => 1.3f;
 
     public override Vector3Curve EnterPositionCurve => _enterPos;
     public override Vector3Curve EnterRotationCurve => _enterRot;
 
     public override Vector3Curve ExitPositionCurve => _exitPos;
     public override Vector3Curve ExitRotationCurve => _exitRot;
+
+    public override float StaminaRate => PluginConfig.ShortStockStaminaRate.Value;
+    public override float WalkSpeedBonus => PluginConfig.ShortStockWalkSpeedBonus.Value;
+    public override float SprintAccelBonus => PluginConfig.ShortStockSprintAccelBonus.Value;
+
+    public override AnimationCurve ExitAimSpeedCurve { get; } = new AnimationCurve
+            (
+                new Keyframe { time = 0f, value = 0f },
+                new Keyframe { time = 0.7f, value = 0.0f },
+                new Keyframe { time = 0.85f, value = 0.1f },
+                new Keyframe { time = 0.95f, value = 0.25f },
+                new Keyframe { time = 1f, value = 1f }
+            );
 
     public override float BlendIntoThreshold(EStanceType nextStance)
     {
@@ -40,7 +52,7 @@ public class ShortStock : StanceBase
             case EStanceType.LowReady: return PluginConfig.ShortStockTransitionFromLowReady.Value;
             case EStanceType.PatrolStance: return PluginConfig.ShortStockTransitionFromPatrol.Value;
             case EStanceType.LeftShoulder: return PluginConfig.ShortStockTransitionFromLeftShoulder.Value;
-            default: return 2.25f;
+            default: return PluginConfig.ShortStockTransitionFromIdle.Value;
         }
     }
 

@@ -46,7 +46,6 @@ namespace StanceOverhaul.Controllers.StateControllers
             var physical = PlayerStateInstance.Player?.Physical;
             if (physical == null) return;
 
-
             BackendConfigSettingsClass.InertiaSettings inertia = Singleton<BackendConfigSettingsClass>.Instance.Inertia;
 
             //Todo: move to common lib
@@ -58,7 +57,6 @@ namespace StanceOverhaul.Controllers.StateControllers
 
             _walkSpeed.Multiplier = stance.WalkSpeedBonus;
 
-            ModLogger.LogWarning($"accel speed {physical.SprintAcceleration}");
             // _preSprintAccelSpeed.Multiplier = stance.SprintAccelBonus; //*  IsDoingTacSprint ? TAC_SPRINT_ACCEL : 1f;
             // _sprintAccelSpeed.Multiplier = stance.SprintAccelBonus; // *  IsDoingTacSprint ? TAC_SPRINT_ACCEL : 1f;
 

@@ -30,6 +30,15 @@ public class ShortStock : StanceBase
                 new Keyframe { time = 1f, value = 1f }
             );
 
+    public override AnimationCurve EnterAimSpeedCurve { get; } = new AnimationCurve
+            (
+                new Keyframe { time = 0f, value = 0f },
+                new Keyframe { time = 0.7f, value = 0.0f },
+                new Keyframe { time = 0.85f, value = 0.1f },
+                new Keyframe { time = 0.95f, value = 0.25f },
+                new Keyframe { time = 1f, value = 1f }
+            );
+
     public override float BlendIntoThreshold(EStanceType nextStance)
     {
         switch (nextStance)

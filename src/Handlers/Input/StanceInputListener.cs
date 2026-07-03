@@ -11,6 +11,7 @@ namespace StanceOverhaul.Handlers.StanceInput
     internal class StanceInputListener : IControllerHelper
     {
         private bool _activeAimWasTriggered;
+        private bool _activeAimOverrideWasTriggered;
         private bool _meleeIsToggleable = true;
         private float _meleeTimer = 0f;
 
@@ -190,23 +191,30 @@ namespace StanceOverhaul.Handlers.StanceInput
             //TODO: get actual player keybind
             bool activeAimOverridesAds = (Input.GetKeyDown(KeyCode.Mouse1) || Input.GetKey(KeyCode.Mouse1)) && StanceControllerInstance.AdsIsBlocked;
             bool keyIsHeld = Input.GetKey(PluginConfig.ActiveAimKeybind.Value.MainKey) && PluginConfig.ActiveAimKeybind.Value.Modifiers.All(Input.GetKey);
-            bool activeAimTriggered = activeAimOverridesAds || keyIsHeld;
 
             if (!PluginConfig.ToggleActiveAim.Value)
             {
-                if (!_activeAimWasTriggered && activeAimTriggered)
-                    StanceInputEvents.RaiseToggleActiveAim();
+                // Keybind and ADS override tracked independently so releasing one fires
+                // immediately without waiting for the other to also be released.
+                if (!_activeAimWasTriggered && keyIsHeld)
+                    StanceInputEvents.RaiseHoldActiveAimKeyDown();
+                if (_activeAimWasTriggered && !keyIsHeld)
+                    StanceInputEvents.RaiseHoldActiveAimKeyUp();
 
-                if (_activeAimWasTriggered && !activeAimTriggered)
-                    StanceInputEvents.RaiseToggleActiveAim();
+                if (!_activeAimOverrideWasTriggered && activeAimOverridesAds)
+                    StanceInputEvents.RaiseHoldActiveAimKeyDown();
+                if (_activeAimOverrideWasTriggered && !activeAimOverridesAds)
+                    StanceInputEvents.RaiseHoldActiveAimKeyUp();
             }
             else
             {
-                if (!_activeAimWasTriggered && activeAimTriggered)
+                bool anyTriggered = activeAimOverridesAds || keyIsHeld;
+                if (!(_activeAimWasTriggered || _activeAimOverrideWasTriggered) && anyTriggered)
                     StanceInputEvents.RaiseToggleActiveAim();
             }
 
-            _activeAimWasTriggered = activeAimTriggered;
+            _activeAimWasTriggered = keyIsHeld;
+            _activeAimOverrideWasTriggered = activeAimOverridesAds;
         }
     }
 }

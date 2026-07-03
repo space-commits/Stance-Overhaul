@@ -173,7 +173,7 @@ namespace StanceOverhaul
 
         public static ConfigEntry<bool> EnableFSAimBlock { get; set; } = null!;
         public static ConfigEntry<bool> EnableNVGAimBlock { get; set; } = null!;
-        public static ConfigEntry<bool> EnableThermalAimBlock { get; set; }  = null!;
+        public static ConfigEntry<bool> EnableThermalAimBlock { get; set; } = null!;
 
         public static ConfigEntry<bool> EnableMountUI { get; set; }
         public static ConfigEntry<bool> ToggleActiveAim { get; set; }
@@ -188,22 +188,33 @@ namespace StanceOverhaul
         public static ConfigEntry<bool> BlockFiring { get; set; }
         public static ConfigEntry<bool> RememberStanceFiring { get; set; }
         public static ConfigEntry<bool> RememberStanceItem { get; set; }
-        public static ConfigEntry<bool> EnableExtraProcEffects { get; set; }        
+        public static ConfigEntry<bool> EnableExtraProcEffects { get; set; }
         public static ConfigEntry<float> StanceBlendSpeed { get; set; }
         public static ConfigEntry<float> GlobalStanceSpeed { get; set; }
         public static ConfigEntry<Vector3> WeapOffset { get; set; }
+
+        // Device bonuses
+        public static ConfigEntry<float> NVGIRLaserBonus { get; set; }
+        public static ConfigEntry<float> NVGIRLightWithLaserBonus { get; set; }
+        public static ConfigEntry<float> NVGIRLightBonus { get; set; }
+        public static ConfigEntry<float> NVGWhiteLightBonus { get; set; }
+        public static ConfigEntry<float> ThermalDeviceBonus { get; set; }
+        public static ConfigEntry<float> NormalVisibleLaserBonus { get; set; }
+        public static ConfigEntry<float> NormalWhiteLightWithLaserBonus { get; set; }
+        public static ConfigEntry<float> NormalWhiteLightBonus { get; set; }
 
         public static void InitConfigBindings(ConfigFile config)
         {
             string dev = "0. Dev.";
             string weapAimAndPos = "1. Weapon Stances And Position.";
             string stanceBinds = "2. Weapon Stances Keybinds.";
-            string activeAim = "3. Active Aim.";
-            string highReady = "4. High Ready.";
-            string lowReady = "5. Low Ready.";
-            string shortStock = "6. Short-Stocking.";
-            string patrol = "7. Patrol Stance.";
-            string leftShoulder = "8. Left Shoulder.";
+            string deviceBonuses = "3. Device Bonuses.";
+            string activeAim = "4. Active Aim.";
+            string highReady = "5. High Ready.";
+            string lowReady = "6. Low Ready.";
+            string shortStock = "7. Short-Stocking.";
+            string patrol = "8. Patrol Stance.";
+            string leftShoulder = "9. Left Shoulder.";
 
             test1 = config.Bind<float>(dev, "test 1", 1f, new ConfigDescription("", new AcceptableValueRange<float>(-5000f, 5000f), new ConfigurationManagerAttributes { Order = 170, IsAdvanced = true, Browsable = true }));
             test2 = config.Bind<float>(dev, "test 2", 1f, new ConfigDescription("", new AcceptableValueRange<float>(-5000f, 5000f), new ConfigurationManagerAttributes { Order = 160, IsAdvanced = true, Browsable = true }));
@@ -226,24 +237,24 @@ namespace StanceOverhaul
             test19 = config.Bind<float>(dev, "test 19", 1f, new ConfigDescription("", new AcceptableValueRange<float>(-5000f, 5000f), new ConfigurationManagerAttributes { Order = -10, IsAdvanced = true, Browsable = true }));
             test20 = config.Bind<float>(dev, "test 20", 1f, new ConfigDescription("", new AcceptableValueRange<float>(-5000f, 5000f), new ConfigurationManagerAttributes { Order = -10, IsAdvanced = true, Browsable = true }));
 
-            EnableAnimationFixes = config.Bind<bool>(weapAimAndPos, "De-Jank EFT Animations",true, new ConfigDescription("Attempts To Make EFT Certain Animations Less Janky, Like Inventory And Door Animations.", null, new ConfigurationManagerAttributes { Order = 430, Browsable =true }));
-            OverrideCollision = config.Bind<bool>(weapAimAndPos, "Override Collision",true, new ConfigDescription("If FOV Fix is installed, will override BSG's collision system completely to make it work well with stances and alt weapon positions. If not installed, will modify BSG collision system.", null, new ConfigurationManagerAttributes { Order = 410, Browsable =true }));
-            OverrideMounting = config.Bind<bool>(weapAimAndPos, "Use Realism Mounting System",true, new ConfigDescription("Overrides BSG's Mounting System WIth Realism's (That Was Implemented First). Recoil, Stance and Sway Mechanics Are All Built Around Realism's Mounting And Won't Function Correctly With BSG's.", null, new ConfigurationManagerAttributes { Order = 300, Browsable =true }));
-            EnableExtraProcEffects = config.Bind<bool>(weapAimAndPos, "Enable Extra Weapon Position/Rotation Effects",true, new ConfigDescription("Weapon Has A Slight Cant To It based On Ergo. ADS With Gasmask/Faceshield Is Canted. Weapon Cant Increases When Crouching, And Moves Closer To You. Other Sublte Effects.", null, new ConfigurationManagerAttributes { Order = 280, Browsable =true }));
-            RememberStanceItem = config.Bind<bool>(weapAimAndPos, "Remember Stance After Using Item",true, new ConfigDescription("Remember Stance After Actions (Using Items)", null, new ConfigurationManagerAttributes { Order = 260, Browsable =true }));
-            RememberStanceFiring = config.Bind<bool>(weapAimAndPos, "Remember Stance After Firing",true, new ConfigDescription("Remember Stance After Firing If The Player Was Aiming.", null, new ConfigurationManagerAttributes { Order = 260, Browsable =true }));
-            BlockFiring = config.Bind<bool>(weapAimAndPos, "Block Shooting While In Stance", false, new ConfigDescription("Blocks Firing While In A Stance, Will Cancel Stance If Attempting To Fire.", null, new ConfigurationManagerAttributes { Order = 250, Browsable =true }));
-            EnableTacSprint = config.Bind<bool>(weapAimAndPos, "Enable High Ready Sprint Animation",true, new ConfigDescription("Enables Usage Of High Ready Sprint Animation When Sprinting From High Ready Position.", null, new ConfigurationManagerAttributes { Order = 230, Browsable =true }));
-            EnableAltPistol = config.Bind<bool>(weapAimAndPos, "Enable Alternative Pistol Position And ADS",true, new ConfigDescription("Pistol Will Be Held Centered And In A Compressed Stance. ADS is animated. If FOV Fix is used, the gun will move to the camera for smoother ADS.", null, new ConfigurationManagerAttributes { Order = 229, Browsable =true }));
-            EnableAltRifle = config.Bind<bool>(weapAimAndPos, "Enable Alternative Rifle Position And ADS",true, new ConfigDescription("Rifle position will be more centered. If FOV Fix is used, the gun will move to the camera for smoother ADS.", null, new ConfigurationManagerAttributes { Order = 229, Browsable =true }));
-            EnableAltRifleRecoil = config.Bind<bool>(weapAimAndPos, "Enable Alternative Rifle Recoil Override",true, new ConfigDescription("When using alt rifle, let it override recoil. This results in different recoil feel but smoother transition from firing to non-firing ADS state.", null, new ConfigurationManagerAttributes { Order = 229, Browsable =true }));
-            EnableIdleStamDrain = config.Bind<bool>(weapAimAndPos, "Enable Idle Arm Stamina Drain",true, new ConfigDescription("Arm Stamina Will Drain When Not In A Stance (High And Low Ready, Short-Stocking).", null, new ConfigurationManagerAttributes { Order = 210, Browsable =true }));
-            IdleStamDrainModi = config.Bind<float>(weapAimAndPos, "Idle Stam Drain Modifer", 0.1f, new ConfigDescription("", new AcceptableValueRange<float>(0.0f, 5f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 200, Browsable =true }));
-            EnableStanceStamChanges = config.Bind<bool>(weapAimAndPos, "Enable Stance Stamina And Movement Effects",true, new ConfigDescription("Enabled Stances And Mounting To Affect Stamina And Movement Speed. Stamina Drain May Not Work Correctly If Disabled. High + Low Ready, Short-Stocking And Pistol Idle Will Regenerate Stamina Faster And Optionally Idle With Rifles Drains Stamina. High Ready Has Faster Sprint Speed And Sprint Accel, Low Ready Has Faster Sprint Accel. Arm Stamina Won't Drain Regular Stamina If It Reaches 0.", null, new ConfigurationManagerAttributes { Order = 183, Browsable =true }));
-            AllowActiveAimReload = config.Bind<bool>(weapAimAndPos, "Allow Reload From Active Aim", false, new ConfigDescription("Allows Reload From Magazine While In Active Aim With Speed Bonus.", null, new ConfigurationManagerAttributes { Order = 190, Browsable =true }));
-            EnableMountUI = config.Bind<bool>(weapAimAndPos, "Enable Mounting UI",true, new ConfigDescription("If Enabled, An Icon On Screen Will Indicate If Player Is Bracing, Mounting And What Side Of Cover They Are On.", null, new ConfigurationManagerAttributes { Order = 179, Browsable =true }));
-            WeapOffset = config.Bind<Vector3>(weapAimAndPos, "Rifle Position Offset", new Vector3(-0.04f, -0.015f, 0f), new ConfigDescription("Config option 'alt rife' is required. Adjusts The Starting Position Of Rifle On Screen.", null, new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 152, IsAdvanced = true, Browsable =true }));
-            StanceSfxModifier = config.Bind<float>(weapAimAndPos, "Stance Sfx Volume Modifier", 2f, new ConfigDescription("Gear rattle volume modifer when doing stance related things", new AcceptableValueRange<float>(0.1f, 20f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 153, Browsable =true }));
+            EnableAnimationFixes = config.Bind<bool>(weapAimAndPos, "De-Jank EFT Animations", true, new ConfigDescription("Attempts To Make EFT Certain Animations Less Janky, Like Inventory And Door Animations.", null, new ConfigurationManagerAttributes { Order = 430, Browsable = true }));
+            OverrideCollision = config.Bind<bool>(weapAimAndPos, "Override Collision", true, new ConfigDescription("If FOV Fix is installed, will override BSG's collision system completely to make it work well with stances and alt weapon positions. If not installed, will modify BSG collision system.", null, new ConfigurationManagerAttributes { Order = 410, Browsable = true }));
+            OverrideMounting = config.Bind<bool>(weapAimAndPos, "Use Realism Mounting System", true, new ConfigDescription("Overrides BSG's Mounting System WIth Realism's (That Was Implemented First). Recoil, Stance and Sway Mechanics Are All Built Around Realism's Mounting And Won't Function Correctly With BSG's.", null, new ConfigurationManagerAttributes { Order = 300, Browsable = true }));
+            EnableExtraProcEffects = config.Bind<bool>(weapAimAndPos, "Enable Extra Weapon Position/Rotation Effects", true, new ConfigDescription("Weapon Has A Slight Cant To It based On Ergo. ADS With Gasmask/Faceshield Is Canted. Weapon Cant Increases When Crouching, And Moves Closer To You. Other Sublte Effects.", null, new ConfigurationManagerAttributes { Order = 280, Browsable = true }));
+            RememberStanceItem = config.Bind<bool>(weapAimAndPos, "Remember Stance After Using Item", true, new ConfigDescription("Remember Stance After Actions (Using Items)", null, new ConfigurationManagerAttributes { Order = 260, Browsable = true }));
+            RememberStanceFiring = config.Bind<bool>(weapAimAndPos, "Remember Stance After Firing", true, new ConfigDescription("Remember Stance After Firing If The Player Was Aiming.", null, new ConfigurationManagerAttributes { Order = 260, Browsable = true }));
+            BlockFiring = config.Bind<bool>(weapAimAndPos, "Block Shooting While In Stance", false, new ConfigDescription("Blocks Firing While In A Stance, Will Cancel Stance If Attempting To Fire.", null, new ConfigurationManagerAttributes { Order = 250, Browsable = true }));
+            EnableTacSprint = config.Bind<bool>(weapAimAndPos, "Enable High Ready Sprint Animation", true, new ConfigDescription("Enables Usage Of High Ready Sprint Animation When Sprinting From High Ready Position.", null, new ConfigurationManagerAttributes { Order = 230, Browsable = true }));
+            EnableAltPistol = config.Bind<bool>(weapAimAndPos, "Enable Alternative Pistol Position And ADS", true, new ConfigDescription("Pistol Will Be Held Centered And In A Compressed Stance. ADS is animated. If FOV Fix is used, the gun will move to the camera for smoother ADS.", null, new ConfigurationManagerAttributes { Order = 229, Browsable = true }));
+            EnableAltRifle = config.Bind<bool>(weapAimAndPos, "Enable Alternative Rifle Position And ADS", true, new ConfigDescription("Rifle position will be more centered. If FOV Fix is used, the gun will move to the camera for smoother ADS.", null, new ConfigurationManagerAttributes { Order = 229, Browsable = true }));
+            EnableAltRifleRecoil = config.Bind<bool>(weapAimAndPos, "Enable Alternative Rifle Recoil Override", true, new ConfigDescription("When using alt rifle, let it override recoil. This results in different recoil feel but smoother transition from firing to non-firing ADS state.", null, new ConfigurationManagerAttributes { Order = 229, Browsable = true }));
+            EnableIdleStamDrain = config.Bind<bool>(weapAimAndPos, "Enable Idle Arm Stamina Drain", true, new ConfigDescription("Arm Stamina Will Drain When Not In A Stance (High And Low Ready, Short-Stocking).", null, new ConfigurationManagerAttributes { Order = 210, Browsable = true }));
+            IdleStamDrainModi = config.Bind<float>(weapAimAndPos, "Idle Stam Drain Modifer", 0.1f, new ConfigDescription("", new AcceptableValueRange<float>(0.0f, 5f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 200, Browsable = true }));
+            EnableStanceStamChanges = config.Bind<bool>(weapAimAndPos, "Enable Stance Stamina And Movement Effects", true, new ConfigDescription("Enabled Stances And Mounting To Affect Stamina And Movement Speed. Stamina Drain May Not Work Correctly If Disabled. High + Low Ready, Short-Stocking And Pistol Idle Will Regenerate Stamina Faster And Optionally Idle With Rifles Drains Stamina. High Ready Has Faster Sprint Speed And Sprint Accel, Low Ready Has Faster Sprint Accel. Arm Stamina Won't Drain Regular Stamina If It Reaches 0.", null, new ConfigurationManagerAttributes { Order = 183, Browsable = true }));
+            AllowActiveAimReload = config.Bind<bool>(weapAimAndPos, "Allow Reload From Active Aim", false, new ConfigDescription("Allows Reload From Magazine While In Active Aim With Speed Bonus.", null, new ConfigurationManagerAttributes { Order = 190, Browsable = true }));
+            EnableMountUI = config.Bind<bool>(weapAimAndPos, "Enable Mounting UI", true, new ConfigDescription("If Enabled, An Icon On Screen Will Indicate If Player Is Bracing, Mounting And What Side Of Cover They Are On.", null, new ConfigurationManagerAttributes { Order = 179, Browsable = true }));
+            WeapOffset = config.Bind<Vector3>(weapAimAndPos, "Rifle Position Offset", new Vector3(-0.04f, -0.015f, 0f), new ConfigDescription("Config option 'alt rife' is required. Adjusts The Starting Position Of Rifle On Screen.", null, new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 152, IsAdvanced = true, Browsable = true }));
+            StanceSfxModifier = config.Bind<float>(weapAimAndPos, "Stance Sfx Volume Modifier", 2f, new ConfigDescription("Gear rattle volume modifer when doing stance related things", new AcceptableValueRange<float>(0.1f, 20f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 153, Browsable = true }));
             StanceBlendSpeed = config.Bind<float>(weapAimAndPos, "Stance Blend Speed", 18f, new ConfigDescription("Speed of stance blending transitions", new AcceptableValueRange<float>(0.1f, 100f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 151, IsAdvanced = true, Browsable = true }));
             GlobalStanceSpeed = config.Bind<float>(weapAimAndPos, "Global Stance Speed", 1f, new ConfigDescription("Global multiplier for all stance speeds", new AcceptableValueRange<float>(0.1f, 10f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 150, IsAdvanced = true, Browsable = true }));
 
@@ -251,10 +262,19 @@ namespace StanceOverhaul
             EnableNVGAimBlock = config.Bind<bool>(weapAimAndPos, "Enable NVG Aim Block", true, new ConfigDescription("Magnified Optics Block ADS When Using NVGs.", null, new ConfigurationManagerAttributes { Order = 5, Browsable = true }));
             EnableThermalAimBlock = config.Bind<bool>(weapAimAndPos, "Enable Thermal Aim Block", true, new ConfigDescription("Can't Aim With Sights When Using Thermal Goggles.", null, new ConfigurationManagerAttributes { Order = 5, Browsable = true }));
 
-            MeleeKeybind = config.Bind(stanceBinds, "Melee Keybind", new KeyboardShortcut(KeyCode.None), new ConfigDescription("Strike With Muzzle Or Bayonet Of Equipped Weapon.", null, new ConfigurationManagerAttributes { Order = 150, Browsable =true }));
-            UseMouseWheelStance = config.Bind<bool>(stanceBinds, "Enable Mouse Wheel Stance Switching",true, new ConfigDescription("Switches Between High And Low Ready Via Mouse Wheel.", null, new ConfigurationManagerAttributes { Order = 160, Browsable =true }));
-            UseMouseWheelPlusKey = config.Bind<bool>(stanceBinds, "Require Key + Mouse Wheel",true, new ConfigDescription("Require Keybind + Mouse Wheel To Change Stance.", null, new ConfigurationManagerAttributes { Order = 170, Browsable =true }));
-            StanceWheelComboKeyBind = config.Bind(stanceBinds, "Keybind To Use With Mouse Wheel", new KeyboardShortcut(KeyCode.LeftAlt), new ConfigDescription("Key Used In Combination With Mouse Wheel If Enabled ", null, new ConfigurationManagerAttributes { Order = 180, Browsable =true }));
+            MeleeKeybind = config.Bind(stanceBinds, "Melee Keybind", new KeyboardShortcut(KeyCode.None), new ConfigDescription("Strike With Muzzle Or Bayonet Of Equipped Weapon.", null, new ConfigurationManagerAttributes { Order = 150, Browsable = true }));
+            UseMouseWheelStance = config.Bind<bool>(stanceBinds, "Enable Mouse Wheel Stance Switching", true, new ConfigDescription("Switches Between High And Low Ready Via Mouse Wheel.", null, new ConfigurationManagerAttributes { Order = 160, Browsable = true }));
+            UseMouseWheelPlusKey = config.Bind<bool>(stanceBinds, "Require Key + Mouse Wheel", true, new ConfigDescription("Require Keybind + Mouse Wheel To Change Stance.", null, new ConfigurationManagerAttributes { Order = 170, Browsable = true }));
+            StanceWheelComboKeyBind = config.Bind(stanceBinds, "Keybind To Use With Mouse Wheel", new KeyboardShortcut(KeyCode.LeftAlt), new ConfigDescription("Key Used In Combination With Mouse Wheel If Enabled ", null, new ConfigurationManagerAttributes { Order = 180, Browsable = true }));
+
+            NVGIRLaserBonus = config.Bind<float>(deviceBonuses, "NVG IR Laser Bonus", 0.5f, new ConfigDescription("Hip inaccuracy multiplier when NVG is active with IR laser or visible laser.", new AcceptableValueRange<float>(0.1f, 2f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 155, Browsable = true }));
+            NVGIRLightWithLaserBonus = config.Bind<float>(deviceBonuses, "NVG IR Light With Laser Bonus", 0.4f, new ConfigDescription("Hip inaccuracy multiplier when NVG is active with IR light and laser.", new AcceptableValueRange<float>(0.1f, 2f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 145, Browsable = true }));
+            NVGIRLightBonus = config.Bind<float>(deviceBonuses, "NVG IR Light Bonus", 0.6f, new ConfigDescription("Hip inaccuracy multiplier when NVG is active with IR light only.", new AcceptableValueRange<float>(0.1f, 2f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 140, Browsable = true }));
+            NVGWhiteLightBonus = config.Bind<float>(deviceBonuses, "NVG White Light Bonus", 0.95f, new ConfigDescription("Hip inaccuracy multiplier when NVG is active with white light.", new AcceptableValueRange<float>(0.1f, 2f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 135, Browsable = true }));
+            ThermalDeviceBonus = config.Bind<float>(deviceBonuses, "Thermal Goggles Debuff", 1.15f, new ConfigDescription("Hip inaccuracy multiplier when thermal imaging is active.", new AcceptableValueRange<float>(0.1f, 2f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 130, Browsable = true }));
+            NormalVisibleLaserBonus = config.Bind<float>(deviceBonuses, "Normal Visible Laser Bonus", 0.5f, new ConfigDescription("Hip inaccuracy multiplier with visible laser in normal (non-NVG/thermal) mode.", new AcceptableValueRange<float>(0.1f, 2f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 125, Browsable = true }));
+            NormalWhiteLightWithLaserBonus = config.Bind<float>(deviceBonuses, "Normal White Light With Laser Bonus", 0.4f, new ConfigDescription("Hip inaccuracy multiplier with white light and laser in normal mode.", new AcceptableValueRange<float>(0.1f, 2f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 120, Browsable = true }));
+            NormalWhiteLightBonus = config.Bind<float>(deviceBonuses, "Normal White Light Bonus", 0.6f, new ConfigDescription("Hip inaccuracy multiplier with white light only in normal mode.", new AcceptableValueRange<float>(0.1f, 2f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 115, Browsable = true }));
 
             ActiveAimKeybind = config.Bind(activeAim, "Active Aim Keybind", new KeyboardShortcut(KeyCode.Mouse4), new ConfigDescription("Cants The Weapon Sideways, Improving Hipfire Accuracy.", null, new ConfigurationManagerAttributes { Order = 110, Browsable = true }));
             ToggleActiveAim = config.Bind<bool>(activeAim, "Use Toggle For Active Aim", false, new ConfigDescription("", null, new ConfigurationManagerAttributes { Order = 109, Browsable = true }));

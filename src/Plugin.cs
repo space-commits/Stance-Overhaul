@@ -52,6 +52,8 @@ namespace StanceOverhaul
 
             new UpdateWeaponVariablesPatch().Enable();
 
+            new UpdateHipInaccuracyPatch().Enable();
+
 
 
             /*            new ShiftWeaponRootPatch().Enable();

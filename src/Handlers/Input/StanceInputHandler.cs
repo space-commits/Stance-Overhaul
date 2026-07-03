@@ -10,11 +10,12 @@ namespace StanceOverhaul.Handlers.StanceInput
     internal class StanceInputHandler : IControllerHelper
     {
         private IStance? _storedStance;
+        private IStance? _stanceBeforeHold;
         private bool _wasInterruptedByADS;
         private bool _aimedFromActiveAim;
 
         private StanceState _stanceState;
-       
+
         public StanceInputHandler(StanceState stanceState)
         {
             _stanceState = stanceState;
@@ -45,8 +46,8 @@ namespace StanceOverhaul.Handlers.StanceInput
             StanceInputEvents.ToggleLowReady += ToggleLowReady;
             StanceInputEvents.ToggleShortStock += ToggleShortStock;
             StanceInputEvents.ToggleActiveAim += ToggleActiveAim;
-/*            StanceInputEvents.OnActiveAimKeyDown += OnActiveAimKeyDown;
-            StanceInputEvents.OnActiveAimKeyUp += OnActiveAimKeyUp;*/
+            StanceInputEvents.OnActiveAimKeyDown += OnActiveAimKeyDown;
+            StanceInputEvents.OnActiveAimKeyUp += OnActiveAimKeyUp;
             StanceInputEvents.ToggleMelee += ToggleMelee;
             InputEvents.ToggleLeftStanceInput += ToggleLeftShoulder;
             StanceInputEvents.OnAttemptedToFireFromStance += OnAttemptedToFireFromStance;
@@ -63,8 +64,8 @@ namespace StanceOverhaul.Handlers.StanceInput
             StanceInputEvents.ToggleLowReady -= ToggleLowReady;
             StanceInputEvents.ToggleShortStock -= ToggleShortStock;
             StanceInputEvents.ToggleActiveAim -= ToggleActiveAim;
-/*            StanceInputEvents.OnActiveAimKeyDown -= OnActiveAimKeyDown;
-            StanceInputEvents.OnActiveAimKeyUp -= OnActiveAimKeyUp;*/
+            StanceInputEvents.OnActiveAimKeyDown -= OnActiveAimKeyDown;
+            StanceInputEvents.OnActiveAimKeyUp -= OnActiveAimKeyUp;
             StanceInputEvents.ToggleMelee -= ToggleMelee;
             InputEvents.ToggleLeftStanceInput -= ToggleLeftShoulder;
             StanceInputEvents.OnAttemptedToFireFromStance -= OnAttemptedToFireFromStance;
@@ -80,7 +81,7 @@ namespace StanceOverhaul.Handlers.StanceInput
                 _stanceState.CancelAll();
         }
 
-        public void OnAttemptedToFireFromStance() 
+        public void OnAttemptedToFireFromStance()
         {
             _stanceState.CancelAll();
         }
@@ -113,12 +114,27 @@ namespace StanceOverhaul.Handlers.StanceInput
 
         public void OnActiveAimKeyDown()
         {
-            //ToggleStance(StanceControllerInstance.ActiveAiming);
+            if (_stanceState.ActiveStanceType == EStanceType.ActiveAiming)
+                return;
+
+            _stanceBeforeHold = _stanceState.ActiveStance;
+            ModLogger.LogWarning($"Active Aim hold begin. Snapshotting stance: {_stanceBeforeHold?.StanceType}");
+            _stanceState.RequestStance(StanceControllerInstance.ActiveAim);
         }
 
         public void OnActiveAimKeyUp()
         {
-            //ToggleStance(_storedStance);
+            var toRestore = _stanceBeforeHold;
+            _stanceBeforeHold = null; 
+
+            if (_stanceState.ActiveStanceType != EStanceType.ActiveAiming)
+                return;
+
+            ModLogger.LogWarning($"Active Aim hold end. Restoring: {toRestore?.StanceType}");
+            if (toRestore != null)
+                _stanceState.RequestStance(toRestore);
+            else
+                _stanceState.CancelAll();
         }
 
         //TODO: this may need a rework
@@ -160,20 +176,19 @@ namespace StanceOverhaul.Handlers.StanceInput
             return true;
         }
 
-        private bool TryRestoreActiveAimAfterADS() 
+        private bool TryRestoreActiveAimAfterADS()
         {
-            _storedStance = null;
             _aimedFromActiveAim = false;
 
             if (_stanceState.ActiveStance?.StanceType == EStanceType.ActiveAiming)
                 return false;
 
-            ModLogger.LogWarning($"Restoring Active Aim stance");
+            ModLogger.LogWarning($"Restoring Active Aim stance after ADS");
             _stanceState.RequestStance(StanceControllerInstance.ActiveAim);
             return true;
         }
 
-        private bool IsTogglingActiveStance(EStanceType stance) 
+        private bool IsTogglingActiveStance(EStanceType stance)
         {
             return _stanceState.ActiveStance?.StanceType == stance;
         }
@@ -191,7 +206,7 @@ namespace StanceOverhaul.Handlers.StanceInput
 
             if (remember)
             {
-                _storedStance = 
+                _storedStance =
                     !IsTogglingActiveStance(targetStance.StanceType) ?
                     targetStance : null;
             }
@@ -250,7 +265,7 @@ namespace StanceOverhaul.Handlers.StanceInput
                 else
                     ToggleStance(StanceControllerInstance.ActiveAim, forgetPrevious: true);
             }
-            else 
+            else
             {
                 ToggleStance(StanceControllerInstance.ActiveAim);
             }

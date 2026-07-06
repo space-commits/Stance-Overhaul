@@ -20,7 +20,7 @@ public class ShortStock : StanceBase
     public override float StaminaRate => PluginConfig.ShortStockStaminaRate.Value;
     public override float WalkSpeedBonus => PluginConfig.ShortStockWalkSpeedBonus.Value;
     public override float SprintAccelBonus => PluginConfig.ShortStockSprintAccelBonus.Value;
-
+    public override float HipfireBonus => PluginConfig.ShortStockHipfireBonus.Value;
     public override AnimationCurve ExitAimSpeedCurve { get; } = new AnimationCurve
             (
                 new Keyframe { time = 0f, value = 0f },

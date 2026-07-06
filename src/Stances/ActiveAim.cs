@@ -20,6 +20,7 @@ public class ActiveAim : StanceBase
     public override float StaminaRate => PluginConfig.ActiveAimStaminaRate.Value;
     public override float WalkSpeedBonus => PluginConfig.ActiveAimWalkSpeedBonus.Value;
     public override float SprintAccelBonus => PluginConfig.ActiveAimSprintAccelBonus.Value;
+    public override float HipfireBonus => PluginConfig.ActiveAimHipfireBonus.Value;
 
     public override float BlendIntoThreshold(EStanceType nextStance)
     {

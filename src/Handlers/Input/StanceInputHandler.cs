@@ -117,7 +117,7 @@ namespace StanceOverhaul.Handlers.StanceInput
             if (_stanceState.ActiveStanceType == EStanceType.ActiveAiming)
                 return;
 
-            _stanceBeforeHold = _stanceState.ActiveStance;
+            _stanceBeforeHold = _storedStance;
             ModLogger.LogWarning($"Active Aim hold begin. Snapshotting stance: {_stanceBeforeHold?.StanceType}");
             _stanceState.RequestStance(StanceControllerInstance.ActiveAim);
         }

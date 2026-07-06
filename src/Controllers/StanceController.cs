@@ -333,6 +333,7 @@ namespace StanceOverhaul.Controllers
         private StanceInputListener _inputListener;
         private StanceStaminaHandler _staminaHandler;
         private StanceMovementHandler _movementHandler;
+        private TacSprintHandler _tacSprintHandler;
         private StanceAimHandler _aimState;
         private StanceState _stanceState;
 
@@ -351,6 +352,10 @@ namespace StanceOverhaul.Controllers
 
         public EStanceType CurrentStanceType => _stanceState.ActiveStanceType;
 
+        public bool IsDoingTacSprint => _tacSprintHandler.IsDoingTacSprint;
+
+        public float StanceHipfireBonus => _stanceState.ActiveStance?.HipfireBonus ?? 1f;
+    
         void Awake()
         {
             AwakeRan = true;
@@ -436,6 +441,9 @@ namespace StanceOverhaul.Controllers
 
             _movementHandler =
                 InitStateController(() => new StanceMovementHandler());
+
+            _tacSprintHandler =
+                InitStateController(() => new TacSprintHandler());
 
             _aimState =
                 InitStateController(() => new StanceAimHandler());

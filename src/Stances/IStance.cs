@@ -14,6 +14,7 @@ namespace StanceOverhaul.Stances
         public float WalkSpeedBonus { get; }
         public float SprintAccelBonus { get; }
         public bool DoesTacSprint { get; }
+        public float HipfireBonus { get; }
 
         public abstract Vector3Curve EnterRotationCurve { get; }
         public abstract Vector3Curve EnterPositionCurve { get; }

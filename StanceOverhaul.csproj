@@ -81,6 +81,10 @@
       <HintPath>F:\SP EFT\SPT-406\BepInEx\core\BepInEx.dll</HintPath>
       <Private>false</Private>
     </Reference>
+    <Reference Include="AnimationSystem.Types">
+      <HintPath>F:\SP EFT\SPT-406\EscapeFromTarkov_Data\Managed\AnimationSystem.Types.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>

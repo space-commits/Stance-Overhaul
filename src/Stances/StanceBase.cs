@@ -16,6 +16,7 @@ namespace StanceOverhaul.Stances
         public virtual float StaminaRate => 0f;
         public virtual float WalkSpeedBonus => 1f;
         public virtual float SprintAccelBonus => 1f;
+        public virtual float HipfireBonus => 1f;
         public virtual bool DoesTacSprint => false;
 
         public abstract Vector3Curve EnterPositionCurve { get; }

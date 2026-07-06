@@ -10,8 +10,7 @@ namespace StanceOverhaul.Handlers.StanceInput
 {
     internal class StanceInputListener : IControllerHelper
     {
-        private bool _activeAimWasTriggered;
-        private bool _activeAimOverrideWasTriggered;
+        private bool _activeAimHoldInProgress;
         private bool _meleeIsToggleable = true;
         private float _meleeTimer = 0f;
 
@@ -46,16 +45,20 @@ namespace StanceOverhaul.Handlers.StanceInput
                 !PlayerStateInstance.IsUsingStationaryWeapon &&
                 !StanceInputBlocked)
             {
-                CheckForPatrolInput();
-                CheckForActimeAimInput();
-                CheckForMeleeInput();
+                CheckForActimeAimInput(); // always runs first to keep _activeAimHoldInProgress current
 
-                if (!WeaponStateInstance.TreatAsPistol)
+                if (!_activeAimHoldInProgress || PluginConfig.ToggleActiveAim.Value)
                 {
-                    CheckScrollInput();
-                    CheckForHighReadyInput();
-                    CheckForLowReadyInput();
-                    CheckForShortStockInput();
+                    CheckForPatrolInput();
+                    CheckForMeleeInput();
+
+                    if (!WeaponStateInstance.TreatAsPistol)
+                    {
+                        CheckScrollInput();
+                        CheckForHighReadyInput();
+                        CheckForLowReadyInput();
+                        CheckForShortStockInput();
+                    }
                 }
             }
         }
@@ -188,33 +191,31 @@ namespace StanceOverhaul.Handlers.StanceInput
 
         public void CheckForActimeAimInput()
         {
-            //TODO: get actual player keybind
-            bool activeAimOverridesAds = (Input.GetKeyDown(KeyCode.Mouse1) || Input.GetKey(KeyCode.Mouse1)) && StanceControllerInstance.AdsIsBlocked;
-            bool keyIsHeld = Input.GetKey(PluginConfig.ActiveAimKeybind.Value.MainKey) && PluginConfig.ActiveAimKeybind.Value.Modifiers.All(Input.GetKey);
+            bool activeAimOverridesAds = (Input.GetKeyDown(KeyCode.Mouse1) || Input.GetKey(KeyCode.Mouse1))
+               && StanceControllerInstance.AdsIsBlocked;
+            bool keyIsHeld = Input.GetKey(PluginConfig.ActiveAimKeybind.Value.MainKey)
+                && PluginConfig.ActiveAimKeybind.Value.Modifiers.All(Input.GetKey);
+            bool anyHeld = keyIsHeld || activeAimOverridesAds;
 
             if (!PluginConfig.ToggleActiveAim.Value)
             {
-                // Keybind and ADS override tracked independently so releasing one fires
-                // immediately without waiting for the other to also be released.
-                if (!_activeAimWasTriggered && keyIsHeld)
+                if (!_activeAimHoldInProgress && anyHeld)
+                {
+                    _activeAimHoldInProgress = true;
                     StanceInputEvents.RaiseHoldActiveAimKeyDown();
-                if (_activeAimWasTriggered && !keyIsHeld)
+                }
+                else if (_activeAimHoldInProgress && !anyHeld)
+                {
+                    _activeAimHoldInProgress = false;
                     StanceInputEvents.RaiseHoldActiveAimKeyUp();
-
-                if (!_activeAimOverrideWasTriggered && activeAimOverridesAds)
-                    StanceInputEvents.RaiseHoldActiveAimKeyDown();
-                if (_activeAimOverrideWasTriggered && !activeAimOverridesAds)
-                    StanceInputEvents.RaiseHoldActiveAimKeyUp();
+                }
             }
             else
             {
-                bool anyTriggered = activeAimOverridesAds || keyIsHeld;
-                if (!(_activeAimWasTriggered || _activeAimOverrideWasTriggered) && anyTriggered)
+                if (!_activeAimHoldInProgress && anyHeld)
                     StanceInputEvents.RaiseToggleActiveAim();
+                _activeAimHoldInProgress = anyHeld;
             }
-
-            _activeAimWasTriggered = keyIsHeld;
-            _activeAimOverrideWasTriggered = activeAimOverridesAds;
         }
     }
 }

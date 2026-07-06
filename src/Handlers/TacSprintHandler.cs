@@ -1,11 +1,11 @@
-﻿using EFT;
+﻿
 using StanceOverhaul.Handlers;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using StanceOverhaul.Enums;
 using UnityEngine;
+using EFT;
 using static RealismCommonLib.Plugin;
 using static StanceOverhaul.Plugin;
+using StanceOverhaul.State;
 
 namespace StanceOverhaul.Controllers.StateControllers
 {
@@ -17,6 +17,10 @@ namespace StanceOverhaul.Controllers.StateControllers
         public const float TAC_SPRINT_ERGO_LIMIT = 35f;
         public const float TAC_SPRINT_RADIATION_LIMIT = 50f;
         public const float TAC_SPRINT_TOXICITY_LIMIT = 50f;
+
+        public bool IsDoingTacSprint { get; private set; }
+        private float _tacSprintTime = 0.0f;
+        private bool _canDoTacSprintTimer = false;
 
         public bool HealthConditionPreventsTacSprint
         {
@@ -30,7 +34,30 @@ namespace StanceOverhaul.Controllers.StateControllers
             }
         }
 
-        public void RunOnAwake() 
+        //TODO: weight limit should be factored by strength skill
+        private bool CanDoTacSprint
+        {
+            get
+            {
+                return PluginConfig.EnableTacSprint.Value
+                    && PlayerStateInstance.IsSprinting
+                    && StanceControllerInstance.CurrentStanceType == EStanceType.HighReady;
+            }
+        }
+
+        private bool WeaponMeetsCriteria
+        {
+            get
+            {
+                return WeaponStateInstance.TotalWeaponWeight <= (WeaponStateInstance.IsBullpup ? TAC_SPRINT_WEIGHT_BULLPUP : TAC_SPRINT_WEIGHT_LIMIT)
+                    && WeaponStateInstance.WeaponLength <= TAC_SPRINT_LENGTH_LIMIT && !PlayerStateInstance.IsScav
+                    && !HealthConditionPreventsTacSprint
+                    && WeaponStateInstance.TotalErgo > TAC_SPRINT_ERGO_LIMIT;
+            }
+        }
+        
+
+        public void RunOnAwake()
         {
         }
 
@@ -40,54 +67,28 @@ namespace StanceOverhaul.Controllers.StateControllers
 
         public void RunOnUpdate(float deltaTime)
         {
-        }
-
-        public bool IsDoingTacSprint = false;
-
-        private float _tacSprintTime = 0.0f;
-        private bool _canDoTacSprintTimer = false;
-
-        //TODO: weight limit should be factored by strength skill
-    /*    private bool CanDoTacSprint
-        {
-            get
+            if (CanDoTacSprint && WeaponMeetsCriteria && !HealthConditionPreventsTacSprint)
             {
-                return PluginConfig.EnableTacSprint.Value
-                    && PlayerStateInstance.IsSprinting
-                    && TargetStance != EStance.ActiveAiming
-                    && (TargetStance == EStance.HighReady || StoredStance == EStance.HighReady)
-                    && WeaponStateInstance.TotalWeaponWeight <= (WeaponStateInstance.IsBullpup ? TAC_SPRINT_WEIGHT_BULLPUP : TAC_SPRINT_WEIGHT_LIMIT)
-                    && WeaponStateInstance.WeaponLength <= TAC_SPRINT_LENGTH_LIMIT && !PlayerStateInstance.IsScav
-                    && !HealthConditionPreventsTacSprint
-                    && WeaponStateInstance.TotalErgo > TAC_SPRINT_ERGO_LIMIT;
-            }
-        }*/
-  /*      private void DoTacSprint(Player.FirearmController fc, Player player)
-        {
-            if (CanDoTacSprint)
-            {
-                IsDoingTacSprint = true;
-                player.BodyAnimatorCommon.SetFloat(PlayerAnimator.WEAPON_SIZE_MODIFIER_PARAM_HASH, 2f);
+
+                PlayerStateInstance.Player.BodyAnimatorCommon.SetFloat(PlayerAnimator.WEAPON_SIZE_MODIFIER_PARAM_HASH, 2f);
                 _tacSprintTime = 0f;
                 _canDoTacSprintTimer = true;
+
+                IsDoingTacSprint = true;
+                return;
             }
-            else if (PluginConfig.EnableTacSprint.Value && _canDoTacSprintTimer)
+            else if (_canDoTacSprintTimer)
             {
                 _tacSprintTime += Time.deltaTime;
                 if (_tacSprintTime >= 0.5f)
                 {
-                    player.BodyAnimatorCommon.SetFloat(PlayerAnimator.WEAPON_SIZE_MODIFIER_PARAM_HASH, WeaponStateInstance.WeaponLength);
+                    PlayerStateInstance.Player.BodyAnimatorCommon.SetFloat(PlayerAnimator.WEAPON_SIZE_MODIFIER_PARAM_HASH, WeaponStateInstance.WeaponLength);
                     _tacSprintTime = 0f;
                     _canDoTacSprintTimer = false;
                 }
-                IsDoingTacSprint = false;
             }
-            else
-            {
-                IsDoingTacSprint = false;
-            }
-        }*/
 
-
+            IsDoingTacSprint = false;
+        }
     }
 }

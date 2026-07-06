@@ -11,7 +11,9 @@ using System.Reflection;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using MultiFlare;
 using static EFT.Player;
+using static StanceOverhaul.Plugin;
 using static RealismCommonLib.Plugin;
 using static RealismCommonLib.PluginRegistry;
 using ReloadClass = EFT.Player.FirearmController.GClass2037;
@@ -23,6 +25,7 @@ namespace StanceOverhaul.Patches
     {
         private static FieldInfo _playerField;
         private static FieldInfo _tacticalModesField;
+        private static FieldInfo _ergoField;
 
         private static float _deviceBonus = 1f;
         private static bool _laserActive = false;
@@ -40,6 +43,7 @@ namespace StanceOverhaul.Patches
                 // Try to find a "light" under the mode, here's hoping BSG stay consistent
                 foreach (Transform child in tacticalMode.GetChildren())
                 {
+                    Logger.LogWarning($"Visible laser Checking child: {child.name}");
                     if (child.name.StartsWith("VIS_"))
                     {
                         return true;
@@ -76,6 +80,7 @@ namespace StanceOverhaul.Patches
                 // Try to find a "light" under the mode, here's hoping BSG stay consistent
                 foreach (Transform child in tacticalMode.GetChildren())
                 {
+                    Logger.LogWarning($"IR laser Checking child: {child.name}");
                     if (child.name.StartsWith("IR_"))
                     {
                         return true;
@@ -93,44 +98,135 @@ namespace StanceOverhaul.Patches
                 if (!tacticalMode.gameObject.activeInHierarchy) continue;
 
                 // Try to find a "VolumetricLight", hopefully only visible flashlights have these
-                VolumetricLight volumetricLight = tacticalMode.GetComponentInChildren<VolumetricLight>();
-                if (volumetricLight != null)
-                {
-                    return true;
-                }
+                if (tacticalMode.GetComponentInChildren<VolumetricLight>() != null) return true;
+                if (tacticalMode.GetComponentInChildren<FlareLight>() != null) return true;
+                if (tacticalMode.GetComponentInChildren<SpotLightFakeGI>() != null) return true;
             }
             return false;
         }
 
+        private static void DebugLogActiveModesAndComponents(FirearmController firearmController)
+        {
+            Transform weaponRoot = firearmController.WeaponRoot;
+            var controllers = weaponRoot.GetComponentsInChildrenActiveIgnoreFirstLevel<TacticalComboVisualController>();
+
+            foreach (var controller in controllers)
+            {
+                Logger.LogWarning($"=== Controller: {controller.gameObject.name} ===");
+                List<Transform> modes = _tacticalModesField.GetValue(controller) as List<Transform>;
+                if (modes == null) continue;
+
+                foreach (Transform mode in modes)
+                {
+                    bool active = mode.gameObject.activeInHierarchy;
+                    Logger.LogWarning($"  Mode: {mode.name}, ActiveInHierarchy: {active}");
+
+                    if (!active) continue;
+
+                    // Log every component on the mode and all children
+                    foreach (Transform child in mode.GetComponentsInChildren<Transform>(true))
+                    {
+                        Component[] comps = child.GetComponents<Component>();
+                        foreach (Component comp in comps)
+                        {
+                            Logger.LogWarning($"    [{child.name}] Component: {comp.GetType().Name}, ActiveSelf: {child.gameObject.activeSelf}");
+                        }
+                    }
+                }
+            }
+        }
+
         private static void CheckDevice(FirearmController firearmController)
         {
-            // Get the list of tacticalComboVisualControllers for the current weapon (One should exist for every flashlight, laser, or combo device)
-            Transform weaponRoot = firearmController.WeaponRoot;
-            List<TacticalComboVisualController> tacticalComboVisualControllers = weaponRoot.GetComponentsInChildrenActiveIgnoreFirstLevel<TacticalComboVisualController>();
-            if (tacticalComboVisualControllers == null)
-            {
-                Logger.LogError("Could find not find tacticalComboVisualControllers");
-                return;
-            }
+            //DebugLogActiveModesAndComponents(firearmController);
 
             _whiteLightActive = false;
             _laserActive = false;
             _irLightActive = false;
             _irLaserActive = false;
 
-            // Loop through all of the tacticalComboVisualControllers, then its modes, then that modes children, and look for a light
-            foreach (TacticalComboVisualController tacticalComboVisualController in tacticalComboVisualControllers)
-            {
-                List<Transform> tacticalModes = _tacticalModesField.GetValue(tacticalComboVisualController) as List<Transform>;
+            Transform weaponRoot = firearmController.WeaponRoot;
 
-                if (tacticalModes == null)
+            var controllers = weaponRoot.GetComponentsInChildrenActiveIgnoreFirstLevel<TacticalComboVisualController>();
+
+            foreach (var controller in controllers)
+            {
+                List<Transform> modes = _tacticalModesField.GetValue(controller) as List<Transform>;
+                if (modes == null)
                     continue;
 
-                if (CheckWhiteLight(tacticalModes)) _whiteLightActive = true;
-                if (CheckVisibleLaser(tacticalModes)) _laserActive = true;
-                if (CheckIRLight(tacticalModes)) _irLightActive = true;
-                if (CheckIRLaser(tacticalModes)) _irLaserActive = true;
+                foreach (Transform mode in modes)
+                {
+                    if (!mode.gameObject.activeInHierarchy)
+                        continue;
+
+                    bool hasVisibleMarker = false;
+                    bool hasIRMarker = false;
+
+                    bool hasLaserBeam = false;
+                    bool hasSpotlight = false;
+
+                    foreach (Transform child in mode.GetComponentsInChildren<Transform>(true))
+                    {
+                        string name = child.name.ToUpperInvariant();
+
+                        // Spectrum markers
+                        if (name.StartsWith("VIS_"))
+                        {
+                            hasVisibleMarker = true;
+                        }
+                        else if (name.StartsWith("IR_") || name.StartsWith("IL_"))
+                        {
+                            hasIRMarker = true;
+                        }
+
+                        // Laser emitter
+                        if (!hasLaserBeam && child.GetComponent<LaserBeam>() != null)
+                        {
+                            hasLaserBeam = true;
+                        }
+
+                        // Flashlight / illuminator
+                        if (!hasSpotlight)
+                        {
+                            if (child.GetComponent<SpotLightFakeGI>() != null)
+                            {
+                                hasSpotlight = true;
+                            }
+                            else if (child.name.Equals("Spotlight", StringComparison.OrdinalIgnoreCase)
+                                     && child.GetComponent<Light>() != null)
+                            {
+                                hasSpotlight = true;
+                            }
+                        }
+                    }
+
+                    // Visible laser
+                    _laserActive |= hasVisibleMarker && hasLaserBeam;
+
+                    // IR laser
+                    _irLaserActive |= hasIRMarker && hasLaserBeam;
+
+                    // IR illuminator
+                    _irLightActive |= hasIRMarker && hasSpotlight;
+
+                    // White flashlight
+                    _whiteLightActive |=
+                        hasSpotlight &&
+                        !hasVisibleMarker &&
+                        !hasIRMarker;
+                }
             }
+        }
+
+        private static void Reset()
+        {
+            _deviceBonus = 1f;
+            _whiteLightActive = false;
+            _laserActive = false;
+            _irLightActive = false;
+            _irLaserActive = false;
+
         }
 
         private static void CalculateDeviceBonus(FirearmController __instance)
@@ -162,25 +258,24 @@ namespace StanceOverhaul.Patches
                        _whiteLightActive ? PluginConfig.NormalWhiteLightBonus.Value : 1f;
                 }
             }
-            else
-            {
-                _deviceBonus = 1f;
-            }
         }
 
         protected override MethodBase GetTargetMethod()
         {
+            _ergoField = AccessTools.Field(typeof(FirearmController), "gclass849_1");
             _playerField = AccessTools.Field(typeof(FirearmController), "_player");
             _tacticalModesField = AccessTools.Field(typeof(TacticalComboVisualController), "list_0");
             return AccessTools.Method(typeof(FirearmController), nameof(FirearmController.UpdateHipInaccuracy));
         }
 
-        [PatchPostfix]
-        private static void PatchPostfix(FirearmController __instance)
+        [PatchPrefix]
+        private static bool PatchPrefix(FirearmController __instance)
         {
             Player player = (Player)_playerField.GetValue(__instance);
             if (!player.IsYourPlayer || GearStateInstance == null)
-                return;
+                return true;
+
+            Reset();
 
             CalculateDeviceBonus(__instance);
 
@@ -188,8 +283,15 @@ namespace StanceOverhaul.Patches
 
             Logger.LogWarning($"Device Bonus: {_deviceBonus}, White Light: {_whiteLightActive}, IR Light: {_irLightActive}, IR Laser: {_irLaserActive}, Visible Laser: {_laserActive}");
 
-            __instance.HipInaccuracy *= PluginConfig.test1.Value;
-            player.ProceduralWeaponAnimation.Breath.HipPenalty *= PluginConfig.test2.Value;
+            GClass849<float> ergo = (GClass849<float>)_ergoField.GetValue(__instance);
+
+            __instance.HipInaccuracy = 1f - Mathf.Clamp01(ergo.Value / 250f - 0.15f);
+            player.ProceduralWeaponAnimation.Breath.HipPenalty = __instance.HipInaccuracy;
+
+            __instance.HipInaccuracy *= _deviceBonus * StanceControllerInstance.StanceHipfireBonus;
+            player.ProceduralWeaponAnimation.Breath.HipPenalty *= _deviceBonus * StanceControllerInstance.StanceHipfireBonus;
+
+            return false;
         }
     }
 
@@ -1275,6 +1377,8 @@ namespace StanceOverhaul.Patches
             Player player = (Player)_playerField.GetValue(firearmController);
             if (player != null && player.MovementContext.CurrentState.Name != EPlayerState.Stationary && player.IsYourPlayer)
             {
+                // Capture EFT's value before zeroing: shouldMoveWeaponCloser=true = compact (no/folded stock)
+                WeaponStateInstance.HasShoulderContact = !____shouldMoveWeaponCloser && !WeaponStateInstance.IsPistol;
                 ____shouldMoveWeaponCloser = false;
             }
         }

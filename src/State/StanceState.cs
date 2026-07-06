@@ -10,7 +10,6 @@ namespace StanceOverhaul.State
 {
     internal class StanceState : IControllerHelper
     {
-        private IStance? _requestedStance;
         private StanceSlot? _primary;
         private StanceSlot? _incoming;
 

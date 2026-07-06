@@ -4,14 +4,12 @@ using StanceOverhaul.Events;
 using StanceOverhaul.Stances;
 using Comfort.Common;
 using static RealismCommonLib.Plugin;
+using static StanceOverhaul.Plugin;
 
 namespace StanceOverhaul.Controllers.StateControllers
 {
     internal class StanceMovementHandler : IControllerHelper
     {
-        private const float TAC_SPRINT_ACCEL = 1.37f;
-        private const float TAC_SPRINT_SPEED_BONUS = 1.15f;
-
         private FloatMultiplierHandle _walkSpeed;
         private FloatMultiplierHandle _sprintSpeed;
         private FloatMultiplierHandle _preSprintAccelSpeed;
@@ -21,7 +19,7 @@ namespace StanceOverhaul.Controllers.StateControllers
         {
             StanceEvents.OnStanceEntered += OnStanceEntered;
             StanceEvents.OnStanceExited += OnStanceExited;
-
+    
             _walkSpeed = StatModifiers.WalkSpeedModifier.Add(1f);
             _sprintSpeed = StatModifiers.SprintSpeedModifier.Add(1f);
             _preSprintAccelSpeed = StatModifiers.PreSprintAccelModifier.Add(1f);
@@ -52,10 +50,16 @@ namespace StanceOverhaul.Controllers.StateControllers
             physical.SprintAcceleration = inertia.SprintAccelerationLimits.InverseLerp(physical.Inertia);
             physical.PreSprintAcceleration = inertia.PreSprintAccelerationLimits.Evaluate(physical.Inertia);
 
-            physical.SprintAcceleration *= stance.SprintAccelBonus;
-            physical.PreSprintAcceleration = stance.SprintAccelBonus;
+            float tacSprintAccelBonus =  StanceControllerInstance.IsDoingTacSprint ? PluginConfig.TacSprintAccelBonus.Value : 1f;
+
+            physical.SprintAcceleration *= stance.SprintAccelBonus * tacSprintAccelBonus;
+            physical.PreSprintAcceleration *= stance.SprintAccelBonus * tacSprintAccelBonus;
 
             _walkSpeed.Multiplier = stance.WalkSpeedBonus;
+
+            _sprintSpeed.Multiplier = StanceControllerInstance.IsDoingTacSprint ? PluginConfig.TacSprintSpeedBonus.Value : 1f;
+
+            ModLogger.LogWarning("StanceControllerInstance.IsDoingTacSprint = " + StanceControllerInstance.IsDoingTacSprint);
 
             // _preSprintAccelSpeed.Multiplier = stance.SprintAccelBonus; //*  IsDoingTacSprint ? TAC_SPRINT_ACCEL : 1f;
             // _sprintAccelSpeed.Multiplier = stance.SprintAccelBonus; // *  IsDoingTacSprint ? TAC_SPRINT_ACCEL : 1f;
@@ -74,7 +78,7 @@ namespace StanceOverhaul.Controllers.StateControllers
             physical.PreSprintAcceleration = inertia.PreSprintAccelerationLimits.Evaluate(physical.Inertia);
 
             _walkSpeed.Multiplier = 1f;
-            // _sprintSpeed.Multiplier = 1f;
+            _sprintSpeed.Multiplier = 1f;
             // _preSprintAccelSpeed.Multiplier = 1f;
             // _sprintAccelSpeed.Multiplier = 1f;
         }

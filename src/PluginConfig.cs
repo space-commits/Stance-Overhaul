@@ -8,6 +8,7 @@ namespace StanceOverhaul
 {
     internal static class PluginConfig
     {
+
         public static ConfigEntry<float> test1 { get; set; }
         public static ConfigEntry<float> test2 { get; set; }
         public static ConfigEntry<float> test3 { get; set; }
@@ -31,6 +32,7 @@ namespace StanceOverhaul
 
         // Movement Speed Bonuses and Stamina Rates
         public static ConfigEntry<float> ActiveAimWalkSpeedBonus { get; set; }
+        public static ConfigEntry<float> ActiveAimHipfireBonus { get; set; }
         public static ConfigEntry<float> ActiveAimSprintAccelBonus { get; set; }
         public static ConfigEntry<float> ActiveAimStaminaRate { get; set; }
         public static ConfigEntry<float> HighReadyWalkSpeedBonus { get; set; }
@@ -42,12 +44,14 @@ namespace StanceOverhaul
         public static ConfigEntry<float> ShortStockWalkSpeedBonus { get; set; }
         public static ConfigEntry<float> ShortStockSprintAccelBonus { get; set; }
         public static ConfigEntry<float> ShortStockStaminaRate { get; set; }
+        public static ConfigEntry<float> ShortStockHipfireBonus { get; set; }
         public static ConfigEntry<float> PatrolWalkSpeedBonus { get; set; }
         public static ConfigEntry<float> PatrolSprintAccelBonus { get; set; }
         public static ConfigEntry<float> PatrolStaminaRate { get; set; }
         public static ConfigEntry<float> LeftShoulderWalkSpeedBonus { get; set; }
         public static ConfigEntry<float> LeftShoulderSprintAccelBonus { get; set; }
         public static ConfigEntry<float> LeftShoulderStaminaRate { get; set; }
+        public static ConfigEntry<float> LeftShoulderHipfireBonus { get; set; }
 
         // Active Aim Transitions
         public static ConfigEntry<float> ActiveAimBlendThresholdLowReady { get; set; }
@@ -185,6 +189,8 @@ namespace StanceOverhaul
         public static ConfigEntry<float> IdleStamDrainModi { get; set; }
         public static ConfigEntry<bool> EnableStanceStamChanges { get; set; }
         public static ConfigEntry<bool> EnableTacSprint { get; set; }
+        public static ConfigEntry<float> TacSprintSpeedBonus { get; set; }
+        public static ConfigEntry<float> TacSprintAccelBonus { get; set; }
         public static ConfigEntry<bool> BlockFiring { get; set; }
         public static ConfigEntry<bool> RememberStanceFiring { get; set; }
         public static ConfigEntry<bool> RememberStanceItem { get; set; }
@@ -244,7 +250,9 @@ namespace StanceOverhaul
             RememberStanceItem = config.Bind<bool>(weapAimAndPos, "Remember Stance After Using Item", true, new ConfigDescription("Remember Stance After Actions (Using Items)", null, new ConfigurationManagerAttributes { Order = 260, Browsable = true }));
             RememberStanceFiring = config.Bind<bool>(weapAimAndPos, "Remember Stance After Firing", true, new ConfigDescription("Remember Stance After Firing If The Player Was Aiming.", null, new ConfigurationManagerAttributes { Order = 260, Browsable = true }));
             BlockFiring = config.Bind<bool>(weapAimAndPos, "Block Shooting While In Stance", false, new ConfigDescription("Blocks Firing While In A Stance, Will Cancel Stance If Attempting To Fire.", null, new ConfigurationManagerAttributes { Order = 250, Browsable = true }));
-            EnableTacSprint = config.Bind<bool>(weapAimAndPos, "Enable High Ready Sprint Animation", true, new ConfigDescription("Enables Usage Of High Ready Sprint Animation When Sprinting From High Ready Position.", null, new ConfigurationManagerAttributes { Order = 230, Browsable = true }));
+            EnableTacSprint = config.Bind<bool>(weapAimAndPos, "Enable Tactical Sprint Animation", true, new ConfigDescription("Enables Usage Of Tactical Sprint Animation When Sprinting From High Ready Position.", null, new ConfigurationManagerAttributes { Order = 230, Browsable = true }));
+            TacSprintSpeedBonus = config.Bind<float>(weapAimAndPos, "Tactical Sprint Sprint Speed Bonus", 1.15f, new ConfigDescription("Sprint Speed Bonus When Sprinting From High Ready Position.", new AcceptableValueRange<float>(0.1f, 5f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 230, Browsable = true }));
+            TacSprintAccelBonus = config.Bind<float>(weapAimAndPos, "Tactical Sprint Sprint Acceleration Bonus", 1.37f, new ConfigDescription("Sprint Acceleration Bonus When Sprinting From High Ready Position.", new AcceptableValueRange<float>(0.1f, 5f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 230, Browsable = true }));
             EnableAltPistol = config.Bind<bool>(weapAimAndPos, "Enable Alternative Pistol Position And ADS", true, new ConfigDescription("Pistol Will Be Held Centered And In A Compressed Stance. ADS is animated. If FOV Fix is used, the gun will move to the camera for smoother ADS.", null, new ConfigurationManagerAttributes { Order = 229, Browsable = true }));
             EnableAltRifle = config.Bind<bool>(weapAimAndPos, "Enable Alternative Rifle Position And ADS", true, new ConfigDescription("Rifle position will be more centered. If FOV Fix is used, the gun will move to the camera for smoother ADS.", null, new ConfigurationManagerAttributes { Order = 229, Browsable = true }));
             EnableAltRifleRecoil = config.Bind<bool>(weapAimAndPos, "Enable Alternative Rifle Recoil Override", true, new ConfigDescription("When using alt rifle, let it override recoil. This results in different recoil feel but smoother transition from firing to non-firing ADS state.", null, new ConfigurationManagerAttributes { Order = 229, Browsable = true }));
@@ -281,6 +289,7 @@ namespace StanceOverhaul
             ActiveAimWalkSpeedBonus = config.Bind<float>(activeAim, "Active Aim Walk Speed Modifier", 0.9f, new ConfigDescription("Multiplier applied to walk speed while in Active Aim.", new AcceptableValueRange<float>(0.1f, 5f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 108, Browsable = true }));
             ActiveAimSprintAccelBonus = config.Bind<float>(activeAim, "Active Aim Sprint Accel Modifier", 1.1f, new ConfigDescription("Multiplier applied to sprint acceleration while in Active Aim.", new AcceptableValueRange<float>(0.1f, 5f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 107, Browsable = true }));
             ActiveAimStaminaRate = config.Bind<float>(activeAim, "Active Aim Stamina Rate", 0.075f, new ConfigDescription("Rate at which arm stamina drains while in Active Aim.", new AcceptableValueRange<float>(0f, 20f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 106, Browsable = true }));
+            ActiveAimHipfireBonus = config.Bind<float>(activeAim, "Active Aim Hipfire Bonus", 0.7f, new ConfigDescription("Multiplier applied to hipfire inaccuracy while in Active Aim.", new AcceptableValueRange<float>(0f, 1f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 105, Browsable = true }));
             ActiveAimTransitionFromIdle = config.Bind<float>(activeAim, "Active Aim Transition From: Idle", 3f, new ConfigDescription("Speed of entering Active Aim from idle (no previous stance).", new AcceptableValueRange<float>(0f, 50f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 105, Browsable = true }));
             ActiveAimBlendThresholdLowReady = config.Bind<float>(activeAim, "Active Aim Blend Threshold: Low Ready", 0.15f, new ConfigDescription("", new AcceptableValueRange<float>(0f, 1f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 99, IsAdvanced = true, Browsable = true }));
             ActiveAimBlendThresholdHighReady = config.Bind<float>(activeAim, "Active Aim Blend Threshold: High Ready", 0f, new ConfigDescription("", new AcceptableValueRange<float>(0f, 1f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 98, IsAdvanced = true, Browsable = true }));
@@ -344,6 +353,7 @@ namespace StanceOverhaul
             ShortStockWalkSpeedBonus = config.Bind<float>(shortStock, "Short-Stock Walk Speed Modifier", 0.9f, new ConfigDescription("Multiplier applied to walk speed while Short-Stocking.", new AcceptableValueRange<float>(0.1f, 5f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 9, Browsable = true }));
             ShortStockSprintAccelBonus = config.Bind<float>(shortStock, "Short-Stock Sprint Accel Modifier", 0.9f, new ConfigDescription("Multiplier applied to sprint acceleration while Short-Stocking.", new AcceptableValueRange<float>(0.1f, 5f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 8, Browsable = true }));
             ShortStockStaminaRate = config.Bind<float>(shortStock, "Short-Stock Stamina Rate", 1.3f, new ConfigDescription("Rate at which arm stamina regenerates while Short-Stocking.", new AcceptableValueRange<float>(0f, 20f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 7, Browsable = true }));
+            ShortStockHipfireBonus = config.Bind<float>(shortStock, "Short-Stock Hipfire Bonus", 1.35f, new ConfigDescription("Multiplier applied to hipfire accuracy while Short-Stocking.", new AcceptableValueRange<float>(0f, 5f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 6, Browsable = true }));
             ShortStockTransitionFromIdle = config.Bind<float>(shortStock, "Short-Stock Transition From: Idle", 2.25f, new ConfigDescription("Speed of entering Short-Stock from idle (no previous stance).", new AcceptableValueRange<float>(0f, 50f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 6, Browsable = true }));
             ShortStockBlendThresholdActiveAim = config.Bind<float>(shortStock, "Short-Stock Blend Threshold: Active Aim", 0f, new ConfigDescription("", new AcceptableValueRange<float>(0f, 1f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 2, IsAdvanced = true, Browsable = true }));
             ShortStockBlendThresholdHighReady = config.Bind<float>(shortStock, "Short-Stock Blend Threshold: High Ready", 0f, new ConfigDescription("", new AcceptableValueRange<float>(0f, 1f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 1, IsAdvanced = true, Browsable = true }));
@@ -385,6 +395,7 @@ namespace StanceOverhaul
             LeftShoulderWalkSpeedBonus = config.Bind<float>(leftShoulder, "Left Shoulder Walk Speed Modifier", 0.88f, new ConfigDescription("Multiplier applied to walk speed while in Left Shoulder stance.", new AcceptableValueRange<float>(0.1f, 5f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 35, Browsable = true }));
             LeftShoulderSprintAccelBonus = config.Bind<float>(leftShoulder, "Left Shoulder Sprint Accel Modifier", 0.9f, new ConfigDescription("Multiplier applied to sprint acceleration while in Left Shoulder stance.", new AcceptableValueRange<float>(0.1f, 5f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 34, Browsable = true }));
             LeftShoulderStaminaRate = config.Bind<float>(leftShoulder, "Left Shoulder Stamina Rate", 0f, new ConfigDescription("Rate at which arm stamina changes while in Left Shoulder stance.", new AcceptableValueRange<float>(0f, 20f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 33, Browsable = true }));
+            LeftShoulderHipfireBonus = config.Bind<float>(leftShoulder, "Left Shoulder Hipfire Bonus", 1.35f, new ConfigDescription("Multiplier applied to hipfire accuracy while in Left Shoulder stance.", new AcceptableValueRange<float>(0f, 5f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 32, Browsable = true }));
             LeftShoulderTransitionFromIdle = config.Bind<float>(leftShoulder, "Left Shoulder Transition From: Idle", 2f, new ConfigDescription("Speed of entering Left Shoulder from idle (no previous stance).", new AcceptableValueRange<float>(0f, 50f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 32, Browsable = true }));
             LeftShoulderBlendThresholdActiveAim = config.Bind<float>(leftShoulder, "Left Shoulder Blend Threshold: Active Aim", 0f, new ConfigDescription("", new AcceptableValueRange<float>(0f, 1f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 29, IsAdvanced = true, Browsable = true }));
             LeftShoulderBlendThresholdHighReady = config.Bind<float>(leftShoulder, "Left Shoulder Blend Threshold: High Ready", 0f, new ConfigDescription("", new AcceptableValueRange<float>(0f, 1f), new ConfigurationManagerAttributes { ShowRangeAsPercent = false, Order = 28, IsAdvanced = true, Browsable = true }));

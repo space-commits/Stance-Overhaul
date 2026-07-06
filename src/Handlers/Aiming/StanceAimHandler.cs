@@ -11,6 +11,7 @@ namespace StanceOverhaul.Handlers.Aiming
     public class StanceAimHandler : IControllerHelper
     {
         private BoolGateHandle _canAim;
+        private bool _blockerInterruptedAim;
 
         public bool AimingInterrupted { get; private set; }
 
@@ -45,12 +46,9 @@ namespace StanceOverhaul.Handlers.Aiming
                    }
                }*/
 
+        //TODO: make event-based
         private void CheckForAimBlockers()
         {
-            _canAim.Allowed = true;
-
-            bool hasActiveGoggles = GearStateInstance.NVGIsActive || GearStateInstance.ThermalIsActive;
-
             bool nvgBlocksAds =
                 PluginConfig.EnableNVGAimBlock.Value
                 && GearStateInstance.NVGIsActive
@@ -61,13 +59,25 @@ namespace StanceOverhaul.Handlers.Aiming
                 && GearStateInstance.ThermalIsActive;
 
             bool faceshieldBlocksADS =
-                PluginConfig.EnableThermalAimBlock.Value
+                PluginConfig.EnableFSAimBlock.Value
                 && GearStateInstance.FaceShieldIsActive
                 && WeaponStateInstance.HasShoulderContact;
 
-            if (nvgBlocksAds || faceshieldBlocksADS || thermalBlocksAds)
+            bool blocked = nvgBlocksAds || faceshieldBlocksADS || thermalBlocksAds;
+            _canAim.Allowed = !blocked;
+
+            if (blocked)
             {
-                _canAim.Allowed = false;
+                // Force-exit ADS once if a blocker became active while already aiming
+                if (!_blockerInterruptedAim && PlayerStateInstance?.FirearmController?.IsAiming == true)
+                {
+                    PlayerStateInstance.FirearmController.ToggleAim();
+                    _blockerInterruptedAim = true;
+                }
+            }
+            else
+            {
+                _blockerInterruptedAim = false;
             }
         }
 

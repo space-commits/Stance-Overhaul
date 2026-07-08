@@ -13,40 +13,30 @@ namespace StanceOverhaul.Handlers.Aiming
         private BoolGateHandle _canAim;
         private bool _blockerInterruptedAim;
 
-        public bool AimingInterrupted { get; private set; }
-
         public void RunOnAwake()
         {
+            RealismCommonLib.Events.PlayerEvents.AimStateChanged += CheckForAimBlockers;
+            RealismCommonLib.Events.PlayerEvents.ToggleHeadDevice += CheckForAimBlockers;
+            RealismCommonLib.Events.PWAEvents.OnUpdateWeaponVariables += CheckForAimBlockers;
+            RealismCommonLib.Events.PlayerEvents.OnWeaponDraw += CheckForAimBlockers;
             _canAim = BoolHandlers.CanAim.Add(true);
         }
 
         public void RunOnDestroy()
         {
+            RealismCommonLib.Events.PlayerEvents.AimStateChanged -= CheckForAimBlockers;
+            RealismCommonLib.Events.PlayerEvents.ToggleHeadDevice -= CheckForAimBlockers;
+            RealismCommonLib.Events.PWAEvents.OnUpdateWeaponVariables -= CheckForAimBlockers;
+            RealismCommonLib.Events.PlayerEvents.OnWeaponDraw -= CheckForAimBlockers;
             BoolHandlers.CanAim.Remove(_canAim);
         }
 
         public void RunOnUpdate(float deltaTime)
         {
-            CheckForAimBlockers();
+            //CheckForAimBlockers();
         }
 
-        //TODO: handle ADS speed modifiers
-        /*       public float StanceADSSpeedMulti
-               {
-                   get
-                   {
-                       return
-                           IsIdle() ? IDLE_ADS_MULTI :
-                           StoredStance == EStance.ActiveAiming || TargetStance == EStance.ActiveAiming ? ACTIVE_AIM_ADS_MULTI :
-                           StoredStance == EStance.HighReady || TargetStance == EStance.HighReady ? HIGH_ADS_MULTI :
-                           StoredStance == EStance.LowReady || TargetStance == EStance.LowReady ? LOW_ADS_MULTI :
-                           StoredStance == EStance.ShortStock || TargetStance == EStance.ShortStock ? SHORT_STOCK_ADS_MULTI :
-                           StoredStance == EStance.PatrolStance || TargetStance == EStance.PatrolStance ? PATROL_ADS_MULTI :
-                           StoredStance == EStance.LeftShoulder || TargetStance == EStance.LeftShoulder ? LEFT_SHOULDER_ADS_MULTI : 1f;
-                   }
-               }*/
-
-        //TODO: make event-based
+        //TODO: make event-based on aim
         private void CheckForAimBlockers()
         {
             bool nvgBlocksAds =
@@ -66,35 +56,20 @@ namespace StanceOverhaul.Handlers.Aiming
             bool blocked = nvgBlocksAds || faceshieldBlocksADS || thermalBlocksAds;
             _canAim.Allowed = !blocked;
 
+            ModLogger.LogWarning($"CheckForAimBlockers: NVG={nvgBlocksAds}, Thermal={thermalBlocksAds}, FaceShield={faceshieldBlocksADS}, Blocked={blocked}");
+
             if (blocked)
             {
                 // Force-exit ADS once if a blocker became active while already aiming
-                if (!_blockerInterruptedAim && PlayerStateInstance?.FirearmController?.IsAiming == true)
+                if (!_blockerInterruptedAim && AimStateInstance.IsAiming)
                 {
-                    PlayerStateInstance.FirearmController.ToggleAim();
+                    PlayerStateInstance?.FirearmController?.ToggleAim();
                     _blockerInterruptedAim = true;
                 }
             }
             else
             {
                 _blockerInterruptedAim = false;
-            }
-        }
-
-        public void InterruptAim()
-        {
-            if (PlayerStateInstance.FirearmController.IsAiming && !AimingInterrupted)
-            {
-                PlayerStateInstance.FirearmController.ToggleAim();
-                AimingInterrupted = true;
-            }
-        }
-        public void UnInterruptAim()
-        {
-            if (!PlayerStateInstance.FirearmController.IsAiming && AimingInterrupted)
-            {
-                PlayerStateInstance.FirearmController.ToggleAim();
-                AimingInterrupted = false;
             }
         }
     }

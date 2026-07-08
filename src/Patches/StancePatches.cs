@@ -1292,12 +1292,14 @@ namespace StanceOverhaul.Patches
             if (player.IsYourPlayer)
             {
                 Plugin.StanceControllerInstance.BaseWeaponLength = length;
-                Plugin.StanceControllerInstance.StanceModifiedWeaponLength = length < 0.92f ? length * 0.95f : length * 1.05f; //length >= 0.92f ? length * 1.12f : length
+                //Plugin.StanceControllerInstance.StanceModifiedWeaponLength = length < 0.92f ? length * 0.95f : length * 1.05f; //length >= 0.92f ? length * 1.12f : length
             }
         }
     }
 
-    //Modify weapon length used for collision based on stance
+    // Modify weapon length used for collision based on stance
+    // Do NOT do this, it has unintended consequences, weapon length determines origin of bullet. 
+    // Need to modify how collision code uses it factored by stance
     public class WeaponOverlappingPatch : ModulePatch
     {
         private static FieldInfo playerField;
@@ -1316,47 +1318,47 @@ namespace StanceOverhaul.Patches
             Player player = (Player)playerField.GetValue(__instance);
             if (player.IsYourPlayer)
             {
-                if (Plugin.StanceControllerInstance.CurrentStanceType == EStanceType.PatrolStance)
-                {
-                    weaponLnField.SetValue(__instance, Plugin.StanceControllerInstance.StanceModifiedWeaponLength * 0.75f);
-                    return;
-                }
+                // if (Plugin.StanceControllerInstance.CurrentStanceType == EStanceType.PatrolStance)
+                // {
+                //     weaponLnField.SetValue(__instance, Plugin.StanceControllerInstance.StanceModifiedWeaponLength * 0.75f);
+                //     return;
+                // }
 
-                if (WeaponStateInstance.TreatAsPistol)
-                {
-                    weaponLnField.SetValue(__instance, Plugin.StanceControllerInstance.StanceModifiedWeaponLength * 0.85f);
-                }
-                else
-                {
-                    if (FikaIsPresent) //collisions acts funky with stances from another client's perspective
-                    {
-                        weaponLnField.SetValue(__instance, Plugin.StanceControllerInstance.StanceModifiedWeaponLength * 0.8f);
-                        return;
-                    }
-                    if (Plugin.StanceControllerInstance.CurrentStanceType == EStanceType.ShortStock)
-                    {
-                        weaponLnField.SetValue(__instance, Plugin.StanceControllerInstance.StanceModifiedWeaponLength * 0.9f);
-                        return;
-                    }
-                    if (Plugin.StanceControllerInstance.CurrentStanceType == EStanceType.HighReady)
-                    {
-                        weaponLnField.SetValue(__instance, Plugin.StanceControllerInstance.StanceModifiedWeaponLength * 0.95f);
-                        return;
-                    }
-                    if (Plugin.StanceControllerInstance.CurrentStanceType == EStanceType.LowReady)
-                    {
-                        weaponLnField.SetValue(__instance, Plugin.StanceControllerInstance.StanceModifiedWeaponLength * 0.98f);
-                        return;
-                    }
-                }
-                weaponLnField.SetValue(__instance, Plugin.StanceControllerInstance.StanceModifiedWeaponLength);
+                // if (WeaponStateInstance.TreatAsPistol)
+                // {
+                //     weaponLnField.SetValue(__instance, Plugin.StanceControllerInstance.StanceModifiedWeaponLength * 0.85f);
+                // }
+                // else
+                // {
+                //     if (FikaIsPresent) //collisions acts funky with stances from another client's perspective
+                //     {
+                //         weaponLnField.SetValue(__instance, Plugin.StanceControllerInstance.StanceModifiedWeaponLength * 0.8f);
+                //         return;
+                //     }
+                //     if (Plugin.StanceControllerInstance.CurrentStanceType == EStanceType.ShortStock)
+                //     {
+                //         weaponLnField.SetValue(__instance, Plugin.StanceControllerInstance.StanceModifiedWeaponLength * 0.9f);
+                //         return;
+                //     }
+                //     if (Plugin.StanceControllerInstance.CurrentStanceType == EStanceType.HighReady)
+                //     {
+                //         weaponLnField.SetValue(__instance, Plugin.StanceControllerInstance.StanceModifiedWeaponLength * 0.95f);
+                //         return;
+                //     }
+                //     if (Plugin.StanceControllerInstance.CurrentStanceType == EStanceType.LowReady)
+                //     {
+                //         weaponLnField.SetValue(__instance, Plugin.StanceControllerInstance.StanceModifiedWeaponLength * 0.98f);
+                //         return;
+                //     }
+                // }
+                // weaponLnField.SetValue(__instance, Plugin.StanceControllerInstance.StanceModifiedWeaponLength);
             }
         }
     }
 
 
-    //Prevent BSG from moving weapon closer based on having a stock
-    //should reproduce this behaviour myself, different weapon hold and position if not stock
+    //Prevent BSG from moving weapon closer based on having a stock, because it looks shit
+    //TODO: should reproduce this behaviour myself, different weapon hold and position if not stock
     public class ShouldMoveWeapCloserPatch : ModulePatch
     {
         private static FieldInfo _playerField;
@@ -1377,8 +1379,6 @@ namespace StanceOverhaul.Patches
             Player player = (Player)_playerField.GetValue(firearmController);
             if (player != null && player.MovementContext.CurrentState.Name != EPlayerState.Stationary && player.IsYourPlayer)
             {
-                // Capture EFT's value before zeroing: shouldMoveWeaponCloser=true = compact (no/folded stock)
-                WeaponStateInstance.HasShoulderContact = !____shouldMoveWeaponCloser && !WeaponStateInstance.IsPistol;
                 ____shouldMoveWeaponCloser = false;
             }
         }

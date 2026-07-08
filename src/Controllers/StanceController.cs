@@ -351,11 +351,11 @@ namespace StanceOverhaul.Controllers
         public bool AwakeRan { get; private set; } = false;
 
         public EStanceType CurrentStanceType => _stanceState.ActiveStanceType;
-
+        public IStance? CurrentStance => _stanceState.ActiveStance;
         public bool IsDoingTacSprint => _tacSprintHandler.IsDoingTacSprint;
 
         public float StanceHipfireBonus => _stanceState.ActiveStance?.HipfireBonus ?? 1f;
-    
+
         void Awake()
         {
             AwakeRan = true;

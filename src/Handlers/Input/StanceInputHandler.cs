@@ -11,6 +11,7 @@ namespace StanceOverhaul.Handlers.StanceInput
     {
         private IStance? _storedStance;
         private IStance? _stanceBeforeHold;
+        private IStance? _stanceBeforeItemEquipped;
         private bool _wasInterruptedByADS;
         private bool _aimedFromActiveAim;
 
@@ -39,8 +40,8 @@ namespace StanceOverhaul.Handlers.StanceInput
         private void SubscribeToEvents()
         {
             PlayerEvents.OnWeaponSwap += OnWeaponSwap;
-            PWAEvents.OnPWAInitialize += OnWeaponSwap;
             PlayerEvents.OnSwappedFromGunToItem += OnSwappedToItem;
+            PlayerEvents.OnSwappedFromItemToGun += OnSwappedBackToGun;
             PlayerEvents.AimStateChanged += OnADSToggled;
             PlayerEvents.OnShotFired += OnShotFired;
             StanceInputEvents.TogglePatrolStance += TogglePatrolStance;
@@ -59,7 +60,7 @@ namespace StanceOverhaul.Handlers.StanceInput
         private void UnSubscribeToEvents()
         {
             PlayerEvents.OnWeaponSwap -= OnWeaponSwap;
-            PWAEvents.OnPWAInitialize -= OnWeaponSwap;
+            PlayerEvents.OnSwappedFromItemToGun -= OnSwappedBackToGun;
             PlayerEvents.OnSwappedFromGunToItem -= OnSwappedToItem;
             PlayerEvents.AimStateChanged -= OnADSToggled;
             PlayerEvents.OnShotFired -= OnShotFired;
@@ -86,13 +87,25 @@ namespace StanceOverhaul.Handlers.StanceInput
 
         private void OnSwappedToItem()
         {
-            if (!PluginConfig.RememberStanceItem.Value)
-                CancelStances();
+            if (PluginConfig.RememberStanceItem.Value)
+                _stanceBeforeItemEquipped = _storedStance;
+
+            CancelStances();
+        }
+
+        private void OnSwappedBackToGun()
+        {
+            if (PluginConfig.RememberStanceItem.Value && _stanceBeforeItemEquipped != null)
+            {
+                ToggleStance(_stanceBeforeItemEquipped);
+            }
+
+            _stanceBeforeItemEquipped = null;
         }
 
         private void OnAttemptedToFireFromStance()
         {
-            
+
         }
 
         private void CancelStances()
@@ -115,14 +128,6 @@ namespace StanceOverhaul.Handlers.StanceInput
                 || _stanceState.ActiveStanceType == EStanceType.ShortStock
                 || _stanceState.ActiveStanceType == EStanceType.PistolCompressed;
 
-
-
-            ModLogger.LogWarning("stance " + _stanceState.ActiveStanceType);
-
-            ModLogger.LogWarning("keepStance " + keepStance);
-
-            ModLogger.LogWarning("rememberStance " + rememberStance);
-
             if (!keepStance)
             {
                 _stanceState.CancelAll();
@@ -136,7 +141,6 @@ namespace StanceOverhaul.Handlers.StanceInput
                 return;
 
             _stanceBeforeHold = _storedStance;
-            ModLogger.LogWarning($"Active Aim hold begin. Snapshotting stance: {_stanceBeforeHold?.StanceType}");
             _stanceState.RequestStance(StanceControllerInstance.ActiveAim);
         }
 
@@ -148,7 +152,6 @@ namespace StanceOverhaul.Handlers.StanceInput
             if (_stanceState.ActiveStanceType != EStanceType.ActiveAiming)
                 return;
 
-            ModLogger.LogWarning($"Active Aim hold end. Restoring: {toRestore?.StanceType}");
             if (toRestore != null)
                 _stanceState.RequestStance(toRestore);
             else
@@ -189,7 +192,6 @@ namespace StanceOverhaul.Handlers.StanceInput
             if (_storedStance == null)
                 return false;
 
-            ModLogger.LogWarning($"Restoring stance: {_storedStance.StanceType}");
             _stanceState.RequestStance(_storedStance);
             return true;
         }
@@ -201,7 +203,6 @@ namespace StanceOverhaul.Handlers.StanceInput
             if (_stanceState.ActiveStance?.StanceType == EStanceType.ActiveAiming)
                 return false;
 
-            ModLogger.LogWarning($"Restoring Active Aim stance after ADS");
             _stanceState.RequestStance(StanceControllerInstance.ActiveAim);
             return true;
         }
@@ -215,14 +216,11 @@ namespace StanceOverhaul.Handlers.StanceInput
         //TODO: this may need a rework
         private void ToggleStance(
             IStance? targetStance,
-            bool remember = false,
             bool forgetPrevious = false)
         {
             if (targetStance == null) return;
 
-            ModLogger.LogWarning("requesting");
-
-            if (remember)
+            if (targetStance.RememberStance)
             {
                 _storedStance =
                     !IsTogglingActiveStance(targetStance.StanceType) ?
@@ -232,52 +230,42 @@ namespace StanceOverhaul.Handlers.StanceInput
             if (forgetPrevious)
                 _storedStance = null;
 
-            ModLogger.LogWarning("_storedStance after toggle is " + (_storedStance?.StanceType));
-
             _stanceState.RequestStance(targetStance);
         }
 
         //TODO: call this from an aim event
         private void TogglePatrolStance()
         {
-            ModLogger.LogWarning("toggle patrol");
             ToggleStance(StanceControllerInstance.PatrolStance, forgetPrevious: true);
         }
 
         private void ToggleLeftShoulder()
         {
-            ModLogger.LogWarning("toggle left shoulder");
             ToggleStance(StanceControllerInstance.LeftShoulder, forgetPrevious: true);
         }
 
         private void ToggleHighReady()
         {
-            ModLogger.LogWarning("toggle high");
-            ToggleStance(StanceControllerInstance.HighReady, true);
+            ToggleStance(StanceControllerInstance.HighReady);
         }
 
         private void ToggleLowReady()
         {
-            ModLogger.LogWarning("toggle low");
-            ToggleStance(StanceControllerInstance.LowReady, true);
+            ToggleStance(StanceControllerInstance.LowReady);
         }
 
         private void ToggleShortStock()
         {
-            ToggleStance(StanceControllerInstance.ShortStock, false);
+            ToggleStance(StanceControllerInstance.ShortStock);
         }
 
         private void ToggleActiveAim()
         {
-            ModLogger.LogWarning("toggle active");
-
             bool activeAimActive =
                _stanceState.ActiveStanceType == EStanceType.ActiveAiming;
 
             if (activeAimActive)
             {
-                ModLogger.LogWarning("active aim is active");
-                ModLogger.LogWarning("_storedStance " + (_storedStance?.StanceType));
                 if (_storedStance != null)
                     ToggleStance(_storedStance);
                 else

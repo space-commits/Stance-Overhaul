@@ -17,8 +17,8 @@ namespace StanceOverhaul.Handlers.Aiming
         {
             RealismCommonLib.Events.PlayerEvents.AimStateChanged += CheckForAimBlockers;
             RealismCommonLib.Events.PlayerEvents.ToggleHeadDevice += CheckForAimBlockers;
-            RealismCommonLib.Events.PWAEvents.OnUpdateWeaponVariables += CheckForAimBlockers;
-            RealismCommonLib.Events.PlayerEvents.OnWeaponDraw += CheckForAimBlockers;
+            WeaponStateInstance.OnWeaponStateChanged += CheckForAimBlockers;
+            RealismCommonLib.Events.PlayerEvents.OnWeaponEquipped += CheckForAimBlockers;
             _canAim = BoolHandlers.CanAim.Add(true);
         }
 
@@ -26,8 +26,8 @@ namespace StanceOverhaul.Handlers.Aiming
         {
             RealismCommonLib.Events.PlayerEvents.AimStateChanged -= CheckForAimBlockers;
             RealismCommonLib.Events.PlayerEvents.ToggleHeadDevice -= CheckForAimBlockers;
-            RealismCommonLib.Events.PWAEvents.OnUpdateWeaponVariables -= CheckForAimBlockers;
-            RealismCommonLib.Events.PlayerEvents.OnWeaponDraw -= CheckForAimBlockers;
+            WeaponStateInstance.OnWeaponStateChanged -= CheckForAimBlockers;
+            RealismCommonLib.Events.PlayerEvents.OnWeaponEquipped -= CheckForAimBlockers;
             BoolHandlers.CanAim.Remove(_canAim);
         }
 
@@ -56,7 +56,7 @@ namespace StanceOverhaul.Handlers.Aiming
             bool blocked = nvgBlocksAds || faceshieldBlocksADS || thermalBlocksAds;
             _canAim.Allowed = !blocked;
 
-            ModLogger.LogWarning($"CheckForAimBlockers: NVG={nvgBlocksAds}, Thermal={thermalBlocksAds}, FaceShield={faceshieldBlocksADS}, Blocked={blocked}");
+            //ModLogger.LogWarning($"CheckForAimBlockers: NVG={nvgBlocksAds}, Thermal={thermalBlocksAds}, FaceShield={faceshieldBlocksADS}, Blocked={blocked}");
 
             if (blocked)
             {

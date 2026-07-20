@@ -1,30 +1,36 @@
 ﻿using StanceOverhaul.Enums;
 using StanceOverhaul.Stances;
 using UnityEngine;
+using StanceOverhaul.Events;
+using static StanceOverhaul.Plugin;
 
 namespace StanceOverhaul.State;
 
 internal class StanceSlot
 {
-    private StanceState _stanceState;
-    public IStance Stance;
+    public StanceTransitionContext Transition { get; set; }
+    public IStance Stance { get; }
     public ECurveType ActiveCurve { get; set; }
     public float Progress { get; set; } // 0..1
     public int Direction { get; set; } // +1 or -1
+    public float PreviousProgress { get; private set; }
 
-    internal StanceSlot(IStance stance, ECurveType activeCurve, float progress, int direction, StanceState stanceState)
+    internal StanceSlot(IStance stance, ECurveType activeCurve, float progress, int direction, StanceTransitionContext transition)
     {
         Stance = stance;
         ActiveCurve = activeCurve;
         Direction = direction;
         Progress = progress;
-        _stanceState = stanceState;
+        Transition = transition;
     }
 
     public bool IsAtIdle =>
         (ActiveCurve == ECurveType.Enter && Progress <= 0f) ||
         (ActiveCurve == ECurveType.Exit && Progress >= 1f);
 
+    /// <summary>
+    /// Is at the terminal state of the stance, and hasn't started transitioning away from it yet.
+    /// </summary>
     public bool IsAtPose =>
         (ActiveCurve == ECurveType.Enter && Progress >= 1f) ||
         (ActiveCurve == ECurveType.Exit && Progress <= 0f);
@@ -37,32 +43,19 @@ internal class StanceSlot
         (ActiveCurve == ECurveType.Enter && Direction == +1) ||
         (ActiveCurve == ECurveType.Exit && Direction == -1);
 
-    public bool IsAtOrHeadingToPose =>
-        IsAtPose || IsHeadingToPose;
+
+    /// <summary>
+    /// Is at the terminal state of the stance, or heading towards it, and not heading away from it.
+    /// </summary>
+    public bool IsAtOrHeadingToActivePose =>
+        (ActiveCurve == ECurveType.Enter && (Direction == +1 || Progress >= 1f)) ||
+        (ActiveCurve == ECurveType.Exit && Direction == -1);
 
     public float IdleProximity =>
         ActiveCurve == ECurveType.Exit ? Progress : 1f - Progress;
 
     public float DistanceToPose =>
         1f - IdleProximity;
-
-    /// <summary>
-    /// Returns true if close to the terminal state stance is heading toward.
-    /// Prevents triggering at the opposite terminal.
-    /// </summary>
-/*    public bool IsCloseToTerminalState(float threshold)
-    {
-        if (IsHeadingToPose)
-            return IsCloseToPose(threshold) && !IsAtPose;   // not already there
-        else
-            return IsCloseToIdle(threshold) && !IsAtIdle;   // was: !IsAtPose (wrong terminal)
-    }
-
-    public bool IsCloseToIdle(float threshold) =>
-        IdleProximity <= threshold;
-
-    public bool IsCloseToPose(float threshold) =>
-        DistanceToPose <= threshold;*/
 
     public Vector3 EvaluatePosition()
     {
@@ -82,7 +75,7 @@ internal class StanceSlot
     {
         return ActiveCurve == ECurveType.Exit
             ? Stance.ExitAimSpeedCurve.Evaluate(Progress)
-            : ActiveCurve == ECurveType.Enter ? 
+            : ActiveCurve == ECurveType.Enter ?
             Stance.EnterAimSpeedCurve.Evaluate(Progress)
             : 1f;
     }
@@ -91,11 +84,22 @@ internal class StanceSlot
     {
         if (Direction == 0) return; // holding
 
+        var speed = Stance.TransitionFromModifier(Transition.From) *
+                    Stance.TransitionToSpeedModifier(Transition.To) *
+                    PluginConfig.GlobalStanceSpeed.Value;
+
+        PreviousProgress = Progress;
+
         Progress = Mathf.Clamp01(
-            Progress + deltaTime *
-            Stance.TransitionFromModifier(_stanceState.PrimaryStance?.StanceType) *
-            Stance.TransitionToSpeedModifier(_stanceState.ActiveStanceType) *
-            PluginConfig.GlobalStanceSpeed.Value * Direction);
+            Progress +
+            Direction *
+            deltaTime *
+            StanceControllerInstance.StatsHandlerInstance.GetStanceSpeedModifier(speed));
+
+        if (PreviousProgress < Stance.StanceHitShoulderThreshold && Progress >= Stance.StanceHitShoulderThreshold)
+        {
+            StanceEvents.RaiseOnStanceHitShoulder();
+        }
 
         // reached pose end -> enter holding
         if (IsAtPose)

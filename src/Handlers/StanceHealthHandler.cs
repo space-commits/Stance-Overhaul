@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace StanceOverhaul.Controllers.StateControllers
+namespace StanceOverhaul.Handlers
 {
     internal class StanceHealthHandler
     {

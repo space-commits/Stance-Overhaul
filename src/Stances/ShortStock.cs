@@ -21,6 +21,7 @@ public class ShortStock : StanceBase
     public override float WalkSpeedBonus => PluginConfig.ShortStockWalkSpeedBonus.Value;
     public override float SprintAccelBonus => PluginConfig.ShortStockSprintAccelBonus.Value;
     public override float HipfireBonus => PluginConfig.ShortStockHipfireBonus.Value;
+    public override bool RememberStance => true;
     public override AnimationCurve ExitAimSpeedCurve { get; } = new AnimationCurve
             (
                 new Keyframe { time = 0f, value = 0f },

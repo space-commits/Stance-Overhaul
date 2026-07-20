@@ -8,6 +8,30 @@ using static RealismCommonLib.Plugin;
 
 namespace StanceOverhaul.State
 {
+
+    /// <summary>
+    /// Represents a transition from one stance to another, including the source and target stances.
+    /// Used to ensure that stance slots are aware of the context of the transition they are part of
+    /// </summary>
+    internal class StanceTransitionContext
+    {
+        /// <summary>
+        /// The stance that is being transitioned from, if there is a stance transition occuring.
+        /// </summary>
+        public EStanceType From { get; }
+
+        /// <summary>
+        /// The stance that is being transitioned to, if there is a stance transition occuring.
+        /// </summary>
+        public EStanceType To { get; }
+
+        public StanceTransitionContext(EStanceType from, EStanceType to)
+        {
+            From = from;
+            To = to;
+        }
+    }
+
     internal class StanceState : IControllerHelper
     {
         private StanceSlot? _primary;
@@ -17,8 +41,6 @@ namespace StanceOverhaul.State
 
         private Vector3 _smoothedPosition;
         private Vector3 _smoothedRotation;
-
-        public float SmoothSpeed { get; private set; } = 20f; //TODO: expose in config?
 
         public Vector3 StancePosition { get; private set; }
         public Vector3 StanceRotation { get; private set; }
@@ -33,19 +55,19 @@ namespace StanceOverhaul.State
 
         /// <summary>
         /// The stance that is active or being transitioned to.
-        /// Use this for checking if what the active or current stance is, not PrimaryStance, 
+        /// Use this for checking what the active or current stance is, not PrimaryStance, 
         /// as PrimaryStance can be heading to idle or being blended out to another stance.
         /// </summary>
         public IStance? ActiveStance
         {
             get
             {
-                if (_incoming != null && !_incomingPaused && _incoming.IsAtOrHeadingToPose)
+                if (_incoming != null && !_incomingPaused && _incoming.IsAtOrHeadingToActivePose)
                     return _incoming.Stance;
 
-                if (_primary != null && _primary.IsAtOrHeadingToPose)
+                if (_primary != null && _primary.IsAtOrHeadingToActivePose)
                     return _primary.Stance;
-                    
+
                 return null;
             }
         }
@@ -86,17 +108,9 @@ namespace StanceOverhaul.State
             //check blend threshold - unpause incoming if met
             if (_incoming != null && _incomingPaused && _primary != null)
             {
-                /*      if (_primary.Direction != 0
-                          && _primary.IdleProximity <= _primary.Stance.BlendThreshold)
-                      {
-                          ModLogger.LogWarning("== threshold met");
-                          _incomingPaused = false;
-                      }*/
-
                 if (_primary.IsHeadingToIdle
                 && _primary.IdleProximity >= _incoming.Stance.BlendIntoThreshold(_primary.Stance.StanceType))
                 {
-                    ModLogger.LogWarning("== threshold met");
                     _incomingPaused = false;
                 }
             }
@@ -118,8 +132,6 @@ namespace StanceOverhaul.State
                 _primary = _incoming;
                 _incoming = null;
                 _incomingPaused = false;
-
-                ModLogger.LogWarning("== incoming promoted to primary");
             }
 
             UpdateAimSpeed();
@@ -165,61 +177,27 @@ namespace StanceOverhaul.State
         {
             float aimSpeedModifier = 1f;
 
-            if (_incoming != null && PlayerStateInstance.PWA.IsAiming)
+            if (AimStateInstance.IsAiming)
             {
-                aimSpeedModifier = _incoming.EvaluateAimSpeed();
-            }
-
-            if (_primary != null && PlayerStateInstance.PWA.IsAiming)
-            {
-                aimSpeedModifier = _primary.EvaluateAimSpeed();
+                if (_incoming != null && _incomingPaused == false)
+                    aimSpeedModifier = _incoming.EvaluateAimSpeed();
+                else if (_primary != null)
+                    aimSpeedModifier = _primary.EvaluateAimSpeed();
             }
 
             Plugin.StanceControllerInstance.PwaAimSpeed = Plugin.StanceControllerInstance.PwaOriginalAimSpeed * aimSpeedModifier;
         }
-
-        //Move to StanceAimHandler
-        /*     public bool AimingInterrupted { get; private set; }*/
-
-        //Move to StanceAimHandler
-        /*       public void UpdateAimState()
-               {
-                   if (_primary == null || !_primary.Stance.InterruptsAiming) return;
-
-                   bool isAnimating = _primary.IsHeadingToIdle || _primary.IsHeadingToPose;
-
-                   // Only interrupt if aiming AND heading AND not already interrupted
-                   if (!AimingInterrupted && isAnimating && AimStateInstance.IsAiming)
-                   {
-                       InterruptAim();
-                       return;
-                   }
-
-                   if (!AimStateInstance.IsAiming && _primary.IsCloseToTerminalState(PluginConfig.test1.Value)) //_primary.Stance.AimResumeThreshold
-                   {
-                       UnInterruptAim();
-                   }
-               }*/
-
-        /*    public void InterruptAim()
-            {
-                PlayerStateInstance.FirearmController.ToggleAim();
-                AimingInterrupted = true;
-            }
-            public void UnInterruptAim()
-            {
-                PlayerStateInstance.FirearmController.ToggleAim();
-                AimingInterrupted = false;
-            }*/
 
         public void RequestStance(IStance stance)
         {
             // no active stance: simple enter
             if (_primary == null && _incoming == null)
             {
-                ModLogger.LogWarning("toggle stance from no stance");
-                _primary = new StanceSlot(stance, ECurveType.Enter, 0f, +1, this);
+                var transition = new StanceTransitionContext(EStanceType.None, stance.StanceType);
+
+                _primary = new StanceSlot(stance, ECurveType.Enter, 0f, +1, transition);
                 stance.OnEnter();
+
                 return;
             }
 
@@ -229,7 +207,8 @@ namespace StanceOverhaul.State
                 //holding -> switch to exit curve
                 if (_primary.Direction == 0)
                 {
-                    ModLogger.LogWarning("switch to exit curve from hold");
+                    _primary.Transition = new StanceTransitionContext(stance.StanceType, EStanceType.None); ;
+
                     _primary.ActiveCurve = ECurveType.Exit;
                     _primary.Progress = 0f;
                     _primary.Direction = +1;
@@ -237,71 +216,84 @@ namespace StanceOverhaul.State
                 }
                 else if (_primary.IsHeadingToIdle) // heading to idle -> reverse toward pose
                 {
-                    ModLogger.LogWarning("reverse direction towards pose");
-                    _primary.Direction *= -1; //should this be +1 or -1?
-                    /*stance.OnEnter();*/
+                    _primary.Transition = new StanceTransitionContext(EStanceType.None, stance.StanceType);
+
+                    _primary.Direction *= -1;
+                    stance.OnEnter();
                 }
                 else // heading to pose -> reverse toward idle
                 {
-                    ModLogger.LogWarning("reverse direction towards idle");
-                    _primary.Direction *= -1; //should this be +1 or -1?
+                    _primary.Transition = new StanceTransitionContext(stance.StanceType, EStanceType.None);
+
+                    _primary.Direction *= -1;
                     stance.OnExit();
                 }
                 return;
             }
 
-            //cancel incoming during blend
+            //same stance is incoming, discard current stance and promote incoming to primary, start its exit
             if (_incoming?.Stance == stance)
             {
-                ModLogger.LogWarning($"cancel incoming during blend");
                 _primary = _incoming;
                 _incoming = null;
                 _incomingPaused = false;
-                BeginExit(_primary);
+
+                var transition = new StanceTransitionContext(_primary.Stance.StanceType, EStanceType.None);
+                BeginExit(_primary, transition);
+
                 return;
             }
 
-            //third stance during blend
+            //third stance during blend. A = Null, B = Primary, C = Incoming. B -> C.
             if (_incoming != null)
             {
-                ModLogger.LogWarning("third stance during blend");
-                //collapse: drop primary, promte incoming, start its exit
-                _primary = _incoming;
+                //collapse: drop primary, promote incoming, start its exit
+                //current incoming becomes the active stance.  Old primary is abandoned.
+                _primary = _incoming; //incoming becomes primary, and will be blended out to the new stance
                 _incoming = null;
-                BeginExit(_primary);
-            }
-            else if (_primary != null)
-            {
-                ModLogger.LogWarning($"normal transition A -> B {stance.StanceType}");
-                //normal transition A -> B
-                BeginExit(_primary);
+
+                //start exit of new primary
+                var transition = new StanceTransitionContext(_primary.Stance.StanceType, stance.StanceType);
+                BeginExit(_primary, transition);
+
+                //start new incoming
+                _incoming = new StanceSlot(stance, ECurveType.Enter, 0f, +1, transition);
+                _incomingPaused = true;
+                stance.OnEnter();
+
+                return;
             }
 
-            _incoming = new StanceSlot(stance, ECurveType.Enter, 0f, +1, this);
-            _incomingPaused = true; //will be unpaused once blend threshold is met
-            stance.OnEnter();
-            ModLogger.LogWarning($"incoming queued and paused {stance.StanceType}");
+            //normal transition A -> B
+            if (_primary != null)
+            {
+                var transition = new StanceTransitionContext(_primary.Stance.StanceType, stance.StanceType);
+
+                BeginExit(_primary, transition);
+
+                _incoming = new StanceSlot(stance, ECurveType.Enter, 0f, +1, transition);
+                _incomingPaused = true;
+                stance.OnEnter();
+            }
         }
 
-        public void BeginExit(StanceSlot slot)
+        public void BeginExit(StanceSlot slot, StanceTransitionContext transition)
         {
+            slot.Transition = transition;
+
             if (slot.Direction == 0) //holding -> switch to exit curve
             {
-                ModLogger.LogWarning($"switch to exit curve  {slot.Stance.StanceType}");
                 slot.ActiveCurve = ECurveType.Exit;
                 slot.Progress = 0f;
                 slot.Direction = +1;
             }
             else if (slot.IsHeadingToIdle) // already heading to idle: no change needed
             {
-                ModLogger.LogWarning($"headed to idle: on change  {slot.Stance.StanceType}");
-
                 return;
             }
             else // heading to pose -> change direction to idle, stay on the same curve, just reverse
             {
-                ModLogger.LogWarning($"reverse direction {slot.Stance.StanceType}");
-                slot.Direction *= -1; //should this be +1 or -1?
+                slot.Direction *= -1;
             }
 
             slot.Stance.OnExit();
@@ -309,21 +301,22 @@ namespace StanceOverhaul.State
 
         public void CancelAll()
         {
-            ModLogger.LogWarning("cancel all");
-
             if (_primary != null)
-                BeginExit(_primary);
+            {
+                var transition = new StanceTransitionContext(_primary.Stance.StanceType, EStanceType.None);
+                BeginExit(_primary, transition);
+            }
 
-            if (_incoming == null) return;
-
+            // Incoming hasn't started yet, discard it.
             if (_incomingPaused)
             {
                 _incoming = null;
                 _incomingPaused = false;
             }
-            else
+            else if (_incoming != null) // incoming is already blending, exit it
             {
-                BeginExit(_incoming);
+                var transition = new StanceTransitionContext(_incoming.Stance.StanceType, EStanceType.None);
+                BeginExit(_incoming, transition);
             }
         }
     }

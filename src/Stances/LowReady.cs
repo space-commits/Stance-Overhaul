@@ -20,6 +20,7 @@ public class LowReady : StanceBase
     public override float StaminaRate => PluginConfig.LowReadyStaminaRate.Value;
     public override float WalkSpeedBonus => PluginConfig.LowReadyWalkSpeedBonus.Value;
     public override float SprintAccelBonus => PluginConfig.LowReadySprintAccelBonus.Value;
+    public override bool RememberStance => true;
 
     public override float BlendIntoThreshold(EStanceType nextStance)
     {

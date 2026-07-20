@@ -21,6 +21,7 @@ public class HighReady : StanceBase
     public override float WalkSpeedBonus => PluginConfig.HighReadyWalkSpeedBonus.Value;
     public override float SprintAccelBonus => PluginConfig.HighReadySprintAccelBonus.Value;
     public override bool CanDoTacSprint => true;
+    public override bool RememberStance => true;
 
     public override float BlendIntoThreshold(EStanceType nextStance)
     {

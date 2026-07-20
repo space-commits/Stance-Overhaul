@@ -26,7 +26,6 @@ namespace StanceOverhaul.Controllers.StateControllers
             {
                 if (_isDoingTacSprint != value)
                 {
-                    ModLogger.LogWarning($"IsDoingTacSprint changed to {value}");
                     _isDoingTacSprint = value;
                     if (_isDoingTacSprint)
                         StanceEvents.RaiseOnTacSprintStarted();
@@ -108,14 +107,12 @@ namespace StanceOverhaul.Controllers.StateControllers
             //Need to change tac sprint state
             if (IsDoingTacSprint && !CanDoTacSprint(StanceControllerInstance.CurrentStance))
             {
-                ModLogger.LogWarning("change tac sprint state");
                 ChangeTacSprintState(null);
                 IsDoingTacSprint = false; 
             }
 
             if (!IsDoingTacSprint && CanDoTacSprint(StanceControllerInstance.CurrentStance) && PlayerStateInstance.IsSprinting)
             {
-                ModLogger.LogWarning("entered tac sprint");
                 IsDoingTacSprint = true;
             }
             else if (!CanDoTacSprint(StanceControllerInstance.CurrentStance) || !PlayerStateInstance.IsSprinting)

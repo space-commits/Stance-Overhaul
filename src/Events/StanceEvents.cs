@@ -16,6 +16,8 @@ public static class StanceEvents
 
     public static event Action? OnTacSprintEnded;
 
+    public static event Action? OnStanceHitShoulder;
+
     internal static void RaiseOnStanceEntered(IStance stance)
     {
         BaseEventHandler.RaiseEvent(OnStanceEntered, stance);
@@ -34,5 +36,10 @@ public static class StanceEvents
     internal static void RaiseOnTacSprintEnded()
     {
         BaseEventHandler.RaiseEvent(OnTacSprintEnded);
+    }
+
+    internal static void RaiseOnStanceHitShoulder()
+    {
+        BaseEventHandler.RaiseEvent(OnStanceHitShoulder);
     }
 }

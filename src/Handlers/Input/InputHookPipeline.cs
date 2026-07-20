@@ -70,10 +70,8 @@ namespace StanceOverhaul.Controllers.PatchHooks
             switch (ctx.Command)
             {
                 case ECommand.LeftStanceToggle:
-                    ModLogger.LogWarning("Overrding left shoulder");
                     return true;
                 case ECommand.WeaponMounting:
-                    ModLogger.LogWarning("Mounting input override");
                     return PluginConfig.OverrideMounting.Value;
                 default:
                     return false;

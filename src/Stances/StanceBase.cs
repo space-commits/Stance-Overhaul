@@ -18,6 +18,8 @@ namespace StanceOverhaul.Stances
         public virtual float SprintAccelBonus => 1f;
         public virtual float HipfireBonus => 1f;
         public virtual bool CanDoTacSprint => false;
+        public virtual bool RememberStance => false;
+        public virtual float StanceHitShoulderThreshold => 0.1f;
 
         public abstract Vector3Curve EnterPositionCurve { get; }
         public abstract Vector3Curve EnterRotationCurve { get; }

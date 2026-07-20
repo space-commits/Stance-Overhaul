@@ -1,13 +1,14 @@
 ﻿using RealismCommonLib.ModifierHandlers;
-using StanceOverhaul.Handlers;
 using StanceOverhaul.Events;
 using StanceOverhaul.Stances;
 using Comfort.Common;
 using static RealismCommonLib.Plugin;
 using static StanceOverhaul.Plugin;
 
-namespace StanceOverhaul.Controllers.StateControllers
+namespace StanceOverhaul.Handlers
 {
+
+    //TODO weapon stats should affect this
     internal class StanceMovementHandler : IControllerHelper
     {
         private FloatMultiplierHandle _walkSpeed;
@@ -21,7 +22,7 @@ namespace StanceOverhaul.Controllers.StateControllers
             StanceEvents.OnStanceExited += OnStanceExited;
             StanceEvents.OnTacSprintStarted += OnExternalStateChange;
             StanceEvents.OnTacSprintEnded += OnExternalStateChange;
-            RealismCommonLib.Events.PlayerEvents.OnWeaponDraw += OnExternalStateChange;
+            RealismCommonLib.Events.PlayerEvents.OnWeaponEquipped += OnExternalStateChange;
 
             _walkSpeed = StatModifiers.WalkSpeedModifier.Add(1f);
             _sprintSpeed = StatModifiers.SprintSpeedModifier.Add(1f);
@@ -35,7 +36,7 @@ namespace StanceOverhaul.Controllers.StateControllers
             StanceEvents.OnStanceExited -= OnStanceExited;
             StanceEvents.OnTacSprintStarted -= OnExternalStateChange;
             StanceEvents.OnTacSprintEnded -= OnExternalStateChange;
-            RealismCommonLib.Events.PlayerEvents.OnWeaponDraw -= OnExternalStateChange;
+            RealismCommonLib.Events.PlayerEvents.OnWeaponEquipped -= OnExternalStateChange;
 
             StatModifiers.WalkSpeedModifier.Remove(_walkSpeed);
             StatModifiers.SprintSpeedModifier.Remove(_sprintSpeed);
@@ -80,7 +81,7 @@ namespace StanceOverhaul.Controllers.StateControllers
 
             _sprintSpeed.Multiplier = StanceControllerInstance.IsDoingTacSprint ? PluginConfig.TacSprintSpeedBonus.Value : 1f;
 
-            ModLogger.LogWarning($"WalkSpeedBonus={stance.WalkSpeedBonus}, SprintAccelBonus={stance.SprintAccelBonus}, IsDoingTacSprint={StanceControllerInstance.IsDoingTacSprint}, TacSprintAccelBonus={tacSprintAccelBonus}, TacSprintSpeedBonus={PluginConfig.TacSprintSpeedBonus.Value}");
+            //ModLogger.LogWarning($"WalkSpeedBonus={stance.WalkSpeedBonus}, SprintAccelBonus={stance.SprintAccelBonus}, IsDoingTacSprint={StanceControllerInstance.IsDoingTacSprint}, TacSprintAccelBonus={tacSprintAccelBonus}, TacSprintSpeedBonus={PluginConfig.TacSprintSpeedBonus.Value}");
 
             // _preSprintAccelSpeed.Multiplier = stance.SprintAccelBonus; //*  IsDoingTacSprint ? TAC_SPRINT_ACCEL : 1f;
             // _sprintAccelSpeed.Multiplier = stance.SprintAccelBonus; // *  IsDoingTacSprint ? TAC_SPRINT_ACCEL : 1f;

@@ -107,8 +107,6 @@ namespace StanceOverhaul.Handlers.StanceInput
 
             if (direction < 0)
             {
-                ModLogger.LogWarning($"-1 {current}");
-
                 // LowReady → no-op
                 if (current == EStanceType.LowReady)
                     return;
@@ -127,8 +125,6 @@ namespace StanceOverhaul.Handlers.StanceInput
 
             if (direction > 0)
             {
-                ModLogger.LogWarning($"+1  {current}");
-
                 // HighReady → no-op
                 if (current == EStanceType.HighReady)
                     return;

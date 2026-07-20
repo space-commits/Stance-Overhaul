@@ -102,7 +102,7 @@ namespace StanceOverhaul
 
         void AddStanceComponentsToPlayer(Player player)
         {
-            StanceControllerInstance = player.gameObject.AddComponent<StanceController>();
+            player.gameObject.AddComponent<StanceController>();
         }
     }
 }

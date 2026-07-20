@@ -43,7 +43,7 @@ namespace StanceOverhaul.Patches
                 // Try to find a "light" under the mode, here's hoping BSG stay consistent
                 foreach (Transform child in tacticalMode.GetChildren())
                 {
-                    Logger.LogWarning($"Visible laser Checking child: {child.name}");
+                    //Logger.LogWarning($"Visible laser Checking child: {child.name}");
                     if (child.name.StartsWith("VIS_"))
                     {
                         return true;
@@ -80,7 +80,7 @@ namespace StanceOverhaul.Patches
                 // Try to find a "light" under the mode, here's hoping BSG stay consistent
                 foreach (Transform child in tacticalMode.GetChildren())
                 {
-                    Logger.LogWarning($"IR laser Checking child: {child.name}");
+                    //Logger.LogWarning($"IR laser Checking child: {child.name}");
                     if (child.name.StartsWith("IR_"))
                     {
                         return true;
@@ -279,9 +279,9 @@ namespace StanceOverhaul.Patches
 
             CalculateDeviceBonus(__instance);
 
-            Logger.LogWarning($"NVG active: {GearStateInstance.NVGIsActive}, Thermal active: {GearStateInstance.ThermalIsActive}");
+            //Logger.LogWarning($"NVG active: {GearStateInstance.NVGIsActive}, Thermal active: {GearStateInstance.ThermalIsActive}");
 
-            Logger.LogWarning($"Device Bonus: {_deviceBonus}, White Light: {_whiteLightActive}, IR Light: {_irLightActive}, IR Laser: {_irLaserActive}, Visible Laser: {_laserActive}");
+            //Logger.LogWarning($"Device Bonus: {_deviceBonus}, White Light: {_whiteLightActive}, IR Light: {_irLightActive}, IR Laser: {_irLaserActive}, Visible Laser: {_laserActive}");
 
             GClass849<float> ergo = (GClass849<float>)_ergoField.GetValue(__instance);
 

@@ -334,8 +334,10 @@ namespace StanceOverhaul.Controllers
         private StanceStaminaHandler _staminaHandler;
         private StanceMovementHandler _movementHandler;
         private TacSprintHandler _tacSprintHandler;
-        private StanceAimHandler _aimState;
+        private StatsHandler _statsHandler;
+        private StanceAimHandler _aimHandler;
         private StanceState _stanceState;
+        private StanceAudioHandler _stanceAudioHandler;
 
         public Spring StancePositionSpring { get; private set; }
         public Spring StanceRotationSpring { get; private set; }
@@ -352,13 +354,14 @@ namespace StanceOverhaul.Controllers
 
         public EStanceType CurrentStanceType => _stanceState.ActiveStanceType;
         public IStance? CurrentStance => _stanceState.ActiveStance;
+        public StatsHandler StatsHandlerInstance => _statsHandler;
         public bool IsDoingTacSprint => _tacSprintHandler.IsDoingTacSprint;
 
         public float StanceHipfireBonus => _stanceState.ActiveStance?.HipfireBonus ?? 1f;
 
         void Awake()
         {
-            AwakeRan = true;
+            Plugin.StanceControllerInstance = this;
 
             InitSprings();
             InitStateControllers();
@@ -366,6 +369,8 @@ namespace StanceOverhaul.Controllers
             SubscribeToInputEvents();
             AssignReloadHandlers();
             InitStances();
+
+            AwakeRan = true;
         }
 
         void Update()
@@ -377,11 +382,11 @@ namespace StanceOverhaul.Controllers
             RunUpdates(regularTime);
 
             //TODO: set these outside of update, and based on weapon stats
-            StanceRotationSpring.ReturnSpeed = PluginConfig.test9.Value;
-            StancePositionSpring.ReturnSpeed = PluginConfig.test9.Value;
+            StanceRotationSpring.ReturnSpeed = PluginConfig.GlobalStanceReturnSpeed.Value;
+            StancePositionSpring.ReturnSpeed = PluginConfig.GlobalStanceReturnSpeed.Value;
 
-            StanceRotationSpring.Damping = PluginConfig.test10.Value;
-            StancePositionSpring.Damping = PluginConfig.test10.Value;
+            StanceRotationSpring.Damping = PluginConfig.GlobalStanceDamping.Value;
+            StancePositionSpring.Damping = PluginConfig.GlobalStanceDamping.Value;
         }
 
         void OnDestroy()
@@ -436,6 +441,9 @@ namespace StanceOverhaul.Controllers
             _inputHookPipeline =
                 InitStateController(() => new InputHookPipeline());
 
+            _statsHandler =
+               InitStateController(() => new StatsHandler());
+
             _staminaHandler =
                 InitStateController(() => new StanceStaminaHandler());
 
@@ -445,7 +453,7 @@ namespace StanceOverhaul.Controllers
             _tacSprintHandler =
                 InitStateController(() => new TacSprintHandler());
 
-            _aimState =
+            _aimHandler =
                 InitStateController(() => new StanceAimHandler());
 
             _inputHandler =
@@ -453,6 +461,10 @@ namespace StanceOverhaul.Controllers
 
             _inputListener =
                 InitStateController(() => new StanceInputListener());
+
+            _stanceAudioHandler =
+                InitStateController(() => new StanceAudioHandler());
+
 
             RunControllerAwake();
         }
@@ -530,7 +542,7 @@ namespace StanceOverhaul.Controllers
 
         private void SubscribeToInputEvents()
         {
-            PlayerEvents.OnWeaponDraw -= OnWeaponSwap;
+            PlayerEvents.OnWeaponEquipped -= OnWeaponSwap;
             InputEvents.WeaponSwapInput += OnWeaponSwap;
             InputEvents.ToggleStepOutInput += OnToggleStepOut;
             InputEvents.ChangeStanceInput += OnChangeStance;
@@ -540,7 +552,7 @@ namespace StanceOverhaul.Controllers
 
         private void UnsubscribeFromInputEvents()
         {
-            PlayerEvents.OnWeaponDraw -= OnWeaponSwap;
+            PlayerEvents.OnWeaponEquipped -= OnWeaponSwap;
             InputEvents.WeaponSwapInput -= OnWeaponSwap;
             InputEvents.ToggleStepOutInput -= OnToggleStepOut;
             InputEvents.ChangeStanceInput -= OnChangeStance;
@@ -795,13 +807,13 @@ namespace StanceOverhaul.Controllers
 
         private void DoMeleeEffect()
         {
-            Player player = Singleton<GameWorld>.Instance.MainPlayer;
-            Player.FirearmController? fc = player.HandsController as Player.FirearmController;
-            if (WeaponStateInstance.HasBayonet)
-            {
-                AudioControllerInstance.PlayKnifeAttackSound(2);
-            }
-            player.Physical.ConsumeAsMelee(2f + (WeaponStateInstance.ErgoFactor / 100f));
+            // Player player = Singleton<GameWorld>.Instance.MainPlayer;
+            // Player.FirearmController? fc = player.HandsController as Player.FirearmController;
+            // if (WeaponStateInstance.HasBayonet)
+            // {
+            //     AudioControllerInstance.PlayKnifeAttackSound(2);
+            // }
+            // player.Physical.ConsumeAsMelee(2f + (WeaponStateInstance.Ergonomics / 100f));
         }
 
         // TODO: replace values with consts and replace pwa reference with common lib only

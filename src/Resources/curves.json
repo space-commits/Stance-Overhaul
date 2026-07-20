@@ -1,0 +1,1828 @@
+{
+  "curves": {
+    "aim_speed": {
+      "X": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 1.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Y": {
+        "keys": []
+      },
+      "Z": {
+        "keys": []
+      }
+    },
+    "high_ready_enter_position": {
+      "X": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.01,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Y": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.25,
+            "value": -0.015,
+            "inTangent": 0.0,
+            "outTangent": -0.2
+          },
+          {
+            "time": 0.8,
+            "value": 0.01,
+            "inTangent": 0.25,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.95,
+            "value": 0.02,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.01,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Z": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.3,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": -0.07,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      }
+    },
+    "high_ready_enter_rotation": {
+      "X": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.15,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": -7.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Y": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.15,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": -10.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Z": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.9,
+            "value": -3.75,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": -3.5,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      }
+    },
+    "high_ready_exit_position": {
+      "X": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.01,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Y": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.25,
+            "value": -0.03,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.5,
+            "value": -0.04,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.75,
+            "value": -0.035,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Z": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": -0.07,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      }
+    },
+    "high_ready_exit_rotation": {
+      "X": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": -7.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.25,
+            "value": -8.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.5,
+            "value": -6.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Y": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": -10.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.85,
+            "value": 4.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Z": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": -3.5,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      }
+    },
+    "low_ready_enter_position": {
+      "X": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Y": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.35,
+            "value": -0.03,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": -0.01,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Z": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      }
+    },
+    "low_ready_enter_rotation": {
+      "X": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.35,
+            "value": 1.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 6.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Y": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.1,
+            "value": -1.5,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.3,
+            "value": -1.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.8,
+            "value": -6.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": -4.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Z": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.15,
+            "value": -1.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.5,
+            "value": -0.5,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      }
+    },
+    "low_ready_exit_position": {
+      "X": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Y": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": -0.01,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.35,
+            "value": -0.02,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": -0.05,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Z": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      }
+    },
+    "low_ready_exit_rotation": {
+      "X": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 6.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.1,
+            "value": 2.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.5,
+            "value": -1.0,
+            "inTangent": 0.0,
+            "outTangent": 5.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Y": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": -4.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.2,
+            "value": -5.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": -10.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Z": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      }
+    },
+    "left_enter_position": {
+      "X": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.2,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": -0.085,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Y": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.2,
+            "value": -0.04,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.97,
+            "value": -0.01,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Z": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      }
+    },
+    "left_enter_rotation": {
+      "X": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.15,
+            "value": -2.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.5,
+            "value": -2.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.75,
+            "value": -0.75,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.9,
+            "value": 0.5,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Y": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.15,
+            "value": 5.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.25,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.5,
+            "value": -1.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.9,
+            "value": -8.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": -5.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Z": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.15,
+            "value": -1.5,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.5,
+            "value": -1.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.75,
+            "value": -0.5,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.9,
+            "value": -0.25,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      }
+    },
+    "left_exit_position": {
+      "X": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": -0.085,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.2,
+            "value": -0.085,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Y": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.1,
+            "value": -0.02,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.85,
+            "value": -0.02,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.98,
+            "value": -0.01,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Z": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      }
+    },
+    "left_exit_rotation": {
+      "X": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.15,
+            "value": -2.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.5,
+            "value": -2.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.85,
+            "value": -0.75,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.9,
+            "value": -0.5,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Y": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": -5.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.25,
+            "value": 2.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.5,
+            "value": 1.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.9,
+            "value": -1.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Z": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.1,
+            "value": 0.15,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.15,
+            "value": 0.1,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.5,
+            "value": 0.5,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.75,
+            "value": 0.25,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      }
+    },
+    "active_enter_position": {
+      "X": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": -0.037,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Y": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.2,
+            "value": -0.03,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.5,
+            "value": -0.025,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.8,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": -0.01,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Z": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      }
+    },
+    "active_enter_rotation": {
+      "X": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.5,
+            "value": -0.75,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Y": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.9,
+            "value": -22.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": -21.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Z": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.5,
+            "value": -1.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      }
+    },
+    "active_exit_position": {
+      "X": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": -0.037,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Y": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": -0.01,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.1,
+            "value": -0.03,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.8,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.9,
+            "value": 0.005,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Z": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      }
+    },
+    "active_exit_rotation": {
+      "X": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.5,
+            "value": -1.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Y": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": -20.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.95,
+            "value": 2.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Z": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.5,
+            "value": 1.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      }
+    },
+    "short_enter_position": {
+      "X": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Y": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.15,
+            "value": -0.025,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.35,
+            "value": -0.02,
+            "inTangent": 0.0,
+            "outTangent": -0.1
+          },
+          {
+            "time": 0.95,
+            "value": 0.05,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.07,
+            "inTangent": 0.25,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Z": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.25,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.35,
+            "value": -0.01,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": -0.038,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      }
+    },
+    "short_enter_rotation": {
+      "X": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.1,
+            "value": -3.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.25,
+            "value": -2.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": -0.1,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Y": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.15,
+            "value": -3.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.75,
+            "value": -8.0,
+            "inTangent": -0.8,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": -6.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Z": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": -0.5
+          },
+          {
+            "time": 0.1,
+            "value": -0.5,
+            "inTangent": -0.5,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.25,
+            "value": -1.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": -0.15,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      }
+    },
+    "short_exit_position": {
+      "X": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Y": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.07,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.7,
+            "value": -0.03,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Z": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": -0.038,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.6,
+            "value": -0.03,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      }
+    },
+    "short_exit_rotation": {
+      "X": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": -0.1,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.1,
+            "value": -0.4,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.25,
+            "value": -0.8,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.6,
+            "value": -3.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Y": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": -6.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.75,
+            "value": -5.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Z": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": -0.15,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.2,
+            "value": -0.25,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.5,
+            "value": -0.5,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      }
+    },
+    "patrol_enter_position": {
+      "X": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.2,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.01,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Y": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.25,
+            "value": -0.04,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.5,
+            "value": -0.02,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": -0.035,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Z": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.2,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.01,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      }
+    },
+    "patrol_enter_rotation": {
+      "X": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.2,
+            "value": 2.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 8.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Y": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.1,
+            "value": 2.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.25,
+            "value": 1.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.8,
+            "value": -16.5,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": -16.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Z": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.2,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": -18.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      }
+    },
+    "patrol_exit_position": {
+      "X": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.01,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.75,
+            "value": 0.01,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Y": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": -0.035,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.5,
+            "value": -0.035,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Z": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 0.01,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.65,
+            "value": 0.01,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      }
+    },
+    "patrol_exit_rotation": {
+      "X": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": 8.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.45,
+            "value": 4.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Y": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": -16.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.5,
+            "value": -10.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 0.9,
+            "value": 1.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      },
+      "Z": {
+        "keys": [
+          {
+            "time": 0.0,
+            "value": -18.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          },
+          {
+            "time": 1.0,
+            "value": 0.0,
+            "inTangent": 0.0,
+            "outTangent": 0.0
+          }
+        ]
+      }
+    }
+  }
+}

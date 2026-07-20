@@ -1,0 +1,78 @@
+﻿using RealismCommonLib.Utils;
+using StanceOverhaul.Enums;
+using UnityEngine;
+using static RealismCommonLib.Plugin;
+using static StanceOverhaul.Plugin;
+
+namespace StanceOverhaul.Stances;
+
+public class PatrolStance : StanceBase
+{
+    public override EStanceType StanceType => EStanceType.PatrolStance;
+    public override EStaminaMode StaminaMode => EStaminaMode.Regen;
+
+    public override Vector3Curve EnterPositionCurve => _enterPos;
+    public override Vector3Curve EnterRotationCurve => _enterRot;
+
+    public override Vector3Curve ExitPositionCurve => _exitPos;
+    public override Vector3Curve ExitRotationCurve => _exitRot;
+
+    public override float StaminaRate => PluginConfig.PatrolStaminaRate.Value;
+    public override float WalkSpeedBonus => PluginConfig.PatrolWalkSpeedBonus.Value;
+    public override float SprintAccelBonus => PluginConfig.PatrolSprintAccelBonus.Value;
+
+    public override float BlendIntoThreshold(EStanceType nextStance)
+    {
+        switch (nextStance)
+        {
+            case EStanceType.ActiveAiming: return PluginConfig.PatrolBlendThresholdActiveAim.Value;
+            case EStanceType.HighReady: return PluginConfig.PatrolBlendThresholdHighReady.Value;
+            case EStanceType.LowReady: return PluginConfig.PatrolBlendThresholdLowReady.Value;
+            case EStanceType.LeftShoulder: return PluginConfig.PatrolBlendThresholdLeftShoulder.Value;
+            case EStanceType.ShortStock: return PluginConfig.PatrolBlendThresholdShortStock.Value;
+            default: return 0.2f;
+        }
+    }
+
+    public override float TransitionFromModifier(EStanceType? previousStance)
+    {
+        switch (previousStance)
+        {
+            case EStanceType.ActiveAiming: return PluginConfig.PatrolTransitionFromActiveAim.Value;
+            case EStanceType.HighReady: return PluginConfig.PatrolTransitionFromHighReady.Value;
+            case EStanceType.LowReady: return PluginConfig.PatrolTransitionFromLowReady.Value;
+            case EStanceType.LeftShoulder: return PluginConfig.PatrolTransitionFromLeftShoulder.Value;
+            case EStanceType.ShortStock: return PluginConfig.PatrolTransitionFromShortStock.Value;
+            default: return PluginConfig.PatrolTransitionFromIdle.Value;
+        }
+    }
+
+    public override float TransitionToSpeedModifier(EStanceType? nextStance)
+    {
+        switch (nextStance)
+        {
+            case EStanceType.ActiveAiming: return PluginConfig.PatrolTransitionToActiveAim.Value;
+            case EStanceType.HighReady: return PluginConfig.PatrolTransitionToHighReady.Value;
+            case EStanceType.LowReady: return PluginConfig.PatrolTransitionToLowReady.Value;
+            case EStanceType.LeftShoulder: return PluginConfig.PatrolTransitionToLeftShoulder.Value;
+            case EStanceType.ShortStock: return PluginConfig.PatrolTransitionToShortStock.Value;
+            default: return 1f;
+        }
+    }
+
+    private readonly Vector3Curve _enterPos;
+    private readonly Vector3Curve _enterRot;
+
+    private readonly Vector3Curve _exitPos;
+    private readonly Vector3Curve _exitRot;
+
+    public PatrolStance()
+    {
+        _enterPos = RealismCommonLib.Utils.CurveDrawer.GetCurve("patrol_enter_position")!;
+        _enterRot = RealismCommonLib.Utils.CurveDrawer.GetCurve("patrol_enter_rotation")!;
+
+        _exitPos = RealismCommonLib.Utils.CurveDrawer.GetCurve("patrol_exit_position")!;
+        _exitRot = RealismCommonLib.Utils.CurveDrawer.GetCurve("patrol_exit_rotation")!;
+    }
+}
+

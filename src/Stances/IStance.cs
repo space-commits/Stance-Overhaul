@@ -16,7 +16,9 @@ namespace StanceOverhaul.Stances
         public float HipfireBonus { get; }
         public bool CanDoTacSprint { get; }
         public bool RememberStance { get; }
-        public float StanceHitShoulderThreshold  { get; }
+        public float StanceHitShoulderThreshold { get; }
+        public float StanceDampingModifier { get; }
+        public float StanceReturnSpeedModifier { get; }
 
         public abstract Vector3Curve EnterRotationCurve { get; }
         public abstract Vector3Curve EnterPositionCurve { get; }

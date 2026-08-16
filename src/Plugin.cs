@@ -56,6 +56,10 @@ namespace StanceOverhaul
 
             new ShouldMoveWeapCloserPatch().Enable();
 
+            new ComplexRotationsPatch().Enable();
+
+            new InitTransformsPatch().Enable();
+
 
 
             /*            new ShiftWeaponRootPatch().Enable();

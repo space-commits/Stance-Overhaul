@@ -4,11 +4,11 @@ using System.Collections.Generic;
 using System.Text;
 using RealismCommonLib.StateControllers;
 using static RealismCommonLib.Plugin;
-using StanceOverhaul.Handlers;
+using StanceOverhaul.SubSystem;
 
-namespace StanceOverhaul.Handlers.Aiming
+namespace StanceOverhaul.SubSystem.Aiming
 {
-    public class StanceAimHandler : IControllerHelper
+    public class StanceAimHandler : ISubSystem
     {
         private BoolGateHandle _canAim;
         private bool _blockerInterruptedAim;

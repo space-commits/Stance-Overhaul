@@ -2,10 +2,9 @@
 using EFT.Animations;
 using EFT.InputSystem;
 using RealismCommonLib.PatchPipeline;
-using StanceOverhaul.Controllers.StateControllers;
 using StanceOverhaul.Enums;
-using StanceOverhaul.Handlers;
-using StanceOverhaul.Handlers.StanceInput;
+using StanceOverhaul.SubSystem;
+using StanceOverhaul.SubSystem.StanceInput;
 using System;
 using UnityEngine;
 using static EFT.Player;
@@ -14,7 +13,7 @@ using static StanceOverhaul.Plugin;
 
 namespace StanceOverhaul.Controllers.PatchHooks
 {
-    internal class InputHookPipeline: IControllerHelper
+    internal class InputHookPipeline: ISubSystem
     {
         private IDisposable _inputVeto;
         private IDisposable _inputOverride;

@@ -8,7 +8,7 @@ using System.Text;
 using static EFT.Player;
 using UnityEngine;
 
-namespace StanceOverhaul.Handlers
+namespace StanceOverhaul.SubSystem
 {
     internal class AdsAnimator : ISpringAnimator
     {

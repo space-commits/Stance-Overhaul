@@ -1,6 +1,6 @@
 ﻿using RealismCommonLib.StateControllers.InstanceState;
 using StanceOverhaul.Enums;
-using StanceOverhaul.Handlers;
+using StanceOverhaul.SubSystem;
 using StanceOverhaul.Stances;
 using System.Text;
 using UnityEngine;
@@ -32,7 +32,7 @@ namespace StanceOverhaul.State
         }
     }
 
-    internal class StanceState : IControllerHelper
+    internal class StanceState : SubSystem.ISubSystem
     {
         private StanceSlot? _primary;
         private StanceSlot? _incoming;

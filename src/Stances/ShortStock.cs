@@ -55,27 +55,31 @@ public class ShortStock : StanceBase
 
     public override float TransitionFromModifier(EStanceType? previousStance)
     {
+        float speed = PluginConfig.ShortStockSpeedModifier.Value;
         switch (previousStance)
         {
-            case EStanceType.ActiveAiming: return PluginConfig.ShortStockTransitionFromActiveAim.Value;
-            case EStanceType.HighReady: return PluginConfig.ShortStockTransitionFromHighReady.Value;
-            case EStanceType.LowReady: return PluginConfig.ShortStockTransitionFromLowReady.Value;
-            case EStanceType.PatrolStance: return PluginConfig.ShortStockTransitionFromPatrol.Value;
-            case EStanceType.LeftShoulder: return PluginConfig.ShortStockTransitionFromLeftShoulder.Value;
-            default: return PluginConfig.ShortStockTransitionFromIdle.Value;
+            case EStanceType.ActiveAiming: speed *= PluginConfig.ShortStockTransitionFromActiveAim.Value; return speed;
+            case EStanceType.HighReady: speed *= PluginConfig.ShortStockTransitionFromHighReady.Value; return speed;
+            case EStanceType.LowReady: speed *= PluginConfig.ShortStockTransitionFromLowReady.Value; return speed;
+            case EStanceType.PatrolStance: speed *= PluginConfig.ShortStockTransitionFromPatrol.Value; return speed;
+            case EStanceType.LeftShoulder: speed *= PluginConfig.ShortStockTransitionFromLeftShoulder.Value; return speed;
+            case EStanceType.None: speed *= PluginConfig.ShortStockTransitionFromIdle.Value; return speed;
+            default: return speed;
         }
     }
 
     public override float TransitionToSpeedModifier(EStanceType? nextStance)
     {
+        float speed = PluginConfig.ShortStockSpeedModifier.Value;
         switch (nextStance)
         {
-            case EStanceType.ActiveAiming: return PluginConfig.ShortStockTransitionToActiveAim.Value;
-            case EStanceType.HighReady: return PluginConfig.ShortStockTransitionToHighReady.Value;
-            case EStanceType.LowReady: return PluginConfig.ShortStockTransitionToLowReady.Value;
-            case EStanceType.PatrolStance: return PluginConfig.ShortStockTransitionToPatrol.Value;
-            case EStanceType.LeftShoulder: return PluginConfig.ShortStockTransitionToLeftShoulder.Value;
-            default: return 1f;
+            case EStanceType.ActiveAiming: speed *= PluginConfig.ShortStockTransitionToActiveAim.Value; return speed;
+            case EStanceType.HighReady: speed *= PluginConfig.ShortStockTransitionToHighReady.Value; return speed;
+            case EStanceType.LowReady: speed *= PluginConfig.ShortStockTransitionToLowReady.Value; return speed;
+            case EStanceType.PatrolStance: speed *= PluginConfig.ShortStockTransitionToPatrol.Value; return speed;
+            case EStanceType.LeftShoulder: speed *= PluginConfig.ShortStockTransitionToLeftShoulder.Value; return speed;
+            case EStanceType.None: speed *= PluginConfig.ShortStockTransitionToIdle.Value; return speed;
+            default: return speed;
         }
     }
 

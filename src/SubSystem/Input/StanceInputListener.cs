@@ -6,9 +6,9 @@ using UnityEngine;
 using static RealismCommonLib.Plugin;
 using static StanceOverhaul.Plugin;
 
-namespace StanceOverhaul.Handlers.StanceInput
+namespace StanceOverhaul.SubSystem.StanceInput
 {
-    internal class StanceInputListener : IControllerHelper
+    internal class StanceInputListener : ISubSystem
     {
         private bool _activeAimHoldInProgress;
         private bool _meleeIsToggleable = true;

@@ -336,7 +336,6 @@ namespace StanceOverhaul.Patches
 
             if (__instance == PlayerStateInstance.PWA.HandsContainer.HandsRotation)
                 Plugin.StanceControllerInstance.StanceRotationSpring.FixedUpdate(dt, nFixedFrames);
-
         }
     }
 
@@ -411,42 +410,39 @@ namespace StanceOverhaul.Patches
 
     public class ZeroAdjustmentsPatch : ModulePatch
     {
-        private static FieldInfo _blindfireStrengthField;
-        private static FieldInfo _blindfireRotationField;
-        private static PropertyInfo _overlappingBlindfireField;
-        private static FieldInfo _blindfirePositionField;
-        private static FieldInfo _firearmControllerField;
-        private static FieldInfo _playerField;
-        private static FieldInfo _fcField;
-
         private static Vector3 _targetPosition = Vector3.zero;
 
         protected override MethodBase GetTargetMethod()
         {
-            _blindfireStrengthField = AccessTools.Field(typeof(EFT.Animations.ProceduralWeaponAnimation), "_blindfireStrength");
-            _blindfireRotationField = AccessTools.Field(typeof(EFT.Animations.ProceduralWeaponAnimation), "_blindFireRotation");
-            _overlappingBlindfireField = AccessTools.Property(typeof(EFT.Animations.ProceduralWeaponAnimation), "Single_3");
-            _blindfirePositionField = AccessTools.Field(typeof(EFT.Animations.ProceduralWeaponAnimation), "_blindFirePosition");
-            _firearmControllerField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_firearmController");
-            _playerField = AccessTools.Field(typeof(FirearmController), "_player");
-            _fcField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_firearmController");
-
             return AccessTools.Method(typeof(ProceduralWeaponAnimation), nameof(ProceduralWeaponAnimation.ZeroAdjustments));
         }
 
         [PatchPostfix]
         private static void PatchPostfix(ProceduralWeaponAnimation __instance)
         {
-            FirearmController firearmController = (FirearmController)_fcField.GetValue(__instance);
-            if (firearmController == null) return;
-            Player player = (Player)_playerField.GetValue(firearmController);
-            if (player != null && player.IsYourPlayer)
+            if (PlayerStateInstance.PWA == __instance)
             {
                 Plugin.StanceControllerInstance.StancePositionSpring.Zero = Plugin.StanceControllerInstance.StancePosition;
                 Plugin.StanceControllerInstance.StanceRotationSpring.Zero = Plugin.StanceControllerInstance.StanceRotation;
-
             }
+        }
+    }
 
+    public class ComplexRotationsPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+
+            return AccessTools.Method(typeof(ProceduralWeaponAnimation), nameof(ProceduralWeaponAnimation.ApplyComplexRotation));
+        }
+
+        [PatchPostfix]
+        private static void PatchPostfix(ProceduralWeaponAnimation __instance)
+        {
+            if (PlayerStateInstance.PWA == __instance)
+            {
+                PlayerStateInstance.PWA.HandsContainer.WeaponRoot.localPosition = StanceControllerInstance.CurrentOffsetPosition;
+            }
         }
     }
 
@@ -1388,26 +1384,27 @@ namespace StanceOverhaul.Patches
     //Get initial weapon position when initializing PWA
     public class InitTransformsPatch : ModulePatch
     {
-        private static FieldInfo playerField;
-        private static FieldInfo fcField;
+        private static FieldInfo _playerField;
+        private static FieldInfo _fcField;
 
         protected override MethodBase GetTargetMethod()
         {
-            playerField = AccessTools.Field(typeof(EFT.Player.FirearmController), "_player");
-            fcField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_firearmController");
+            _playerField = AccessTools.Field(typeof(EFT.Player.FirearmController), "_player");
+            _fcField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_firearmController");
             return typeof(EFT.Animations.ProceduralWeaponAnimation).GetMethod("InitTransforms", BindingFlags.Instance | BindingFlags.Public);
         }
 
         [PatchPostfix]
         private static void PatchPostfix(EFT.Animations.ProceduralWeaponAnimation __instance)
         {
-            FirearmController firearmController = (FirearmController)fcField.GetValue(__instance);
+            FirearmController firearmController = (FirearmController)_fcField.GetValue(__instance);
             if (firearmController == null) return;
-            Player player = (Player)playerField.GetValue(firearmController);
+            Player player = (Player)_playerField.GetValue(firearmController);
             if (player != null && player.MovementContext.CurrentState.Name != EPlayerState.Stationary && player.IsYourPlayer)
             {
-                Vector3 baseOffset = Plugin.StanceControllerInstance.GetWeaponOffsets().TryGetValue(firearmController.Weapon.TemplateId, out Vector3 offset) ? offset : Vector3.zero;
-                Plugin.StanceControllerInstance.BaseWeaponOffsetPosition = __instance.HandsContainer.WeaponRoot.localPosition + baseOffset;
+                Vector3 baseOffset = Plugin.StanceControllerInstance.GetWeaponOffset(firearmController.Weapon.TemplateId) ?? Vector3.zero;
+
+                StanceControllerInstance.BaseWeaponOffsetPosition = __instance.HandsContainer.WeaponRoot.localPosition + baseOffset;
 
                 //if (!Plugin.FOVFixPresent) __instance.HandsContainer.CameraOffset = new Vector3(0.04f, 0.04f, 0.025f);
             }

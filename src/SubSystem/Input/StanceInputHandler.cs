@@ -5,9 +5,9 @@ using StanceOverhaul.State;
 using static RealismCommonLib.Plugin;
 using static StanceOverhaul.Plugin;
 
-namespace StanceOverhaul.Handlers.StanceInput
+namespace StanceOverhaul.SubSystem.StanceInput
 {
-    internal class StanceInputHandler : IControllerHelper
+    internal class StanceInputHandler : ISubSystem
     {
         private IStance? _storedStance;
         private IStance? _stanceBeforeHold;
@@ -40,8 +40,8 @@ namespace StanceOverhaul.Handlers.StanceInput
         private void SubscribeToEvents()
         {
             PlayerEvents.OnWeaponSwap += OnWeaponSwap;
-            PlayerEvents.OnSwappedFromGunToItem += OnSwappedToItem;
             PlayerEvents.OnSwappedFromItemToGun += OnSwappedBackToGun;
+            PlayerEvents.OnSwappedFromGunToItem += OnSwappedToItem;
             PlayerEvents.AimStateChanged += OnADSToggled;
             PlayerEvents.OnShotFired += OnShotFired;
             StanceInputEvents.TogglePatrolStance += TogglePatrolStance;
@@ -78,6 +78,26 @@ namespace StanceOverhaul.Handlers.StanceInput
 
         private void StanceInputUpdate()
         {
+            UpdatePistolDefaultStance();
+        }
+
+        private void UpdatePistolDefaultStance()
+        {
+            bool conditionsMet =
+                WeaponStateInstance.TreatAsPistol
+                && PlayerStateInstance.WeaponIsReady
+                && !PlayerStateInstance.IsUsingStationaryWeapon
+                && !AimStateInstance.IsAiming
+                && !PlayerStateInstance.IsSprinting
+                && !PlayerStateInstance.IsInventoryOpen;
+
+            bool alreadyActive = _stanceState.ActiveStanceType == EStanceType.PistolCompress;
+
+            if (conditionsMet && _stanceState.IsIdle && !alreadyActive)
+            {
+                ModLogger.LogWarning("Pistol default stance activated");
+                _stanceState.RequestStance(StanceControllerInstance.PistolCompress);
+            }
         }
 
         private void OnWeaponSwap()
@@ -103,11 +123,6 @@ namespace StanceOverhaul.Handlers.StanceInput
             _stanceBeforeItemEquipped = null;
         }
 
-        private void OnAttemptedToFireFromStance()
-        {
-
-        }
-
         private void CancelStances()
         {
             _stanceState.CancelAll();
@@ -117,7 +132,7 @@ namespace StanceOverhaul.Handlers.StanceInput
             _storedStance = null;
         }
 
-        private void OnShotFired()
+        private void AssessStanceOnShotAttempt()
         {
             bool rememberStance = PluginConfig.RememberStanceFiring.Value && AimStateInstance.IsAiming;
             bool isActiveAim = _stanceState.ActiveStanceType == EStanceType.ActiveAiming && !AimStateInstance.IsAiming;
@@ -126,13 +141,22 @@ namespace StanceOverhaul.Handlers.StanceInput
                 || isActiveAim
                 || _stanceState.ActiveStanceType == EStanceType.LeftShoulder
                 || _stanceState.ActiveStanceType == EStanceType.ShortStock
-                || _stanceState.ActiveStanceType == EStanceType.PistolCompressed;
+                || _stanceState.ActiveStanceType == EStanceType.PistolCompress;
 
             if (!keepStance)
             {
-                _stanceState.CancelAll();
-                _storedStance = null;
+                CancelStances();
             }
+        }
+
+        private void OnShotFired()
+        {
+            AssessStanceOnShotAttempt();
+        }
+
+        private void OnAttemptedToFireFromStance()
+        {
+            AssessStanceOnShotAttempt();
         }
 
         private void OnActiveAimKeyDown()
@@ -162,6 +186,12 @@ namespace StanceOverhaul.Handlers.StanceInput
         //maybe stances hould sub to ADS toggle and pause themselves, or handle cancelling themselves
         private void OnADSToggled()
         {
+            if (WeaponStateInstance.TreatAsPistol)
+            {
+                _stanceState.CancelAll();
+                return;
+            }        
+
             if (AimStateInstance.IsAiming && _stanceState.ActiveStance?.StanceType != EStanceType.LeftShoulder)
             {
                 if (_stanceState.ActiveStance != null)
@@ -257,6 +287,11 @@ namespace StanceOverhaul.Handlers.StanceInput
         private void ToggleShortStock()
         {
             ToggleStance(StanceControllerInstance.ShortStock);
+        }
+
+        private void TogglePistolCompress()
+        {
+            ToggleStance(StanceControllerInstance.PistolCompress);
         }
 
         private void ToggleActiveAim()

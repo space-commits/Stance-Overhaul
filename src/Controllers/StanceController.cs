@@ -6,11 +6,10 @@ using RealismCommonLib.Events;
 using RealismCommonLib.ModifierHandlers;
 using RealismCommonLib.Utils;
 using StanceOverhaul.Controllers.PatchHooks;
-using StanceOverhaul.Controllers.StateControllers;
+using StanceOverhaul.SubSystem;
 using StanceOverhaul.Enums;
-using StanceOverhaul.Handlers;
-using StanceOverhaul.Handlers.Aiming;
-using StanceOverhaul.Handlers.StanceInput;
+using StanceOverhaul.SubSystem.Aiming;
+using StanceOverhaul.SubSystem.StanceInput;
 using StanceOverhaul.Stances;
 using StanceOverhaul.State;
 using System;
@@ -58,36 +57,20 @@ namespace StanceOverhaul.Controllers
 
         private EStanceType _targetStance = EStanceType.None;
 
-        public Vector3 MountWeapPosition = Vector3.zero;
-        public Vector3 CurrentVisualRecoil = Vector3.zero;
-        public Vector3 TargetVisualRecoil = Vector3.zero;
-
-        private float _pistolPosSpeed = 1f;
-
-        private float _currentRifleXPos = 0f;
-        private float _currentRifleYPos = 0f;
-        private float _currentRifleZPos = 0f;
-        private float _currentPistolXPos = 0f;
-        private float _currentPistolYPos = 0f;
-        private float _currentPistolZPos = 0f;
-
-        private float _gunCameraAlignmentTargetX = 0f;
-        private float _gunCameraAlignmentTargetY = 0f;
-        private float _gunCameraAlignmentTargetZ = 0f;
-        private float _gunXTarget = 0f;
-        private float _gunYTarget = 0f;
-        private float _gunZTarget = 0f;
-
-        public Vector3 _riflePatrolPos = new Vector3(0.2f, 0.025f, 0.1f);
-        public Vector3 _riflePatrolRot = new Vector3(0.05f, -0.05f, -0.5f);
-        public Vector3 _pistolPatrolPos = new Vector3(0.05f, 0f, 0f);
-        public Vector3 _pistolPatrolRot = new Vector3(0.1f, -0.1f, -0.1f);
-
-        public Vector3 CoverWiggleDirection = Vector3.zero;
+        /// <summary>
+        /// The base offset for weapon root position + weapon-specific base offsets if present. Used as the baseline for weapon offsets.
+        /// </summary>
         public Vector3 BaseWeaponOffsetPosition = Vector3.zero;
-        public Vector3 StanceCurrentPosition = Vector3.zero;
-        private Vector3 _pistolLocalPosition = Vector3.zero;
-        private Vector3 _rifleLocalPosition = Vector3.zero;
+
+        /// <summary>
+        /// Sum total of all offsets not related to stances, including BaseWeaponOffsetPosition
+        /// </summary>
+        public Vector3 CurrentOffsetPosition = Vector3.zero;
+
+        /// <summary>
+        /// Sum total of all offsets not related to stances
+        /// </summary>
+        public Vector3 CurrentOffsetRotation = Vector3.zero;
 
         //TODO move to collision controller
         public bool WasAimingBeforeCollision = false;
@@ -255,14 +238,6 @@ namespace StanceOverhaul.Controllers
                    }
                }*/
 
-        public bool WeaponIsReady
-        {
-            get
-            {
-                return PlayerStateInstance.FirearmController != null;
-            }
-        }
-
         public bool ShouldAllowActiveOnReload
         {
             get
@@ -307,10 +282,18 @@ namespace StanceOverhaul.Controllers
         //TODO: this needs to move to FOV Fix and/or JSON file, or wherever weapon POS will be handled (common lib?)
         //Common lib can have functionality for it, but modules need to apply offsets themeselves
         //Common lib can then surface the starting weapon positions for PID
-        public Dictionary<string, Vector3> GetWeaponOffsets()
+        public Vector3? GetWeaponOffset(string weaponId)
         {
-            return new Dictionary<string, Vector3>{
-            { "5aafa857e5b5b00018480968", new Vector3(0f, 0f, -0.1f)}, //m1a
+            if (_baseWeaponOffsets.TryGetValue(weaponId, out var offset))
+            {
+                return offset;
+            }
+            return null;
+        }
+
+        private Dictionary<string, Vector3> _baseWeaponOffsets = new Dictionary<string, Vector3>
+        {
+            {"5aafa857e5b5b00018480968", new Vector3(0f, 0f, -0.1f)}, //m1a
             { "5b0bbe4e5acfc40dc528a72d", new Vector3(0f, 0f, -0.035f)}, //sa58
             { "676176d362e0497044079f4c", new Vector3(0f, -0.0135f, 0.02f)}, //x17
             { "6183afd850224f204c1da514", new Vector3(0f, -0.0135f, 0.02f)}, //mk17
@@ -323,21 +306,21 @@ namespace StanceOverhaul.Controllers
             { "56dee2bdd2720bc8328b4567", new Vector3(0f, 0f, -0.01f)}, //mp153
             { "606dae0ab0e443224b421bb7", new Vector3(0f, 0f, -0.01f)}, //mp155
             { "6259b864ebedf17603599e88", new Vector3(0f, 0f, -0.02f)}, //M3
-            { "6783ae5bb52da6ed912e3d01", new Vector3(0f, 0f, -0.02f)}, //M3 mechanic
-            };
-        }
+            { "6783ae5bb52da6ed912e3d01", new Vector3(0f, 0f, -0.02f)}, //M3 mechanic           
+        };
 
-        private List<IControllerHelper> _stateControllers = new List<IControllerHelper>();
+        private List<ISubSystem> _stateControllers = new List<ISubSystem>();
         private InputHookPipeline _inputHookPipeline;
         private StanceInputHandler _inputHandler;
         private StanceInputListener _inputListener;
-        private StanceStaminaHandler _staminaHandler;
-        private StanceMovementHandler _movementHandler;
-        private TacSprintHandler _tacSprintHandler;
-        private StatsHandler _statsHandler;
+        private StanceStaminaSystem _staminaHandler;
+        private StanceMovementSystem _movementHandler;
+        private TacSprintSystem _tacSprintHandler;
+        private StatsSystem _statsHandler;
         private StanceAimHandler _aimHandler;
         private StanceState _stanceState;
-        private StanceAudioHandler _stanceAudioHandler;
+        private StanceAudioSystem _stanceAudioHandler;
+        private WeaponOffsetSystem _weaponOffsetHandler;
 
         public Spring StancePositionSpring { get; private set; }
         public Spring StanceRotationSpring { get; private set; }
@@ -349,12 +332,12 @@ namespace StanceOverhaul.Controllers
         public HighReady HighReady { get; private set; }
         public ActiveAim ActiveAim { get; private set; }
         public ShortStock ShortStock { get; private set; }
-
+        public PistolCompress PistolCompress { get; private set; }
         public bool AwakeRan { get; private set; } = false;
 
         public EStanceType CurrentStanceType => _stanceState.ActiveStanceType;
         public IStance? CurrentStance => _stanceState.ActiveStance;
-        public StatsHandler StatsHandlerInstance => _statsHandler;
+        public StatsSystem StatsHandlerInstance => _statsHandler;
         public bool IsDoingTacSprint => _tacSprintHandler.IsDoingTacSprint;
 
         public float StanceHipfireBonus => _stanceState.ActiveStance?.HipfireBonus ?? 1f;
@@ -380,13 +363,6 @@ namespace StanceOverhaul.Controllers
             if (!CanDoUpdate()) return;
 
             RunUpdates(regularTime);
-
-            //TODO: set these outside of update, and based on weapon stats
-            StanceRotationSpring.ReturnSpeed = PluginConfig.GlobalStanceReturnSpeed.Value;
-            StancePositionSpring.ReturnSpeed = PluginConfig.GlobalStanceReturnSpeed.Value;
-
-            StanceRotationSpring.Damping = PluginConfig.GlobalStanceDamping.Value;
-            StancePositionSpring.Damping = PluginConfig.GlobalStanceDamping.Value;
         }
 
         void OnDestroy()
@@ -418,6 +394,9 @@ namespace StanceOverhaul.Controllers
             ShortStock =
                 InitStance(() => new ShortStock());
 
+            PistolCompress =
+                InitStance(() => new PistolCompress());
+
         }
 
         private T InitStance<T>(Func<T> factory) where T : StanceBase
@@ -442,16 +421,16 @@ namespace StanceOverhaul.Controllers
                 InitStateController(() => new InputHookPipeline());
 
             _statsHandler =
-               InitStateController(() => new StatsHandler());
+               InitStateController(() => new StatsSystem());
 
             _staminaHandler =
-                InitStateController(() => new StanceStaminaHandler());
+                InitStateController(() => new StanceStaminaSystem());
 
             _movementHandler =
-                InitStateController(() => new StanceMovementHandler());
+                InitStateController(() => new StanceMovementSystem());
 
             _tacSprintHandler =
-                InitStateController(() => new TacSprintHandler());
+                InitStateController(() => new TacSprintSystem());
 
             _aimHandler =
                 InitStateController(() => new StanceAimHandler());
@@ -463,13 +442,15 @@ namespace StanceOverhaul.Controllers
                 InitStateController(() => new StanceInputListener());
 
             _stanceAudioHandler =
-                InitStateController(() => new StanceAudioHandler());
+                InitStateController(() => new StanceAudioSystem());
 
+            _weaponOffsetHandler =
+                InitStateController(() => new WeaponOffsetSystem());
 
             RunControllerAwake();
         }
 
-        private T InitStateController<T>(Func<T> factory) where T : IControllerHelper
+        private T InitStateController<T>(Func<T> factory) where T : SubSystem.ISubSystem
         {
             var instance = factory();
             _stateControllers.Add(instance);
@@ -478,7 +459,7 @@ namespace StanceOverhaul.Controllers
 
         private void RunControllerAwake()
         {
-            foreach (IControllerHelper controller in _stateControllers)
+            foreach (SubSystem.ISubSystem controller in _stateControllers)
             {
                 controller.RunOnAwake();
             }
@@ -486,7 +467,7 @@ namespace StanceOverhaul.Controllers
 
         private void RunUpdates(float deltaTime)
         {
-            foreach (IControllerHelper controller in _stateControllers)
+            foreach (SubSystem.ISubSystem controller in _stateControllers)
             {
                 controller.RunOnUpdate(deltaTime);
             }
@@ -494,7 +475,7 @@ namespace StanceOverhaul.Controllers
 
         private void RunControllerOnDestroy()
         {
-            foreach (IControllerHelper controller in _stateControllers)
+            foreach (SubSystem.ISubSystem controller in _stateControllers)
             {
                 controller.RunOnDestroy();
             }
@@ -589,15 +570,7 @@ namespace StanceOverhaul.Controllers
         private bool CanDoUpdate()
         {
             Player player = PlayerStateInstance.Player;
-
-            if (player != null &&
-                PlayerStateInstance.FirearmController != null &&
-                GameStateInstance.PlayerIsInRaidOrHideout &&
-                PlayerStateInstance.WeaponIsReady)
-            {
-                return true;
-            }
-            return false;
+            return player != null && GameStateInstance.PlayerIsInRaidOrHideout;
         }
 
         //TODO: replace with event to trigger stances to cancel

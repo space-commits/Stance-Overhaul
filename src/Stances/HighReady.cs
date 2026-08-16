@@ -23,6 +23,26 @@ public class HighReady : StanceBase
     public override bool CanDoTacSprint => true;
     public override bool RememberStance => true;
 
+    public override AnimationCurve ExitAimSpeedCurve { get; } = new AnimationCurve
+        (
+            new Keyframe { time = 0f, value = 0f },
+            new Keyframe { time = 0.15f, value = 0.0f },
+            new Keyframe { time = 0.25f, value = 0.05f },
+            new Keyframe { time = 0.5f, value = 0.15f },
+            new Keyframe { time = 0.85f, value = 0.5f },
+            new Keyframe { time = 1f, value = 1f }
+        );
+
+    public override AnimationCurve EnterAimSpeedCurve { get; } = new AnimationCurve
+        (
+            new Keyframe { time = 0f, value = 0f },
+            new Keyframe { time = 0.15f, value = 0.0f },
+            new Keyframe { time = 0.25f, value = 0.05f },
+            new Keyframe { time = 0.5f, value = 0.15f },
+            new Keyframe { time = 0.85f, value = 0.5f },
+            new Keyframe { time = 1f, value = 1f }
+        );
+
     public override float BlendIntoThreshold(EStanceType nextStance)
     {
         switch (nextStance)
@@ -38,27 +58,31 @@ public class HighReady : StanceBase
 
     public override float TransitionFromModifier(EStanceType? previousStance)
     {
+        float speed = PluginConfig.HighReadySpeedModifier.Value;
         switch (previousStance)
         {
-            case EStanceType.ActiveAiming: return PluginConfig.HighReadyTransitionFromActiveAim.Value;
-            case EStanceType.LowReady: return PluginConfig.HighReadyTransitionFromLowReady.Value;
-            case EStanceType.LeftShoulder: return PluginConfig.HighReadyTransitionFromLeftShoulder.Value;
-            case EStanceType.PatrolStance: return PluginConfig.HighReadyTransitionFromPatrol.Value;
-            case EStanceType.ShortStock: return PluginConfig.HighReadyTransitionFromShortStock.Value;
-            default: return PluginConfig.HighReadyTransitionFromIdle.Value;
+            case EStanceType.ActiveAiming: speed *= PluginConfig.HighReadyTransitionFromActiveAim.Value; return speed;
+            case EStanceType.LowReady: speed *= PluginConfig.HighReadyTransitionFromLowReady.Value; return speed;
+            case EStanceType.LeftShoulder: speed *= PluginConfig.HighReadyTransitionFromLeftShoulder.Value; return speed;
+            case EStanceType.PatrolStance: speed *= PluginConfig.HighReadyTransitionFromPatrol.Value; return speed;
+            case EStanceType.ShortStock: speed *= PluginConfig.HighReadyTransitionFromShortStock.Value; return speed;
+            case EStanceType.None: speed *= PluginConfig.HighReadyTransitionFromIdle.Value; return speed;
+            default: return speed;
         }
     }
 
     public override float TransitionToSpeedModifier(EStanceType? nextStance)
     {
+        float speed = PluginConfig.HighReadySpeedModifier.Value;
         switch (nextStance)
         {
-            case EStanceType.ActiveAiming: return PluginConfig.HighReadyTransitionToActiveAim.Value;
-            case EStanceType.LowReady: return PluginConfig.HighReadyTransitionToLowReady.Value;
-            case EStanceType.LeftShoulder: return PluginConfig.HighReadyTransitionToLeftShoulder.Value;
-            case EStanceType.PatrolStance: return PluginConfig.HighReadyTransitionToPatrol.Value;
-            case EStanceType.ShortStock: return PluginConfig.HighReadyTransitionToShortStock.Value;
-            default: return 1f;
+            case EStanceType.ActiveAiming: speed *= PluginConfig.HighReadyTransitionToActiveAim.Value; return speed;
+            case EStanceType.LowReady: speed *= PluginConfig.HighReadyTransitionToLowReady.Value; return speed;
+            case EStanceType.LeftShoulder: speed *= PluginConfig.HighReadyTransitionToLeftShoulder.Value; return speed;
+            case EStanceType.PatrolStance: speed *= PluginConfig.HighReadyTransitionToPatrol.Value; return speed;
+            case EStanceType.ShortStock: speed *= PluginConfig.HighReadyTransitionToShortStock.Value; return speed;
+            case EStanceType.None: speed *= PluginConfig.HighReadyTransitionToIdle.Value; return speed;
+            default: return speed;
         }
     }
 

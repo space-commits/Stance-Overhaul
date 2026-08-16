@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace StanceOverhaul.Handlers.Aiming
+namespace StanceOverhaul.SubSystem.Aiming
 {
     internal class AimPIDHandler
     {

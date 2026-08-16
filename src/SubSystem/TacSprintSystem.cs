@@ -1,16 +1,13 @@
 ﻿
-using StanceOverhaul.Handlers;
-using StanceOverhaul.Enums;
-using UnityEngine;
 using EFT;
 using StanceOverhaul.Events;
 using StanceOverhaul.Stances;
 using static RealismCommonLib.Plugin;
 using static StanceOverhaul.Plugin;
 
-namespace StanceOverhaul.Controllers.StateControllers
+namespace StanceOverhaul.SubSystem
 {
-    public class TacSprintHandler : IControllerHelper
+    public class TacSprintSystem : ISubSystem
     {
         public const float TAC_SPRINT_WEIGHT_LIMIT = 5.1f;
         public const float TAC_SPRINT_WEIGHT_BULLPUP = 5.75f;
@@ -53,6 +50,7 @@ namespace StanceOverhaul.Controllers.StateControllers
         private bool CanDoTacSprint(IStance? stance = null)
         {
             return PluginConfig.EnableTacSprint.Value
+                     && PlayerStateInstance.WeaponIsReady
                      && (stance?.CanDoTacSprint ?? false)
                      && WeaponMeetsCriteria
                      && !HealthConditionPreventsTacSprint;

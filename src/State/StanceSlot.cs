@@ -2,6 +2,7 @@
 using StanceOverhaul.Stances;
 using UnityEngine;
 using StanceOverhaul.Events;
+using static RealismCommonLib.Plugin;
 using static StanceOverhaul.Plugin;
 
 namespace StanceOverhaul.State;
@@ -88,13 +89,15 @@ internal class StanceSlot
                     Stance.TransitionToSpeedModifier(Transition.To) *
                     PluginConfig.GlobalStanceSpeed.Value;
 
+        speed = Mathf.Clamp(StanceControllerInstance.StatsHandlerInstance.GetStanceSpeedModifier(speed), 1f, speed);
+
         PreviousProgress = Progress;
 
         Progress = Mathf.Clamp01(
             Progress +
             Direction *
             deltaTime *
-            StanceControllerInstance.StatsHandlerInstance.GetStanceSpeedModifier(speed));
+            speed);
 
         if (PreviousProgress < Stance.StanceHitShoulderThreshold && Progress >= Stance.StanceHitShoulderThreshold)
         {
@@ -104,5 +107,12 @@ internal class StanceSlot
         // reached pose end -> enter holding
         if (IsAtPose)
             Direction = 0;
+
+        // TODO: put in a better place
+        StanceControllerInstance.StanceRotationSpring.ReturnSpeed = StanceControllerInstance.StatsHandlerInstance.GetSpringReturnSpeed(Stance.StanceReturnSpeedModifier);
+        StanceControllerInstance.StancePositionSpring.ReturnSpeed = StanceControllerInstance.StatsHandlerInstance.GetSpringReturnSpeed(Stance.StanceReturnSpeedModifier);
+
+        StanceControllerInstance.StanceRotationSpring.Damping = StanceControllerInstance.StatsHandlerInstance.GetSpringDamping(Stance.StanceDampingModifier);
+        StanceControllerInstance.StancePositionSpring.Damping = StanceControllerInstance.StatsHandlerInstance.GetSpringDamping(Stance.StanceDampingModifier);
     }
 }

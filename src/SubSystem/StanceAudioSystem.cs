@@ -1,9 +1,9 @@
 using StanceOverhaul.Events;
 using static RealismCommonLib.Plugin;
 
-namespace StanceOverhaul.Handlers;
+namespace StanceOverhaul.SubSystem;
 
-public class StanceAudioHandler : IControllerHelper
+public class StanceAudioSystem : ISubSystem
 {
       public void RunOnAwake()
         {

@@ -5,11 +5,11 @@ using Comfort.Common;
 using static RealismCommonLib.Plugin;
 using static StanceOverhaul.Plugin;
 
-namespace StanceOverhaul.Handlers
+namespace StanceOverhaul.SubSystem
 {
 
     //TODO weapon stats should affect this
-    internal class StanceMovementHandler : IControllerHelper
+    internal class StanceMovementSystem : ISubSystem
     {
         private FloatMultiplierHandle _walkSpeed;
         private FloatMultiplierHandle _sprintSpeed;

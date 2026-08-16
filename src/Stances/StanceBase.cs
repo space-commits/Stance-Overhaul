@@ -1,6 +1,6 @@
 ﻿using RealismCommonLib.Events;
 using RealismCommonLib.Utils;
-using StanceOverhaul.Controllers.StateControllers;
+using StanceOverhaul.SubSystem;
 using StanceOverhaul.Enums;
 using StanceOverhaul.Events;
 using System;
@@ -20,6 +20,8 @@ namespace StanceOverhaul.Stances
         public virtual bool CanDoTacSprint => false;
         public virtual bool RememberStance => false;
         public virtual float StanceHitShoulderThreshold => 0.1f;
+        public virtual float StanceDampingModifier => 1f;
+        public virtual float StanceReturnSpeedModifier => 1f;
 
         public abstract Vector3Curve EnterPositionCurve { get; }
         public abstract Vector3Curve EnterRotationCurve { get; }

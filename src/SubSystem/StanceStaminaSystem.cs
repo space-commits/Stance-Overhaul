@@ -5,9 +5,9 @@ using UnityEngine;
 using static RealismCommonLib.Plugin;
 using static StanceOverhaul.Plugin;
 
-namespace StanceOverhaul.Handlers;
+namespace StanceOverhaul.SubSystem;
 
-public class StanceStaminaHandler : IControllerHelper
+public class StanceStaminaSystem : ISubSystem
 {
     private const float BaseIdleDrainRate = 0.1f;
 

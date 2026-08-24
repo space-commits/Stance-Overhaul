@@ -131,8 +131,6 @@ public class StatsSystem : ISubSystem
 
         var damping = (springProfile.BaseDamping - springProfile.DampingReductionRange * lightnessFactor * stanceDampingModifier) * PluginConfig.StanceDampingModifier.Value;
 
-        ModLogger.LogWarning($"Damping: {damping}, Base: {springProfile.BaseDamping}, ReductionRange: {springProfile.DampingReductionRange}, LightnessFactor: {lightnessFactor}, StanceDampingModifier: {stanceDampingModifier}, GlobalStanceDampingModifier: {PluginConfig.StanceDampingModifier.Value}");
-
         return Mathf.Clamp(damping, AbsoluteMinDamping, AbsoluteMaxDamping);
     }
 
@@ -143,8 +141,6 @@ public class StatsSystem : ISubSystem
         var lightnessFactor = GetLightnessFactor(exponent);
 
         var returnSpeed = (springProfile.BaseReturnSpeed + springProfile.ReturnSpeedIncreaseRange * lightnessFactor * stanceReturnSpeedModifier) * PluginConfig.StanceReturnSpeedModifier.Value;
-
-        ModLogger.LogWarning($"ReturnSpeed: {returnSpeed}, Base: {springProfile.BaseReturnSpeed}, IncreaseRange: {springProfile.ReturnSpeedIncreaseRange}, LightnessFactor: {lightnessFactor}, StanceReturnSpeedModifier: {stanceReturnSpeedModifier}, GlobalStanceReturnSpeedModifier: {PluginConfig.StanceReturnSpeedModifier.Value}");
 
         return Mathf.Clamp(returnSpeed, AbsoluteMinReturnSpeed, AbsoluteMaxReturnSpeed);
     }

@@ -430,16 +430,23 @@ namespace StanceOverhaul.Patches
 
     public class ComplexRotationsPatch : ModulePatch
     {
+        private static FieldInfo _playerField;
+        private static FieldInfo _fcField;
+
         protected override MethodBase GetTargetMethod()
         {
-
+            _playerField = AccessTools.Field(typeof(FirearmController), "_player");
+            _fcField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_firearmController");
             return AccessTools.Method(typeof(ProceduralWeaponAnimation), nameof(ProceduralWeaponAnimation.ApplyComplexRotation));
         }
 
         [PatchPostfix]
         private static void PatchPostfix(ProceduralWeaponAnimation __instance)
         {
-            if (PlayerStateInstance.PWA == __instance)
+            FirearmController firearmController = (FirearmController)_fcField.GetValue(__instance);
+            if (firearmController == null) return;
+            Player player = (Player)_playerField.GetValue(firearmController);
+            if (player != null && player.IsYourPlayer)
             {
                 PlayerStateInstance.PWA.HandsContainer.WeaponRoot.localPosition = StanceControllerInstance.CurrentOffsetPosition;
             }

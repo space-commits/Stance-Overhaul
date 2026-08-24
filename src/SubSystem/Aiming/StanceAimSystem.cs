@@ -8,7 +8,7 @@ using StanceOverhaul.SubSystem;
 
 namespace StanceOverhaul.SubSystem.Aiming
 {
-    public class StanceAimHandler : ISubSystem
+    public class StanceAimSystem : ISubSystem
     {
         private BoolGateHandle _canAim;
         private bool _blockerInterruptedAim;
@@ -33,7 +33,6 @@ namespace StanceOverhaul.SubSystem.Aiming
 
         public void RunOnUpdate(float deltaTime)
         {
-            //CheckForAimBlockers();
         }
 
         //TODO: make event-based on aim
@@ -55,8 +54,6 @@ namespace StanceOverhaul.SubSystem.Aiming
 
             bool blocked = nvgBlocksAds || faceshieldBlocksADS || thermalBlocksAds;
             _canAim.Allowed = !blocked;
-
-            //ModLogger.LogWarning($"CheckForAimBlockers: NVG={nvgBlocksAds}, Thermal={thermalBlocksAds}, FaceShield={faceshieldBlocksADS}, Blocked={blocked}");
 
             if (blocked)
             {

@@ -9,7 +9,7 @@ namespace StanceOverhaul.Stances
     public interface IStance
     {
         public EStanceType StanceType { get; }
-        public EStaminaMode StaminaMode { get; }
+        public EStanceStaminaType StaminaMode { get; }
         public float StaminaRate { get; }
         public float WalkSpeedBonus { get; }
         public float SprintAccelBonus { get; }
@@ -19,6 +19,13 @@ namespace StanceOverhaul.Stances
         public float StanceHitShoulderThreshold { get; }
         public float StanceDampingModifier { get; }
         public float StanceReturnSpeedModifier { get; }
+        public float MagazineReloadSpeedModifier { get; }
+        public float TubeReloadSpeedModifier { get; }
+        public float TopReloadSpeedModifier { get; }
+        public float RevolverReloadSpeedModifier { get; }
+        public float WeaponManipSpeedModifier { get; }
+        public float PumpBoltSpeedModifier { get; }
+        public EStanceReloadType[] ReloadTypesThatPauseStance { get; }
 
         public abstract Vector3Curve EnterRotationCurve { get; }
         public abstract Vector3Curve EnterPositionCurve { get; }

@@ -9,7 +9,7 @@ namespace StanceOverhaul.Stances;
 public class ShortStock : StanceBase
 {
     public override EStanceType StanceType => EStanceType.ShortStock;
-    public override EStaminaMode StaminaMode => EStaminaMode.Regen;
+    public override EStanceStaminaType StaminaMode => EStanceStaminaType.Regen;
 
     public override Vector3Curve EnterPositionCurve => _enterPos;
     public override Vector3Curve EnterRotationCurve => _enterRot;
@@ -22,6 +22,23 @@ public class ShortStock : StanceBase
     public override float SprintAccelBonus => PluginConfig.ShortStockSprintAccelBonus.Value;
     public override float HipfireBonus => PluginConfig.ShortStockHipfireBonus.Value;
     public override bool RememberStance => true;
+    public override float PumpBoltSpeedModifier => PluginConfig.ShortStockPumpBoltSpeedModifier.Value;
+
+    public override EStanceReloadType[] ReloadTypesThatPauseStance => new EStanceReloadType[]
+    {
+        EStanceReloadType.Magazine,
+        EStanceReloadType.QuickReload,
+        EStanceReloadType.Tube,
+        EStanceReloadType.Top,
+        EStanceReloadType.Revolver,
+        EStanceReloadType.CheckAmmo,
+        EStanceReloadType.CheckChamber,
+        EStanceReloadType.Rechamber,
+        EStanceReloadType.ClearMalfunction,
+        EStanceReloadType.InsertMagazine,
+        EStanceReloadType.RemoveMagazine
+    };
+
     public override AnimationCurve ExitAimSpeedCurve { get; } = new AnimationCurve
             (
                 new Keyframe { time = 0f, value = 0f },

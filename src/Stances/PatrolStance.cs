@@ -9,7 +9,7 @@ namespace StanceOverhaul.Stances;
 public class PatrolStance : StanceBase
 {
     public override EStanceType StanceType => EStanceType.PatrolStance;
-    public override EStaminaMode StaminaMode => EStaminaMode.Regen;
+    public override EStanceStaminaType StaminaMode => EStanceStaminaType.Regen;
 
     public override Vector3Curve EnterPositionCurve => _enterPos;
     public override Vector3Curve EnterRotationCurve => _enterRot;
@@ -20,6 +20,22 @@ public class PatrolStance : StanceBase
     public override float StaminaRate => PluginConfig.PatrolStaminaRate.Value;
     public override float WalkSpeedBonus => PluginConfig.PatrolWalkSpeedBonus.Value;
     public override float SprintAccelBonus => PluginConfig.PatrolSprintAccelBonus.Value;
+
+    public override EStanceReloadType[] ReloadTypesThatPauseStance => new EStanceReloadType[]
+    {
+        EStanceReloadType.Magazine,
+        EStanceReloadType.QuickReload,
+        EStanceReloadType.Tube,
+        EStanceReloadType.Top,
+        EStanceReloadType.Revolver,
+        EStanceReloadType.PumpBolt,
+        EStanceReloadType.CheckAmmo,
+        EStanceReloadType.CheckChamber,
+        EStanceReloadType.Rechamber,
+        EStanceReloadType.ClearMalfunction,
+        EStanceReloadType.InsertMagazine,
+        EStanceReloadType.RemoveMagazine
+    };
 
     public override float BlendIntoThreshold(EStanceType nextStance)
     {

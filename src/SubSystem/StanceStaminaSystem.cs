@@ -2,20 +2,148 @@
 using StanceOverhaul.Events;
 using StanceOverhaul.Stances;
 using UnityEngine;
+using EFT;
+using System;
 using static RealismCommonLib.Plugin;
 using static StanceOverhaul.Plugin;
 
 namespace StanceOverhaul.SubSystem;
 
+
 public class StanceStaminaSystem : ISubSystem
 {
+    private const float BaseMinimumArmStamina = 10f;
     private const float BaseIdleDrainRate = 0.1f;
+    private const float TacSprintDrainRate = 0.5f;
 
     // Positive = regen pts/sec, negative = drain pts/sec, 0 = do nothing.
-    private float _rate = 0f;
+    private float _stanceRate = 0f;
 
-    // When true, write DisableRestoration each frame to suppress SelfRestoration.
-    private bool _freeze = false;
+    private float _aimDrainRate = 0f;
+
+    private EStanceStaminaType _stanceStaminaMode = EStanceStaminaType.Neutral;
+
+    public float CurrentStanceStaminaDrainRate
+    {
+        get
+        {
+            return _stanceRate;
+        }
+    }
+
+    public bool RestoreStamina
+    {
+        get
+        {
+            return (_stanceStaminaMode == EStanceStaminaType.Regen || ExternalStateThatAllowsRegen) && !IsInExternalStateThatPausesRestoration && !ExternalStateThatDrainsStam;
+        }
+    }
+
+    public bool DrainStamina
+    {
+        get
+        {
+            bool stanceCanDrain = _stanceStaminaMode == EStanceStaminaType.Drain && !IsInExternalStateThatPausesRestoration && !RestoreStamina;
+            return stanceCanDrain || ExternalStateThatDrainsStam;
+        }
+    }
+
+    public bool DisableStaminaRestoration
+    {
+        get
+        {
+            return (_stanceStaminaMode == EStanceStaminaType.Freeze || DrainStamina || IsInExternalStateThatPausesRestoration) && !ExternalStateThatAllowsRegen;
+        }
+    }
+
+
+    //TODO: factor by strength and endurance skills
+    public float StaminaRegenRate
+    {
+        get
+        {
+            return ExternalStateThatAllowsRegen ? BaseGameStaminaRegenRate() : _stanceRate;
+        }
+    }
+
+    //TODO: factor by strength and endurance skills
+    public float StaminaDrainRate
+    {
+        get
+        {
+            return ExternalStateThatDrainsStam ? GetExternalStaminaDrainRate() : _stanceRate;
+        }
+    }
+
+    //TODO: factor by strength and endurance skills
+    public float StanceMinArmStamina
+    {
+        get
+        {
+            bool isDoingStanceDrain = _stanceStaminaMode == EStanceStaminaType.Drain && _stanceRate != 0f && !ExternalStateThatDrainsStam;
+            return isDoingStanceDrain ? BaseMinimumArmStamina : 0f;
+        }
+    }
+
+    public bool ExternalStateThatAllowsRegen
+    {
+        get
+        {
+            return !PlayerStateInstance.WeaponIsReady || PlayerStateInstance.IsInInventory || PlayerStateInstance.IsUsingStationaryWeapon || PlayerStateInstance.IsMounting || PlayerStateInstance.Player.IsInPronePose;
+        }
+    }
+
+    public bool ExternalStateThatDrainsStam
+    {
+        get
+        {
+            return StanceControllerInstance.IsDoingTacSprint || PlayerStateInstance.Player.Physical.HoldingBreath || PlayerStateInstance.Player.ProceduralWeaponAnimation.IsAiming;
+        }
+    }
+
+    public bool IsInExternalStateThatPausesRestoration
+    {
+        get
+        {
+            var doingRegularSprint = PlayerStateInstance.IsSprinting && !StanceControllerInstance.IsDoingTacSprint;
+            return doingRegularSprint || FiringStateInstance.IsFiring || ExternalStatePausesStanceDrain;
+        }
+    }
+
+    public bool ExternalStatePausesStanceDrain
+    {
+        get
+        {
+            return StanceControllerInstance.CurrentStanceType == EStanceType.ActiveAiming && PlayerStateInstance.Player.Pose == EPlayerPose.Duck;
+        }
+    }
+
+    public float GetExternalStaminaDrainRate()
+    {
+        if (StanceControllerInstance.IsDoingTacSprint)
+            return -ComputeDrainRate(TacSprintDrainRate * PluginConfig.IdleStamDrainModi.Value);
+        if (PlayerStateInstance.Player.Physical.HoldingBreath || PlayerStateInstance.Player.ProceduralWeaponAnimation.IsAiming)
+            return -ComputeDrainRate(BaseIdleDrainRate * PluginConfig.IdleStamDrainModi.Value);
+        return 0f;
+    }
+
+    public float BaseGameStaminaRegenRate()
+    {
+        //patrol should be the best regen stance, use it as a baseline
+        var standardRate = StanceControllerInstance.StatsHandlerInstance.GetRegenerationRate(PluginConfig.PatrolStaminaRate.Value * 0.85f);
+        var noWeapon = PluginConfig.PatrolStaminaRate.Value * 1.15f;
+
+        var weaponCounts = PlayerStateInstance.IsInInventory;
+        var weaponDoesNotCount = PlayerStateInstance.IsUsingStationaryWeapon || !PlayerStateInstance.WeaponIsReady || PlayerStateInstance.IsMounting;
+
+        if (weaponCounts)
+            return standardRate;
+        else if (weaponDoesNotCount)
+            return noWeapon;
+
+        return 0f;
+    }
+
 
     public void RunOnAwake()
     {
@@ -38,20 +166,23 @@ public class StanceStaminaSystem : ISubSystem
         if (!PluginConfig.EnableStanceStamChanges.Value) return;
 
         var physical = PlayerStateInstance.Player?.Physical;
-        if (physical == null) return;
+        if (physical == null || _stanceStaminaMode == EStanceStaminaType.Neutral) return;
 
-        if (_rate > 0f)
+        if (RestoreStamina)
         {
-            physical.HandsStamina.Current = Mathf.Min(physical.HandsStamina.Current + _rate * deltaTime, physical.HandsStamina.TotalCapacity);
+            //ModLogger.LogWarning($"RestoreStamina: stance={StanceControllerInstance?.CurrentStance?.StanceType}, staminaMode={_stanceStaminaMode}, staminaRate={_stanceRate}, regenRate={StaminaRegenRate}");
+            physical.HandsStamina.Current = Mathf.Min(physical.HandsStamina.Current + StaminaRegenRate * deltaTime, physical.HandsStamina.TotalCapacity);
         }
-        else if (_rate < 0f)
+        else if (DrainStamina)
         {
-            physical.HandsStamina.Current = Mathf.Max(physical.HandsStamina.Current + _rate * deltaTime, 0f);
+            //ModLogger.LogWarning($"DrainStamina: stance={StanceControllerInstance?.CurrentStance?.StanceType}, staminaMode={_stanceStaminaMode}, staminaRate={_stanceRate}, drainRate={StaminaDrainRate}");
+            if (physical.HandsStamina.Current > StanceMinArmStamina)
+                physical.HandsStamina.Current = physical.HandsStamina.Current + StaminaDrainRate * deltaTime;
         }
 
-        if (_freeze)
+        if (DisableStaminaRestoration)
         {
-            // Perpetually gate SelfRestoration without touching drain consumptions.
+            //ModLogger.LogWarning($"DisableStaminaRestoration: stance={StanceControllerInstance?.CurrentStance?.StanceType}, staminaMode={_stanceStaminaMode}, staminaRate={_stanceRate}");
             physical.HandsStamina.DisableRestoration = Time.time + 1f;
         }
     }
@@ -65,27 +196,27 @@ public class StanceStaminaSystem : ISubSystem
     {
         switch (stance?.StaminaMode)
         {
-            case EStaminaMode.Regen:
-                _rate = ComputeRegenRate(stance.StaminaRate);
-                _freeze = false;
+            case EStanceStaminaType.Regen:
+                _stanceRate = ComputeRegenRate(stance.StaminaRate);
+                _stanceStaminaMode = EStanceStaminaType.Regen;
                 break;
 
-            case EStaminaMode.Drain:
-                _rate = -ComputeDrainRate(stance.StaminaRate);
-                _freeze = true;
+            case EStanceStaminaType.Drain:
+                _stanceRate = -ComputeDrainRate(stance.StaminaRate);
+                _stanceStaminaMode = EStanceStaminaType.Drain;
                 break;
 
-            case EStaminaMode.Freeze:
-                _rate = 0f;
-                _freeze = true;
+            case EStanceStaminaType.Freeze:
+                _stanceRate = 0f;
+                _stanceStaminaMode = EStanceStaminaType.Freeze;
                 break;
             default: // Neutral
-                _rate = PluginConfig.EnableIdleStamDrain.Value ? -ComputeDrainRateIdle() : 0f;
-                _freeze = PluginConfig.EnableIdleStamDrain.Value ? true : false;
+                _stanceRate = PluginConfig.EnableIdleStamDrain.Value ? -ComputeDrainRateIdle() : 0f;
+                _stanceStaminaMode = PluginConfig.EnableIdleStamDrain.Value ? EStanceStaminaType.Drain : EStanceStaminaType.Neutral;
                 break;
         }
 
-        //ModLogger.LogWarning($"CheckState: stance={stance?.StanceType}, staminaMode={stance?.StaminaMode}, staminaRate={stance?.StaminaRate}, rate={_rate}, freeze={_freeze}");
+        ModLogger.LogWarning($"CheckState: stance={stance?.StanceType}, staminaMode={stance?.StaminaMode}, staminaRate={stance?.StaminaRate}, rate={_stanceRate}, staminaMode={_stanceStaminaMode}");
     }
 
     private float ComputeRegenRate(float baseRate)

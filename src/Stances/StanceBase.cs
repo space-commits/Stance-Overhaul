@@ -12,7 +12,7 @@ namespace StanceOverhaul.Stances
     public abstract class StanceBase : IStance, IDisposable
     {
         public virtual EStanceType StanceType => EStanceType.None;
-        public virtual EStaminaMode StaminaMode => EStaminaMode.Neutral;
+        public virtual EStanceStaminaType StaminaMode => EStanceStaminaType.Neutral;
         public virtual float StaminaRate => 0f;
         public virtual float WalkSpeedBonus => 1f;
         public virtual float SprintAccelBonus => 1f;
@@ -22,6 +22,13 @@ namespace StanceOverhaul.Stances
         public virtual float StanceHitShoulderThreshold => 0.1f;
         public virtual float StanceDampingModifier => 1f;
         public virtual float StanceReturnSpeedModifier => 1f;
+        public virtual float MagazineReloadSpeedModifier => 1f;
+        public virtual float TubeReloadSpeedModifier => 1f;
+        public virtual float TopReloadSpeedModifier => 1f;
+        public virtual float WeaponManipSpeedModifier => 1f;
+        public virtual float RevolverReloadSpeedModifier => 1f;
+        public virtual float PumpBoltSpeedModifier => 1f;
+        public virtual EStanceReloadType[] ReloadTypesThatPauseStance => new EStanceReloadType[0];
 
         public abstract Vector3Curve EnterPositionCurve { get; }
         public abstract Vector3Curve EnterRotationCurve { get; }

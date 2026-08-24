@@ -19,7 +19,22 @@ public class LeftShoulder : StanceBase
     public override float StaminaRate => PluginConfig.LeftShoulderStaminaRate.Value;
     public override float WalkSpeedBonus => PluginConfig.LeftShoulderWalkSpeedBonus.Value;
     public override float SprintAccelBonus => PluginConfig.LeftShoulderSprintAccelBonus.Value;
-     public override float HipfireBonus => PluginConfig.LeftShoulderHipfireBonus.Value;
+    public override float HipfireBonus => PluginConfig.LeftShoulderHipfireBonus.Value;
+
+    public override EStanceReloadType[] ReloadTypesThatPauseStance => new EStanceReloadType[]
+    {
+        EStanceReloadType.Magazine,
+        EStanceReloadType.QuickReload,
+        EStanceReloadType.Tube,
+        EStanceReloadType.Top,
+        EStanceReloadType.Revolver,
+        EStanceReloadType.CheckAmmo,
+        EStanceReloadType.CheckChamber,
+        EStanceReloadType.Rechamber,
+        EStanceReloadType.ClearMalfunction,
+        EStanceReloadType.InsertMagazine,
+        EStanceReloadType.RemoveMagazine
+    };
 
     public override float BlendIntoThreshold(EStanceType nextStance)
     {

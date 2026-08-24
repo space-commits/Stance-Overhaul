@@ -9,7 +9,7 @@ namespace StanceOverhaul.Stances;
 public class PistolCompress : StanceBase
 {
     public override EStanceType StanceType => EStanceType.PistolCompress;
-    public override EStaminaMode StaminaMode => EStaminaMode.Regen;
+    public override EStanceStaminaType StaminaMode => EStanceStaminaType.Regen;
 
     public override Vector3Curve EnterPositionCurve => _enterPos;
     public override Vector3Curve EnterRotationCurve => _enterRot;
@@ -22,6 +22,9 @@ public class PistolCompress : StanceBase
     public override float SprintAccelBonus => PluginConfig.PistolSprintAccelBonus.Value;
     public override float HipfireBonus => PluginConfig.PistolHipfireBonus.Value;
     public override bool RememberStance => true;
+    public override float MagazineReloadSpeedModifier => PluginConfig.PistolMagazineReloadSpeedModifier.Value;
+    public override float WeaponManipSpeedModifier => PluginConfig.PistolWeaponManipSpeedModifier.Value;
+    public override float RevolverReloadSpeedModifier => PluginConfig.PistolRevolverReloadSpeedModifier.Value;
 
     public override AnimationCurve ExitAimSpeedCurve { get; } = new AnimationCurve
             (

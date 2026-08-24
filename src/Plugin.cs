@@ -9,21 +9,25 @@ using static RealismCommonLib.Plugin;
 namespace StanceOverhaul
 {
     [BepInDependency(RealismCommonLib.Plugin.MOD_GUID)]
-    [BepInPlugin("com.fontaine.stanceoverhaul", "Fontaine-StanceOverhaul", "1.0.0")]
+    [BepInPlugin(MOD_GUID, MOD_NAME, MOD_VERSION)]
     public class Plugin : BaseUnityPlugin
     {
         public static StanceController StanceControllerInstance;
+
+        public const string MOD_GUID = "com.fontaine.stanceoverhaul";
+        public const string MOD_NAME = "Fontaine-StanceOverhaul";
+        public const string MOD_VERSION = "0.0.1";
 
         void Awake()
         {
             PluginConfig.InitConfigBindings(Config);
 
-            SubscribeToEvents(); 
+            SubscribeToEvents();
 
             EnablePatches();
         }
 
-        void EnablePatches() 
+        void EnablePatches()
         {
             //new TacticalReloadPatch().Enable();
             /*            new SprintPatch().Enable();
@@ -99,7 +103,7 @@ namespace StanceOverhaul
                        new UpdateAimWeightPatch().Enable();*/
         }
 
-        void SubscribeToEvents() 
+        void SubscribeToEvents()
         {
             RealismCommonLib.Events.PlayerEvents.OnPlayerInitArgs += AddStanceComponentsToPlayer;
         }

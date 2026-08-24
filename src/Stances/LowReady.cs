@@ -9,7 +9,7 @@ namespace StanceOverhaul.Stances;
 public class LowReady : StanceBase
 {
     public override EStanceType StanceType => EStanceType.LowReady;
-    public override EStaminaMode StaminaMode => EStaminaMode.Regen;
+    public override EStanceStaminaType StaminaMode => EStanceStaminaType.Regen;
 
     public override Vector3Curve EnterPositionCurve => _enterPos;
     public override Vector3Curve EnterRotationCurve => _enterRot;
@@ -21,6 +21,16 @@ public class LowReady : StanceBase
     public override float WalkSpeedBonus => PluginConfig.LowReadyWalkSpeedBonus.Value;
     public override float SprintAccelBonus => PluginConfig.LowReadySprintAccelBonus.Value;
     public override bool RememberStance => true;
+    public override float MagazineReloadSpeedModifier => PluginConfig.LowReadyMagazineReloadSpeedModifier.Value;
+    public override float TubeReloadSpeedModifier => PluginConfig.LowReadyTubeReloadSpeedModifier.Value;
+    public override float TopReloadSpeedModifier => PluginConfig.LowReadyTopReloadSpeedModifier.Value;
+    public override float WeaponManipSpeedModifier => PluginConfig.LowReadyWeaponManipSpeedModifier.Value;
+    public override EStanceReloadType[] ReloadTypesThatPauseStance => new EStanceReloadType[]
+    {
+        EStanceReloadType.PumpBolt,
+        EStanceReloadType.CheckAmmo,
+        EStanceReloadType.CheckChamber,
+    };
 
     public override float BlendIntoThreshold(EStanceType nextStance)
     {

@@ -9,7 +9,7 @@ namespace StanceOverhaul.Stances;
 public class ActiveAim : StanceBase
 {
     public override EStanceType StanceType => EStanceType.ActiveAiming;
-    public override EStaminaMode StaminaMode => EStaminaMode.Drain;
+    public override EStanceStaminaType StaminaMode => EStanceStaminaType.Drain;
 
     public override Vector3Curve EnterPositionCurve => _enterPos;
     public override Vector3Curve EnterRotationCurve => _enterRot;
@@ -21,6 +21,20 @@ public class ActiveAim : StanceBase
     public override float WalkSpeedBonus => PluginConfig.ActiveAimWalkSpeedBonus.Value;
     public override float SprintAccelBonus => PluginConfig.ActiveAimSprintAccelBonus.Value;
     public override float HipfireBonus => PluginConfig.ActiveAimHipfireBonus.Value;
+    public override float MagazineReloadSpeedModifier => PluginConfig.ActiveAimMagazineReloadSpeedModifier.Value;
+    public override float PumpBoltSpeedModifier => PluginConfig.ActiveAimPumpBoltSpeedModifier.Value;
+    public override float WeaponManipSpeedModifier => PluginConfig.ActiveAimWeaponManipSpeedModifier.Value;
+
+    public override EStanceReloadType[] ReloadTypesThatPauseStance => new EStanceReloadType[]
+    {
+        EStanceReloadType.Tube,
+        EStanceReloadType.Top,
+        EStanceReloadType.Revolver,
+        EStanceReloadType.PumpBolt,
+        EStanceReloadType.CheckChamber,
+        EStanceReloadType.Rechamber,
+        EStanceReloadType.ClearMalfunction,
+    };
 
     public override float BlendIntoThreshold(EStanceType nextStance)
     {

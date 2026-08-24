@@ -9,7 +9,7 @@ namespace StanceOverhaul.Stances;
 public class HighReady : StanceBase
 {
     public override EStanceType StanceType => EStanceType.HighReady;
-    public override EStaminaMode StaminaMode => EStaminaMode.Regen;
+    public override EStanceStaminaType StaminaMode => EStanceStaminaType.Regen;
 
     public override Vector3Curve EnterPositionCurve => _enterPos;
     public override Vector3Curve EnterRotationCurve => _enterRot;
@@ -22,6 +22,15 @@ public class HighReady : StanceBase
     public override float SprintAccelBonus => PluginConfig.HighReadySprintAccelBonus.Value;
     public override bool CanDoTacSprint => true;
     public override bool RememberStance => true;
+    public override float MagazineReloadSpeedModifier => PluginConfig.HighReadyMagazineReloadSpeedModifier.Value;
+    public override float TubeReloadSpeedModifier => PluginConfig.HighReadyTubeReloadSpeedModifier.Value;
+    public override float TopReloadSpeedModifier => PluginConfig.HighReadyTopReloadSpeedModifier.Value;
+    public override float WeaponManipSpeedModifier => PluginConfig.HighReadyWeaponManipSpeedModifier.Value;
+
+    public override EStanceReloadType[] ReloadTypesThatPauseStance => new EStanceReloadType[]
+    {
+        EStanceReloadType.PumpBolt,
+    };
 
     public override AnimationCurve ExitAimSpeedCurve { get; } = new AnimationCurve
         (

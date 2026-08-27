@@ -279,6 +279,7 @@ namespace StanceOverhaul.Controllers
         public PistolCompress PistolCompress { get; private set; }
         public bool AwakeRan { get; private set; } = false;
 
+        public EStanceReloadType CurrentReloadType => _reloadSpeedSystem.CurrentReloadType;
         public EStanceType CurrentStanceType => _stanceState.ActiveStanceType;
         public IStance? CurrentStance => _stanceState.ActiveStance;
         public StatsSystem StatsHandlerInstance => _statsSystem;

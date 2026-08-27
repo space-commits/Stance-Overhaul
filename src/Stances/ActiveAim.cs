@@ -28,12 +28,7 @@ public class ActiveAim : StanceBase
     public override EStanceReloadType[] ReloadTypesThatPauseStance => new EStanceReloadType[]
     {
         EStanceReloadType.Tube,
-        EStanceReloadType.Top,
         EStanceReloadType.Revolver,
-        EStanceReloadType.PumpBolt,
-        EStanceReloadType.CheckChamber,
-        EStanceReloadType.Rechamber,
-        EStanceReloadType.ClearMalfunction,
     };
 
     public override float BlendIntoThreshold(EStanceType nextStance)

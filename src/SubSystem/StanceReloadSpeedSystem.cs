@@ -19,19 +19,18 @@ public class StanceReloadSpeedSystem : ISubSystem
     private FloatMultiplierHandle _rechamber;
     private FloatMultiplierHandle _internalMagReload;
     private FloatMultiplierHandle _revolverReload;
-    private EStanceReloadType _stanceReloadType = EStanceReloadType.None;
+    public EStanceReloadType CurrentReloadType { get; private set; }
 
     public bool IsInReloadOperation
     {
         get
         {
-            return _stanceReloadType != EStanceReloadType.None;
+            return CurrentReloadType != EStanceReloadType.None;
         }
     }
 
     public void RunOnAwake()
     {
-        if (!PluginConfig.EnableReloadSpeedChanges.Value) return;
         ReloadEvents.WeaponStateReset += OnWeaponStateReset;
         ReloadEvents.CheckAmmo += OnCheckAmmo;
         ReloadEvents.ChamberCheck += OnChamberCheck;
@@ -41,13 +40,12 @@ public class StanceReloadSpeedSystem : ISubSystem
         ReloadEvents.QuickMagReload += OnQuickMagReload;
         ReloadEvents.InternalMagReload += OnInternalMagReload;
         ReloadEvents.BoltActionPump += PumpBolt;
-        
+
         AssignReloadHandlers();
     }
 
     public void RunOnDestroy()
     {
-        if (!PluginConfig.EnableReloadSpeedChanges.Value) return;
         ReloadEvents.WeaponStateReset -= OnWeaponStateReset;
         ReloadEvents.CheckAmmo -= OnCheckAmmo;
         ReloadEvents.ChamberCheck -= OnChamberCheck;
@@ -85,6 +83,20 @@ public class StanceReloadSpeedSystem : ISubSystem
         StatModifiers.RevolverReloadModifier.Remove(_revolverReload);
     }
 
+    private void OnWeaponStateReset()
+    {
+        CurrentReloadType = EStanceReloadType.None;
+        _checkAmmo.Multiplier = 1f;
+        _checkChamber.Multiplier = 1f;
+        _rechamber.Multiplier = 1f;
+        _malfFix.Multiplier = 1f;
+        _magReload.Multiplier = 1f;
+        _internalMagReload.Multiplier = 1f;
+        _pumpBolt.Multiplier = 1f;
+        _revolverReload.Multiplier = 1f;
+
+        StanceEvents.RaiseStanceReloadReset();
+    }
 
     public void RunOnUpdate(float deltaTime)
     {
@@ -93,13 +105,18 @@ public class StanceReloadSpeedSystem : ISubSystem
     private void OnInternalMagReload()
     {
         ApplyInternalReloadSpeedBonus();
+        StanceEvents.RaiseStanceReload();
     }
 
     private void OnMagReload()
     {
-        _stanceReloadType = EStanceReloadType.Magazine;
-        ApplyMagReloadSpeedBonuses();
-        ModLogger.LogWarning($"OnMagReload: stance={StanceControllerInstance?.CurrentStance?.StanceType}, reloadType={_stanceReloadType}");
+        CurrentReloadType = EStanceReloadType.Magazine;
+
+        if (PluginConfig.EnableReloadSpeedChanges.Value)
+            ApplyMagReloadSpeedBonuses();
+
+        StanceEvents.RaiseStanceReload();
+        StanceEvents.RaiseStanceMagReload();
     }
 
     private void OnQuickMagReload()
@@ -112,50 +129,46 @@ public class StanceReloadSpeedSystem : ISubSystem
         _magReload.Multiplier = StanceControllerInstance.CurrentStance?.MagazineReloadSpeedModifier ?? 1f;
     }
 
-    private void OnWeaponStateReset()
-    {
-        _stanceReloadType = EStanceReloadType.None;
-        _checkAmmo.Multiplier = 1f;
-        _checkChamber.Multiplier = 1f;
-        _rechamber.Multiplier = 1f;
-        _malfFix.Multiplier = 1f;
-        _magReload.Multiplier = 1f;
-        _internalMagReload.Multiplier = 1f;
-        _pumpBolt.Multiplier = 1f;
-        _revolverReload.Multiplier = 1f;
-    }
-
     private void OnCheckAmmo()
     {
-        _stanceReloadType = EStanceReloadType.CheckAmmo;
+        CurrentReloadType = EStanceReloadType.CheckAmmo;
         OnWeaponManip();
+        StanceEvents.RaiseStanceCheckAmmo();
     }
 
     private void OnChamberCheck()
     {
-        _stanceReloadType = EStanceReloadType.CheckChamber;
+        CurrentReloadType = EStanceReloadType.CheckChamber;
         OnWeaponManip();
+        StanceEvents.RaiseStanceChamberCheck();
     }
 
     private void OnRechamber()
     {
-        _stanceReloadType = EStanceReloadType.Rechamber;
+        CurrentReloadType = EStanceReloadType.Rechamber;
         OnWeaponManip();
+        StanceEvents.RaiseStanceChamber();
     }
 
     private void OnMalfFix()
     {
-        _stanceReloadType = EStanceReloadType.ClearMalfunction;
+        CurrentReloadType = EStanceReloadType.ClearMalfunction;
         OnWeaponManip();
+        StanceEvents.RaiseStanceChamber();
     }
 
     private void OnWeaponManip()
     {
-        var bonus = StanceControllerInstance.CurrentStance?.WeaponManipSpeedModifier ?? 1f;
-        _checkAmmo.Multiplier = bonus;
-        _checkChamber.Multiplier = bonus;
-        _rechamber.Multiplier = bonus;
-        _malfFix.Multiplier = bonus;
+        if (PluginConfig.EnableReloadSpeedChanges.Value)
+        {
+            var bonus = StanceControllerInstance.CurrentStance?.WeaponManipSpeedModifier ?? 1f;
+            _checkAmmo.Multiplier = bonus;
+            _checkChamber.Multiplier = bonus;
+            _rechamber.Multiplier = bonus;
+            _malfFix.Multiplier = bonus;
+        }
+
+        StanceEvents.RaiseStanceReload();
     }
 
 
@@ -165,28 +178,32 @@ public class StanceReloadSpeedSystem : ISubSystem
 
         if (ReloadStateInstance.IsAttemptingRevolverReload)
         {
-            _stanceReloadType = EStanceReloadType.Revolver;
+            CurrentReloadType = EStanceReloadType.Revolver;
             _revolverReload.Multiplier = StanceControllerInstance.CurrentStance?.RevolverReloadSpeedModifier ?? 1f;
             return;
         }
         else if (WeaponStateInstance.IsShotgun)
         {
-            _stanceReloadType = EStanceReloadType.Tube;
+            CurrentReloadType = EStanceReloadType.Tube;
             bonus = StanceControllerInstance.CurrentStance?.TubeReloadSpeedModifier ?? 1f;
+            StanceEvents.RaiseStanceTubeReload();
         }
         else
         {
-            _stanceReloadType = EStanceReloadType.Top;
+            CurrentReloadType = EStanceReloadType.Top;
             bonus = StanceControllerInstance.CurrentStance?.TopReloadSpeedModifier ?? 1f;
+            StanceEvents.RaiseStanceTopReload();
         }
 
-        _internalMagReload.Multiplier = bonus;
+        if (PluginConfig.EnableReloadSpeedChanges.Value)
+            _internalMagReload.Multiplier = bonus;
     }
 
     private void PumpBolt()
     {
-        _stanceReloadType = EStanceReloadType.PumpBolt;
-        _pumpBolt.Multiplier = StanceControllerInstance.CurrentStance?.PumpBoltSpeedModifier ?? 1f;
-        ModLogger.LogWarning($"PumpBolt: stance={StanceControllerInstance?.CurrentStance?.StanceType}, reloadType={_stanceReloadType}");
+        CurrentReloadType = EStanceReloadType.PumpBolt;
+
+        if (PluginConfig.EnableReloadSpeedChanges.Value)
+            _pumpBolt.Multiplier = StanceControllerInstance.CurrentStance?.PumpBoltSpeedModifier ?? 1f;
     }
 }

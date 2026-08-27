@@ -13,13 +13,10 @@ namespace StanceOverhaul.SubSystem;
 public class StanceStaminaSystem : ISubSystem
 {
     private const float BaseMinimumArmStamina = 10f;
-    private const float BaseIdleDrainRate = 0.1f;
-    private const float TacSprintDrainRate = 0.5f;
+    private const float BaseIdleDrainRate = 0.11f;
 
     // Positive = regen pts/sec, negative = drain pts/sec, 0 = do nothing.
     private float _stanceRate = 0f;
-
-    private float _aimDrainRate = 0f;
 
     private EStanceStaminaType _stanceStaminaMode = EStanceStaminaType.Neutral;
 
@@ -121,7 +118,7 @@ public class StanceStaminaSystem : ISubSystem
     public float GetExternalStaminaDrainRate()
     {
         if (StanceControllerInstance.IsDoingTacSprint)
-            return -ComputeDrainRate(TacSprintDrainRate * PluginConfig.IdleStamDrainModi.Value);
+            return -ComputeDrainRate(PluginConfig.TacSprintDrainRate.Value * PluginConfig.IdleStamDrainModi.Value);
         if (PlayerStateInstance.Player.Physical.HoldingBreath || PlayerStateInstance.Player.ProceduralWeaponAnimation.IsAiming)
             return -ComputeDrainRate(BaseIdleDrainRate * PluginConfig.IdleStamDrainModi.Value);
         return 0f;
@@ -175,7 +172,9 @@ public class StanceStaminaSystem : ISubSystem
         }
         else if (DrainStamina)
         {
-            //ModLogger.LogWarning($"DrainStamina: stance={StanceControllerInstance?.CurrentStance?.StanceType}, staminaMode={_stanceStaminaMode}, staminaRate={_stanceRate}, drainRate={StaminaDrainRate}");
+            //ModLogger.LogWarning($"DrainStamina: stance={StanceControllerInstance?.CurrentStance?.StanceType}, staminaMode={_stanceStaminaMode}, staminaRate={_stanceRate}");
+            //ModLogger.LogWarning($"DrainStamina: current={physical.HandsStamina.Current}, min={StanceMinArmStamina}, drainRate={StaminaDrainRate}");
+
             if (physical.HandsStamina.Current > StanceMinArmStamina)
                 physical.HandsStamina.Current = physical.HandsStamina.Current + StaminaDrainRate * deltaTime;
         }
@@ -215,8 +214,6 @@ public class StanceStaminaSystem : ISubSystem
                 _stanceStaminaMode = PluginConfig.EnableIdleStamDrain.Value ? EStanceStaminaType.Drain : EStanceStaminaType.Neutral;
                 break;
         }
-
-        ModLogger.LogWarning($"CheckState: stance={stance?.StanceType}, staminaMode={stance?.StaminaMode}, staminaRate={stance?.StaminaRate}, rate={_stanceRate}, staminaMode={_stanceStaminaMode}");
     }
 
     private float ComputeRegenRate(float baseRate)

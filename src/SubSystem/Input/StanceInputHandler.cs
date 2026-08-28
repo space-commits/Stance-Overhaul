@@ -273,15 +273,15 @@ namespace StanceOverhaul.SubSystem.StanceInput
             ToggleStance(_stanceThatWasToggledOriginally);
         }
 
-        private bool TryRestoreActiveAimAfterADS()
+        private void TryRestoreActiveAimAfterADS()
         {
             _aimedFromActiveAim = false;
+            _interruptType = EStanceInterruptType.None;
 
             if (_stanceState.ActiveStance?.StanceType == EStanceType.ActiveAiming)
-                return false;
+                return;
 
             RequestStance(StanceControllerInstance.ActiveAim);
-            return true;
         }
 
         private bool IsTogglingActiveStance(EStanceType stance)

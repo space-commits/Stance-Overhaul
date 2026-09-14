@@ -100,15 +100,9 @@ namespace StanceOverhaul.Controllers.PatchHooks
 
         private bool ShouldVetoFiring()
         {
-            bool isInStanceThatCanBlockFiring =
-                StanceControllerInstance.CurrentStanceType == EStanceType.HighReady ||
-                StanceControllerInstance.CurrentStanceType == EStanceType.LowReady ||
-                StanceControllerInstance.CurrentStanceType == EStanceType.PatrolStance;
+            bool isInStanceThatCanBlockFiring = StanceControllerInstance?.CurrentStance?.BlocksFiring == true;
 
-            bool shouldVeto =
-                PluginConfig.BlockFiring.Value &&
-                //!StanceControllerInstance.ShouldForceLowReady &&
-                isInStanceThatCanBlockFiring;
+            bool shouldVeto = PluginConfig.BlockFiring.Value && isInStanceThatCanBlockFiring;
 
             if (shouldVeto)
             {

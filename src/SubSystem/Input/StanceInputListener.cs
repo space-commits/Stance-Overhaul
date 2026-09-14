@@ -20,7 +20,9 @@ namespace StanceOverhaul.SubSystem.StanceInput
             {
                 return AimStateInstance.IsAiming
                     || PlayerStateInstance.IsSprinting
-                    || PlayerStateInstance.IsInventoryOpen;
+                    || PlayerStateInstance.IsInventoryOpen
+                    || !PlayerStateInstance.WeaponIsReady
+                    || PlayerStateInstance.IsUsingStationaryWeapon;
             }
         }
 
@@ -41,9 +43,7 @@ namespace StanceOverhaul.SubSystem.StanceInput
         {
             MeleeCooldownTimer(deltaTime);
 
-            if (PlayerStateInstance.WeaponIsReady &&
-                !PlayerStateInstance.IsUsingStationaryWeapon &&
-                !StanceInputBlocked)
+            if (!StanceInputBlocked)
             {
                 CheckForActimeAimInput(); // always runs first to keep _activeAimHoldInProgress current
 
@@ -187,6 +187,10 @@ namespace StanceOverhaul.SubSystem.StanceInput
 
         public void CheckForActimeAimInput()
         {
+            //TODO: add active aim varient for pistols
+            if (WeaponStateInstance.TreatAsPistol)
+                return;
+
             bool activeAimOverridesAds = (Input.GetKeyDown(KeyCode.Mouse1) || Input.GetKey(KeyCode.Mouse1))
                && StanceControllerInstance.AdsIsBlocked;
             bool keyIsHeld = Input.GetKey(PluginConfig.ActiveAimKeybind.Value.MainKey)

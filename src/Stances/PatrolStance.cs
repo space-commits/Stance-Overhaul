@@ -13,13 +13,20 @@ public class PatrolStance : StanceBase
 
     public override Vector3Curve EnterPositionCurve => _enterPos;
     public override Vector3Curve EnterRotationCurve => _enterRot;
-
     public override Vector3Curve ExitPositionCurve => _exitPos;
     public override Vector3Curve ExitRotationCurve => _exitRot;
+
+    public override Vector3Curve PistolEnterPositionCurve => _enterPistolPos;
+    public override Vector3Curve PistolEnterRotationCurve => _enterPistolRot;
+
+    public override Vector3Curve PistolExitPositionCurve => _exitPistolPos;
+    public override Vector3Curve PistolExitRotationCurve => _exitPistolRot;
 
     public override float StaminaRate => PluginConfig.PatrolStaminaRate.Value;
     public override float WalkSpeedBonus => PluginConfig.PatrolWalkSpeedBonus.Value;
     public override float SprintAccelBonus => PluginConfig.PatrolSprintAccelBonus.Value;
+
+    public override bool BlocksFiring => false;
 
     public override EStanceReloadType[] ReloadTypesThatPauseStance => new EStanceReloadType[]
     {
@@ -86,13 +93,26 @@ public class PatrolStance : StanceBase
     private readonly Vector3Curve _exitPos;
     private readonly Vector3Curve _exitRot;
 
+    private readonly Vector3Curve _enterPistolPos;
+    private readonly Vector3Curve _enterPistolRot;
+
+    private readonly Vector3Curve _exitPistolPos;
+    private readonly Vector3Curve _exitPistolRot;
+
+
     public PatrolStance()
     {
-        _enterPos = RealismCommonLib.Utils.CurveDrawer.GetCurve("patrol_enter_position")!;
-        _enterRot = RealismCommonLib.Utils.CurveDrawer.GetCurve("patrol_enter_rotation")!;
+        _enterPos = CurveDrawer.GetCurve("patrol_enter_position")!;
+        _enterRot = CurveDrawer.GetCurve("patrol_enter_rotation")!;
 
-        _exitPos = RealismCommonLib.Utils.CurveDrawer.GetCurve("patrol_exit_position")!;
-        _exitRot = RealismCommonLib.Utils.CurveDrawer.GetCurve("patrol_exit_rotation")!;
+        _exitPos = CurveDrawer.GetCurve("patrol_exit_position")!;
+        _exitRot = CurveDrawer.GetCurve("patrol_exit_rotation")!;
+
+        _enterPistolPos = CurveDrawer.GetCurve("pistol_patrol_enter_position")!;
+        _enterPistolRot = CurveDrawer.GetCurve("pistol_patrol_enter_rotation")!;
+
+        _exitPistolPos = CurveDrawer.GetCurve("pistol_patrol_exit_position")!;
+        _exitPistolRot = CurveDrawer.GetCurve("pistol_patrol_exit_rotation")!;
     }
 }
 

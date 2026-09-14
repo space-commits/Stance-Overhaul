@@ -28,12 +28,20 @@ namespace StanceOverhaul.Stances
         public virtual float WeaponManipSpeedModifier => 1f;
         public virtual float RevolverReloadSpeedModifier => 1f;
         public virtual float PumpBoltSpeedModifier => 1f;
-        public virtual EStanceReloadType[] ReloadTypesThatPauseStance => new EStanceReloadType[0];
+
+        public virtual bool BlocksFiring => true;
+
+        public virtual EStanceReloadType[] ReloadTypesThatPauseStance => [];
 
         public abstract Vector3Curve EnterPositionCurve { get; }
         public abstract Vector3Curve EnterRotationCurve { get; }
         public abstract Vector3Curve ExitPositionCurve { get; }
         public abstract Vector3Curve ExitRotationCurve { get; }
+
+        public virtual Vector3Curve? PistolEnterPositionCurve { get; }
+        public virtual Vector3Curve? PistolEnterRotationCurve { get; }
+        public virtual Vector3Curve? PistolExitPositionCurve { get; }
+        public virtual Vector3Curve? PistolExitRotationCurve { get; }
 
         public virtual AnimationCurve ExitAimSpeedCurve { get; }
             = new AnimationCurve
@@ -127,5 +135,7 @@ namespace StanceOverhaul.Stances
         }
 
         public virtual void OnHoldUpdate(float deltaTime) { } //TODO: implement
+
+        public virtual void CorrectPositionCurveX() { }
     }
 }

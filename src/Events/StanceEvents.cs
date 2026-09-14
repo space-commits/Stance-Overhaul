@@ -1,5 +1,6 @@
 using RealismCommonLib.Events;
 using StanceOverhaul.Stances;
+using EFT;
 using System;
 
 namespace StanceOverhaul.Events;
@@ -26,6 +27,14 @@ public static class StanceEvents
     public static event Action? OnStanceTubeReload;
     public static event Action? OnStanceTopReload;
     public static event Action? OnStanceReload;
+    public static event Action? OnTransformsInit;
+    public static event Action<Player.FirearmController>? OnTransformsInitFC;
+
+    internal static void RaiseOnTransformsInit(Player.FirearmController fc)
+    {
+        BaseEventHandler.RaiseEvent(OnTransformsInit);
+        BaseEventHandler.RaiseEvent(OnTransformsInitFC, fc);
+    }
 
     internal static void RaiseOnStanceEntered(IStance stance)
     {

@@ -24,6 +24,8 @@ public class ShortStock : StanceBase
     public override bool RememberStance => true;
     public override float PumpBoltSpeedModifier => PluginConfig.ShortStockPumpBoltSpeedModifier.Value;
 
+    public override bool BlocksFiring => false;
+
     public override EStanceReloadType[] ReloadTypesThatPauseStance => new EStanceReloadType[]
     {
         EStanceReloadType.Magazine,

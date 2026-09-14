@@ -25,6 +25,9 @@ namespace StanceOverhaul.Stances
         public float RevolverReloadSpeedModifier { get; }
         public float WeaponManipSpeedModifier { get; }
         public float PumpBoltSpeedModifier { get; }
+
+        public bool BlocksFiring { get; }
+
         public EStanceReloadType[] ReloadTypesThatPauseStance { get; }
 
         public abstract Vector3Curve EnterRotationCurve { get; }
@@ -33,12 +36,20 @@ namespace StanceOverhaul.Stances
         public abstract Vector3Curve ExitRotationCurve { get; }
         public abstract Vector3Curve ExitPositionCurve { get; }
 
+        public abstract Vector3Curve? PistolEnterRotationCurve { get; }
+        public abstract Vector3Curve? PistolEnterPositionCurve { get; }
+
+        public abstract Vector3Curve? PistolExitRotationCurve { get; }
+        public abstract Vector3Curve? PistolExitPositionCurve { get; }
+
         public abstract AnimationCurve ExitAimSpeedCurve { get; }
         public abstract AnimationCurve EnterAimSpeedCurve { get; }
 
         float BlendIntoThreshold(EStanceType nextStance);
         float TransitionFromModifier(EStanceType? previousStance);
         float TransitionToSpeedModifier(EStanceType? nextStance);
+
+        void CorrectPositionCurveX();
 
         void OnEnter();
         void OnExit();

@@ -4,6 +4,7 @@ using UnityEngine;
 using StanceOverhaul.Events;
 using static RealismCommonLib.Plugin;
 using static StanceOverhaul.Plugin;
+using RealismCommonLib.Utils;
 
 namespace StanceOverhaul.State;
 
@@ -11,77 +12,89 @@ internal class StanceSlot
 {
     public StanceTransitionContext Transition { get; set; }
     public IStance Stance { get; }
-    public ECurveType ActiveCurve { get; set; }
+    public ECurveType ActiveCurveType { get; set; }
     public float Progress { get; set; } // 0..1
     public int Direction { get; set; } // +1 or -1
     public float PreviousProgress { get; private set; }
 
+    private Vector3Curve _enterPosCurve;
+    private Vector3Curve _enterRotCurve;
+    private Vector3Curve _exitPosCurve;
+    private Vector3Curve _exitRotCurve;
+
     internal StanceSlot(IStance stance, ECurveType activeCurve, float progress, int direction, StanceTransitionContext transition)
     {
         Stance = stance;
-        ActiveCurve = activeCurve;
+        Stance.CorrectPositionCurveX(); //to prevent timing issues, this needs to be called on slot creation.
+
+        ActiveCurveType = activeCurve;
         Direction = direction;
         Progress = progress;
         Transition = transition;
+
+        _enterPosCurve = (WeaponStateInstance.TreatAsPistol ? Stance.PistolEnterPositionCurve : null) ?? Stance.EnterPositionCurve;
+        _enterRotCurve = (WeaponStateInstance.TreatAsPistol ? Stance.PistolEnterRotationCurve : null) ?? Stance.EnterRotationCurve;
+        _exitPosCurve = (WeaponStateInstance.TreatAsPistol ? Stance.PistolExitPositionCurve : null) ?? Stance.ExitPositionCurve;
+        _exitRotCurve = (WeaponStateInstance.TreatAsPistol ? Stance.PistolExitRotationCurve : null) ?? Stance.ExitRotationCurve;
     }
 
     public bool IsAtIdle =>
-        (ActiveCurve == ECurveType.Enter && Progress <= 0f) ||
-        (ActiveCurve == ECurveType.Exit && Progress >= 1f);
+        (ActiveCurveType == ECurveType.Enter && Progress <= 0f) ||
+        (ActiveCurveType == ECurveType.Exit && Progress >= 1f);
 
     /// <summary>
     /// Is at the terminal state of the stance, and hasn't started transitioning away from it yet.
     /// </summary>
     public bool IsAtPose =>
-        (ActiveCurve == ECurveType.Enter && Progress >= 1f) ||
-        (ActiveCurve == ECurveType.Exit && Progress <= 0f);
+        (ActiveCurveType == ECurveType.Enter && Progress >= 1f) ||
+        (ActiveCurveType == ECurveType.Exit && Progress <= 0f);
 
     public bool IsHeadingToIdle =>
-        (ActiveCurve == ECurveType.Enter && Direction == -1) ||
-        (ActiveCurve == ECurveType.Exit && Direction == +1);
+        (ActiveCurveType == ECurveType.Enter && Direction == -1) ||
+        (ActiveCurveType == ECurveType.Exit && Direction == +1);
 
     public bool IsHeadingToPose =>
-        (ActiveCurve == ECurveType.Enter && Direction == +1) ||
-        (ActiveCurve == ECurveType.Exit && Direction == -1);
+        (ActiveCurveType == ECurveType.Enter && Direction == +1) ||
+        (ActiveCurveType == ECurveType.Exit && Direction == -1);
 
 
     /// <summary>
     /// Is at the terminal state of the stance, or heading towards it, and not heading away from it.
     /// </summary>
     public bool IsAtOrHeadingToActivePose =>
-        (ActiveCurve == ECurveType.Enter && (Direction == +1 || Progress >= 1f)) ||
-        (ActiveCurve == ECurveType.Exit && Direction == -1);
+        (ActiveCurveType == ECurveType.Enter && (Direction == +1 || Progress >= 1f)) ||
+        (ActiveCurveType == ECurveType.Exit && Direction == -1);
 
     public float IdleProximity =>
-        ActiveCurve == ECurveType.Exit ? Progress : 1f - Progress;
+        ActiveCurveType == ECurveType.Exit ? Progress : 1f - Progress;
 
     public float DistanceToPose =>
         1f - IdleProximity;
 
     public Vector3 EvaluatePosition()
     {
-        return ActiveCurve == ECurveType.Exit
-            ? Stance.ExitPositionCurve.Evaluate(Progress)
-            : Stance.EnterPositionCurve.Evaluate(Progress);
+        return ActiveCurveType == ECurveType.Exit
+            ? _exitPosCurve.Evaluate(Progress)
+            : _enterPosCurve.Evaluate(Progress);
     }
 
     public Vector3 EvaluateRotation()
     {
-        return ActiveCurve == ECurveType.Exit
-            ? Stance.ExitRotationCurve.Evaluate(Progress)
-            : Stance.EnterRotationCurve.Evaluate(Progress);
+        return ActiveCurveType == ECurveType.Exit
+            ? _exitRotCurve.Evaluate(Progress)
+            : _enterRotCurve.Evaluate(Progress);
     }
 
     public float EvaluateAimSpeed()
     {
-        return ActiveCurve == ECurveType.Exit
+        return ActiveCurveType == ECurveType.Exit
             ? Stance.ExitAimSpeedCurve.Evaluate(Progress)
-            : ActiveCurve == ECurveType.Enter ?
+            : ActiveCurveType == ECurveType.Enter ?
             Stance.EnterAimSpeedCurve.Evaluate(Progress)
             : 1f;
     }
 
-    public void SlotUpdate(float deltaTime)
+    public void StanceSlotUpdate(float deltaTime)
     {
         if (Direction == 0) return; // holding
 

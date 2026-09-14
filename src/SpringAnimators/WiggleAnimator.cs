@@ -5,7 +5,7 @@ using System.Text;
 
 namespace StanceOverhaul.SpringAnimators
 {
-    internal class WiggleAnimator : ISpringAnimator
+    internal class WiggleAnimator
     {
     }
 }

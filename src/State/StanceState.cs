@@ -5,6 +5,7 @@ using StanceOverhaul.Stances;
 using System.Text;
 using UnityEngine;
 using static RealismCommonLib.Plugin;
+using static StanceOverhaul.Plugin;
 
 namespace StanceOverhaul.State
 {
@@ -32,7 +33,7 @@ namespace StanceOverhaul.State
         }
     }
 
-    internal class StanceState : SubSystem.ISubSystem
+    internal class StanceState : ISubSystem
     {
         private StanceSlot? _primary;
         private StanceSlot? _incoming;
@@ -103,7 +104,7 @@ namespace StanceOverhaul.State
         private void UpdateStanceState(float deltaTime)
         {
             //update primary
-            _primary?.SlotUpdate(deltaTime);
+            _primary?.StanceSlotUpdate(deltaTime);
 
             //check blend threshold - unpause incoming if met
             if (_incoming != null && _incomingPaused && _primary != null)
@@ -117,7 +118,7 @@ namespace StanceOverhaul.State
 
             //upate incoming if not paused
             if (_incoming != null && !_incomingPaused)
-                _incoming.SlotUpdate(deltaTime);
+                _incoming.StanceSlotUpdate(deltaTime);
 
             //cleanup completed slots: discard slots that reached idle
             if (_primary?.IsAtIdle == true) //&& _incoming == null
@@ -140,7 +141,7 @@ namespace StanceOverhaul.State
             UpdateTransforms(deltaTime);
         }
 
-        public void UpdateTransforms(float deltaTime)
+        private void UpdateTransforms(float deltaTime)
         {
             //evaluate output from active slots
             var rawPos = Vector3.zero;
@@ -173,7 +174,7 @@ namespace StanceOverhaul.State
         }
 
         //Move to StanceAimHandler
-        public void UpdateAimSpeed()
+        private void UpdateAimSpeed()
         {
             float aimSpeedModifier = 1f;
 
@@ -185,7 +186,7 @@ namespace StanceOverhaul.State
                     aimSpeedModifier = _primary.EvaluateAimSpeed();
             }
 
-            Plugin.StanceControllerInstance.PwaAimSpeed = Plugin.StanceControllerInstance.PwaOriginalAimSpeed * aimSpeedModifier;
+            StanceControllerInstance.PwaAimSpeed = StanceControllerInstance.PwaOriginalAimSpeed * aimSpeedModifier;
         }
 
         public void RequestStance(IStance stance)
@@ -193,11 +194,12 @@ namespace StanceOverhaul.State
             // no active stance: simple enter
             if (_primary == null && _incoming == null)
             {
+                ModLogger.LogWarning("enter stance ");
+
                 var transition = new StanceTransitionContext(EStanceType.None, stance.StanceType);
 
                 _primary = new StanceSlot(stance, ECurveType.Enter, 0f, +1, transition);
                 stance.OnEnter();
-
                 return;
             }
 
@@ -209,7 +211,7 @@ namespace StanceOverhaul.State
                 {
                     _primary.Transition = new StanceTransitionContext(stance.StanceType, EStanceType.None); ;
 
-                    _primary.ActiveCurve = ECurveType.Exit;
+                    _primary.ActiveCurveType = ECurveType.Exit;
                     _primary.Progress = 0f;
                     _primary.Direction = +1;
                     stance.OnExit();
@@ -283,7 +285,7 @@ namespace StanceOverhaul.State
 
             if (slot.Direction == 0) //holding -> switch to exit curve
             {
-                slot.ActiveCurve = ECurveType.Exit;
+                slot.ActiveCurveType = ECurveType.Exit;
                 slot.Progress = 0f;
                 slot.Direction = +1;
             }

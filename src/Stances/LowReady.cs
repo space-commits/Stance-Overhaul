@@ -27,9 +27,7 @@ public class LowReady : StanceBase
     public override float WeaponManipSpeedModifier => PluginConfig.LowReadyWeaponManipSpeedModifier.Value;
     public override EStanceReloadType[] ReloadTypesThatPauseStance => new EStanceReloadType[]
     {
-        EStanceReloadType.PumpBolt,
-        EStanceReloadType.CheckAmmo,
-        EStanceReloadType.CheckChamber,
+        EStanceReloadType.PumpBolt
     };
 
     public override float BlendIntoThreshold(EStanceType nextStance)
@@ -83,10 +81,10 @@ public class LowReady : StanceBase
 
     public LowReady()
     {
-        _enterPos = RealismCommonLib.Utils.CurveDrawer.GetCurve("low_ready_enter_position")!;
-        _enterRot = RealismCommonLib.Utils.CurveDrawer.GetCurve("low_ready_enter_rotation")!;
+        _enterPos = CurveDrawer.GetCurve("low_ready_enter_position")!;
+        _enterRot = CurveDrawer.GetCurve("low_ready_enter_rotation")!;
 
-        _exitPos = RealismCommonLib.Utils.CurveDrawer.GetCurve("low_ready_exit_position")!;
-        _exitRot = RealismCommonLib.Utils.CurveDrawer.GetCurve("low_ready_exit_rotation")!;
+        _exitPos = CurveDrawer.GetCurve("low_ready_exit_position")!;
+        _exitRot = CurveDrawer.GetCurve("low_ready_exit_rotation")!;
     }
 }

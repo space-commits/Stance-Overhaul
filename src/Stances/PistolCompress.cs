@@ -26,6 +26,8 @@ public class PistolCompress : StanceBase
     public override float WeaponManipSpeedModifier => PluginConfig.PistolWeaponManipSpeedModifier.Value;
     public override float RevolverReloadSpeedModifier => PluginConfig.PistolRevolverReloadSpeedModifier.Value;
 
+    public override bool BlocksFiring => false;
+
     public override AnimationCurve ExitAimSpeedCurve { get; } = new AnimationCurve
             (
                 new Keyframe { time = 0f, value = 0f },
@@ -50,7 +52,13 @@ public class PistolCompress : StanceBase
     {
         switch (nextStance)
         {
-            default: return 0.0f;
+            case EStanceType.ActiveAiming: return 0.25f;
+            case EStanceType.HighReady: return 0.25f;
+            case EStanceType.LeftShoulder: return 0.25f;
+            case EStanceType.PatrolStance: return 0.25f;
+            case EStanceType.ShortStock: return 0.25f;
+            case EStanceType.LowReady: return 0.25f;
+            default: return 0.25f;
         }
     }
 
@@ -60,6 +68,12 @@ public class PistolCompress : StanceBase
         switch (previousStance)
         {
             case EStanceType.None: speed *= PluginConfig.PistolTransitionFromIdle.Value; return speed;
+            case EStanceType.ActiveAiming: speed *= 5f; return speed;
+            case EStanceType.HighReady: speed *= 5f; return speed;
+            case EStanceType.LowReady: speed *= 5f; return speed;
+            case EStanceType.ShortStock: speed *= 5f; return speed;
+            case EStanceType.PatrolStance: speed *= PluginConfig.PistolTransitionFromIdle.Value; return speed;
+            case EStanceType.LeftShoulder: speed *= 5f; return speed;
             default: return speed;
         }
     }
@@ -70,6 +84,12 @@ public class PistolCompress : StanceBase
         switch (nextStance)
         {
             case EStanceType.None: speed *= PluginConfig.PistolTransitionToIdle.Value; return speed;
+            case EStanceType.ActiveAiming: speed *= 5f; return speed;
+            case EStanceType.HighReady: speed *= 5f; return speed;
+            case EStanceType.LowReady: speed *= 5f; return speed;
+            case EStanceType.ShortStock: speed *= 5f; return speed;
+            case EStanceType.PatrolStance: speed *= PluginConfig.PistolTransitionToIdle.Value; return speed;
+            case EStanceType.LeftShoulder: speed *= 5f; return speed;
             default: return speed;
         }
     }

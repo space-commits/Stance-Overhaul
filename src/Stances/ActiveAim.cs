@@ -17,6 +17,8 @@ public class ActiveAim : StanceBase
     public override Vector3Curve ExitPositionCurve => _exitPos;
     public override Vector3Curve ExitRotationCurve => _exitRot;
 
+    public override bool RememberStance => true;
+
     public override float StaminaRate => PluginConfig.ActiveAimStaminaRate.Value;
     public override float WalkSpeedBonus => PluginConfig.ActiveAimWalkSpeedBonus.Value;
     public override float SprintAccelBonus => PluginConfig.ActiveAimSprintAccelBonus.Value;
@@ -25,9 +27,11 @@ public class ActiveAim : StanceBase
     public override float PumpBoltSpeedModifier => PluginConfig.ActiveAimPumpBoltSpeedModifier.Value;
     public override float WeaponManipSpeedModifier => PluginConfig.ActiveAimWeaponManipSpeedModifier.Value;
 
+    public override bool BlocksFiring => false;
+
     public override EStanceReloadType[] ReloadTypesThatPauseStance => new EStanceReloadType[]
     {
-        EStanceReloadType.Tube,
+        EStanceReloadType.Top,
         EStanceReloadType.Revolver,
     };
 
@@ -74,19 +78,28 @@ public class ActiveAim : StanceBase
         }
     }
 
-    private readonly Vector3Curve _enterPos;
+    private Vector3Curve _enterPos;
     private readonly Vector3Curve _enterRot;
 
-    private readonly Vector3Curve _exitPos;
+    private Vector3Curve _exitPos;
     private readonly Vector3Curve _exitRot;
 
     public ActiveAim()
     {
-        _enterPos = RealismCommonLib.Utils.CurveDrawer.GetCurve("active_enter_position")!;
-        _enterRot = RealismCommonLib.Utils.CurveDrawer.GetCurve("active_enter_rotation")!;
+        _enterPos = CurveDrawer.GetCurve("active_enter_position")?.Clone()!;
+        _enterRot = CurveDrawer.GetCurve("active_enter_rotation")?.Clone()!;
 
-        _exitPos = RealismCommonLib.Utils.CurveDrawer.GetCurve("active_exit_position")!;
-        _exitRot = RealismCommonLib.Utils.CurveDrawer.GetCurve("active_exit_rotation")!;
+        _exitPos = CurveDrawer.GetCurve("active_exit_position")?.Clone()!;
+        _exitRot = CurveDrawer.GetCurve("active_exit_rotation")?.Clone()!;
+    }
+
+    public override void CorrectPositionCurveX()
+    {
+        _enterPos = CurveDrawer.GetCurve("active_enter_position")?.Clone()!;
+        _exitPos = CurveDrawer.GetCurve("active_exit_position")?.Clone()!;
+
+        _enterPos = StanceUtils.NormalizeXPositionCurve(_enterPos);
+        _exitPos = StanceUtils.NormalizeXPositionCurve(_exitPos);
     }
 }
 

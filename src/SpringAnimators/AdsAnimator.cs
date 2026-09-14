@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace StanceOverhaul.SubSystem
 {
-    internal class AdsAnimator : ISpringAnimator
+    internal class AdsAnimator
     {
     }
 

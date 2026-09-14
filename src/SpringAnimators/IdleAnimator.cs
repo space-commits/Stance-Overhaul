@@ -3,7 +3,7 @@ using System.Text;
 
 namespace StanceOverhaul.SpringAnimators
 {
-    internal class IdleAnimator : ISpringAnimator
+    internal class IdleAnimator
     {
         //TODO: plays idle animations using its own spring instance
         //tracks when player is considered idle, using its own timers

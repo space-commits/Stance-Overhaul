@@ -52,7 +52,7 @@ namespace StanceOverhaul
             new SpringResetPatch().Enable();
 
             new SpringGetPatch().Enable();
-            new SpringGetRelativePatch().Enable();
+            //new SpringGetRelativePatch().Enable();
 
             new UpdateWeaponVariablesPatch().Enable();
 

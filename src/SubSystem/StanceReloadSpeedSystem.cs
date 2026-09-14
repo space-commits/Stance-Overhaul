@@ -1,7 +1,6 @@
 ﻿using StanceOverhaul.Enums;
 using StanceOverhaul.Events;
-using StanceOverhaul.Stances;
-using UnityEngine;
+using EFT.InventoryLogic;
 using RealismCommonLib.Events;
 using RealismCommonLib.ModifierHandlers;
 using static RealismCommonLib.Plugin;
@@ -19,6 +18,7 @@ public class StanceReloadSpeedSystem : ISubSystem
     private FloatMultiplierHandle _rechamber;
     private FloatMultiplierHandle _internalMagReload;
     private FloatMultiplierHandle _revolverReload;
+    
     public EStanceReloadType CurrentReloadType { get; private set; }
 
     public bool IsInReloadOperation
@@ -182,7 +182,7 @@ public class StanceReloadSpeedSystem : ISubSystem
             _revolverReload.Multiplier = StanceControllerInstance.CurrentStance?.RevolverReloadSpeedModifier ?? 1f;
             return;
         }
-        else if (WeaponStateInstance.IsShotgun)
+        else if (WeaponStateInstance.IsShotgun && WeaponStateInstance.WeaponReloadType == Weapon.EReloadMode.InternalMagazine)
         {
             CurrentReloadType = EStanceReloadType.Tube;
             bonus = StanceControllerInstance.CurrentStance?.TubeReloadSpeedModifier ?? 1f;

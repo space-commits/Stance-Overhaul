@@ -21,8 +21,21 @@ namespace StanceOverhaul.SubSystem.StanceInput
     {
         private IStance? _stanceThatWasToggledOriginally;
         private IStance? _stanceBeforeInterrupt;
+
+        //in future can expand on this if want to force low ready, combine with ShouldForceADefaultStance or similar?
+        private IStance? EffectiveRememberedStance =>
+            DefaultStance ?? _stanceThatWasToggledOriginally;
+
+        //should always return null if there's no reaon to force a stance
+        private IStance? DefaultStance
+        {
+            get
+            {
+                return WeaponStateInstance.TreatAsPistol ? StanceControllerInstance.PistolCompress : null;
+            }
+        }
+
         private EStanceInterruptType _interruptType = EStanceInterruptType.None;
-        private bool _aimedFromActiveAim;
 
         private StanceState _stanceState;
         public StanceInputHandler(StanceState stanceState)
@@ -42,7 +55,6 @@ namespace StanceOverhaul.SubSystem.StanceInput
 
         public void RunOnUpdate(float deltaTime)
         {
-            StanceInputUpdate();
         }
 
         private void SubscribeToEvents()
@@ -64,6 +76,7 @@ namespace StanceOverhaul.SubSystem.StanceInput
             StanceInputEvents.OnAttemptedToFireFromStance += OnAttemptedToFireFromStance;
             StanceEvents.OnStanceReloadReset += ResetReloadState;
             StanceEvents.OnStanceReload += CheckIfReloadInterruptsStance;
+            StanceEvents.OnTransformsInit += OnWeaponInit;
             //StanceInputEvents.ToggleMounting += ToggleMounting; TODO: decide if will override BSG mounting
         }
 
@@ -86,45 +99,27 @@ namespace StanceOverhaul.SubSystem.StanceInput
             StanceInputEvents.OnAttemptedToFireFromStance -= OnAttemptedToFireFromStance;
             StanceEvents.OnStanceReloadReset -= ResetReloadState;
             StanceEvents.OnStanceReload -= CheckIfReloadInterruptsStance;
-        }
-
-        private void StanceInputUpdate()
-        {
-            UpdatePistolDefaultStance();
-        }
-
-        private void UpdatePistolDefaultStance()
-        {
-            bool conditionsMet =
-                WeaponStateInstance.TreatAsPistol
-                && PlayerStateInstance.WeaponIsReady
-                && !PlayerStateInstance.IsUsingStationaryWeapon
-                && !AimStateInstance.IsAiming
-                && !PlayerStateInstance.IsSprinting
-                && !PlayerStateInstance.IsInventoryOpen;
-
-            bool alreadyActive = _stanceState.ActiveStanceType == EStanceType.PistolCompress;
-
-            if (conditionsMet && _stanceState.IsIdle && !alreadyActive)
-            {
-                RequestStance(StanceControllerInstance.PistolCompress);
-            }
+            StanceEvents.OnTransformsInit -= OnWeaponInit;
         }
 
         private void RequestStance(IStance stance)
         {
             if (_interruptType == EStanceInterruptType.None)
+            {
                 _stanceState.RequestStance(stance);
+            }
         }
-
 
         private void CheckIfReloadInterruptsStance()
         {
             if (_stanceState.ActiveStance == null)
                 return;
 
+            ModLogger.LogWarning("CheckIfReloadInterruptsStance");
+
             if (_stanceState.ActiveStance.ReloadTypesThatPauseStance.Contains(StanceControllerInstance.CurrentReloadType))
             {
+                ModLogger.LogWarning("cancel reload");
                 _interruptType = EStanceInterruptType.Reload;
                 _stanceBeforeInterrupt = _stanceState.ActiveStance;
                 InterruptStances();
@@ -135,6 +130,7 @@ namespace StanceOverhaul.SubSystem.StanceInput
         {
             if (_stanceBeforeInterrupt != null && _interruptType == EStanceInterruptType.Reload)
             {
+                ModLogger.LogWarning("restore stance after reload");
                 _interruptType = EStanceInterruptType.None;
                 ToggleStance(_stanceBeforeInterrupt);
                 _stanceBeforeInterrupt = null;
@@ -143,20 +139,24 @@ namespace StanceOverhaul.SubSystem.StanceInput
 
         private void OnWeaponSwap()
         {
-            CancelStances();
+            ModLogger.LogWarning($"OnWeaponSwap");
+            if (WeaponStateInstance.TreatAsPistol)
+                return;
+
+            CancelStancesAndResetState();
         }
 
         private void OnSwappedToItem()
         {
-            if (PluginConfig.RememberStanceItem.Value)
-                _stanceBeforeInterrupt = _stanceThatWasToggledOriginally;
+            if (PluginConfig.RememberStanceItem.Value || WeaponStateInstance.TreatAsPistol)
+                _stanceBeforeInterrupt = EffectiveRememberedStance;
 
             InterruptStances();
         }
 
         private void OnSwappedBackToGun()
         {
-            if (PluginConfig.RememberStanceItem.Value && _stanceBeforeInterrupt != null)
+            if ((PluginConfig.RememberStanceItem.Value || WeaponStateInstance.TreatAsPistol) && _stanceBeforeInterrupt != null)
             {
                 ToggleStance(_stanceBeforeInterrupt);
             }
@@ -164,10 +164,31 @@ namespace StanceOverhaul.SubSystem.StanceInput
             _stanceBeforeInterrupt = null;
         }
 
-        private void CancelStances()
+        private void OnWeaponInit()
+        {
+            ModLogger.LogWarning($"OnWeaponInit");
+
+            if (!WeaponStateInstance.TreatAsPistol)
+            {
+                CancelStancesAndResetState();
+            }
+            else
+                TryInitializePisolStance();
+        }
+
+        private void TryInitializePisolStance()
+        {
+            ModLogger.LogWarning($"active stance: {_stanceState.ActiveStanceType}, interrupt: {_interruptType}, stance before interrupt: {_stanceBeforeInterrupt?.StanceType}");
+
+            if (_stanceState.ActiveStanceType != EStanceType.PistolCompress && _interruptType == EStanceInterruptType.None && _stanceBeforeInterrupt is null)
+            {
+                ToggleStance(StanceControllerInstance.PistolCompress);
+            }
+        }
+
+        private void CancelStancesAndResetState()
         {
             _stanceState.CancelAll();
-            _aimedFromActiveAim = false;
             _stanceThatWasToggledOriginally = null;
             _interruptType = EStanceInterruptType.None;
             _stanceBeforeInterrupt = null;
@@ -176,24 +197,21 @@ namespace StanceOverhaul.SubSystem.StanceInput
         private void InterruptStances()
         {
             _stanceState.CancelAll();
-            _aimedFromActiveAim = false;
             _stanceThatWasToggledOriginally = null;
         }
 
         private void AssessStanceOnShotAttempt()
         {
-            bool rememberStance = PluginConfig.RememberStanceFiring.Value && AimStateInstance.IsAiming;
-            bool isActiveAim = _stanceState.ActiveStanceType == EStanceType.ActiveAiming && !AimStateInstance.IsAiming;
-            bool keepStance =
-                rememberStance
-                || isActiveAim
-                || _stanceState.ActiveStanceType == EStanceType.LeftShoulder
-                || _stanceState.ActiveStanceType == EStanceType.ShortStock
-                || _stanceState.ActiveStanceType == EStanceType.PistolCompress;
+            bool rememberStanceWhenAiming = PluginConfig.RememberStanceFiring.Value && AimStateInstance.IsAiming;
 
-            if (!keepStance)
+            bool cancelStance = !rememberStanceWhenAiming && _stanceState?.ActiveStance?.BlocksFiring == true;
+
+            if (cancelStance)
             {
-                CancelStances();
+                CancelStancesAndResetState();
+
+                if (DefaultStance != null)
+                    RequestStance(DefaultStance);
             }
         }
 
@@ -207,81 +225,43 @@ namespace StanceOverhaul.SubSystem.StanceInput
             AssessStanceOnShotAttempt();
         }
 
-        private void OnActiveAimKeyDown()
-        {
-            if (_stanceState.ActiveStanceType == EStanceType.ActiveAiming)
-                return;
-
-            _stanceBeforeInterrupt = _stanceThatWasToggledOriginally;
-            RequestStance(StanceControllerInstance.ActiveAim);
-        }
-
-        private void OnActiveAimKeyUp()
-        {
-            var toRestore = _stanceBeforeInterrupt;
-            _stanceBeforeInterrupt = null;
-
-            if (_stanceState.ActiveStanceType != EStanceType.ActiveAiming)
-                return;
-
-            if (toRestore != null)
-                ToggleStance(toRestore);
-            else
-                _stanceState.CancelAll();
-        }
-
         //TODO: this may need a rework
         //maybe stances hould sub to ADS toggle and pause themselves, or handle cancelling themselves
         private void OnADSToggled()
         {
-            if (WeaponStateInstance.TreatAsPistol)
-            {
-                _stanceState.CancelAll();
-                return;
-            }
-
             if (AimStateInstance.IsAiming && _stanceState.ActiveStance?.StanceType != EStanceType.LeftShoulder)
             {
                 if (_stanceState.ActiveStance != null)
                     _interruptType = EStanceInterruptType.ADS;
 
-                if (_stanceState.ActiveStance?.StanceType == EStanceType.ActiveAiming)
-                    _aimedFromActiveAim = true;
-
                 _stanceState.CancelAll();
             }
             else
             {
-                // ADS released
-                if (_aimedFromActiveAim)
-                    TryRestoreActiveAimAfterADS();
-                else
-                    TryRestoreStoredStanceAfterADS();
+                TryRestoreStoredStanceAfterADS();
             }
         }
 
         private void TryRestoreStoredStanceAfterADS()
         {
-            if (_interruptType != EStanceInterruptType.ADS)
-                return;
-
             _interruptType = EStanceInterruptType.None;
 
-            if (_stanceThatWasToggledOriginally == null)
+            //if a default stance is enforced, should always go back to it after ADS.
+            //this becomes problematic if, for example, forced to low ready but player is allowed to use and ADS from other stances
+
+
+            if (DefaultStance != null && EffectiveRememberedStance?.StanceType != _stanceState.ActiveStance?.StanceType)
+            {
+                ModLogger.LogWarning($"DefaultStance {DefaultStance?.StanceType}, restore Active stance {_stanceState.ActiveStance?.StanceType}, effective: {EffectiveRememberedStance?.StanceType}");
+
+                ToggleStance(EffectiveRememberedStance);
+                return;
+            }
+
+            if (_stanceState.ActiveStance?.StanceType == _stanceThatWasToggledOriginally?.StanceType)
                 return;
 
-            ToggleStance(_stanceThatWasToggledOriginally);
-        }
-
-        private void TryRestoreActiveAimAfterADS()
-        {
-            _aimedFromActiveAim = false;
-            _interruptType = EStanceInterruptType.None;
-
-            if (_stanceState.ActiveStance?.StanceType == EStanceType.ActiveAiming)
-                return;
-
-            RequestStance(StanceControllerInstance.ActiveAim);
+            ModLogger.LogWarning($"_stanceThatWasToggledOriginally {DefaultStance?.StanceType}");
         }
 
         private bool IsTogglingActiveStance(EStanceType stance)
@@ -297,8 +277,18 @@ namespace StanceOverhaul.SubSystem.StanceInput
         {
             if (targetStance == null || _interruptType != EStanceInterruptType.None) return;
 
+            ModLogger.LogWarning("toggle stance");
+
+            if (DefaultStance != null && _stanceState.ActiveStance != DefaultStance)
+            {
+                ModLogger.LogWarning("toggle DefaultStance");
+                RequestStance(DefaultStance);
+                return;
+            }
+
             if (targetStance.RememberStance)
             {
+                ModLogger.LogWarning("RememberStance");
                 _stanceThatWasToggledOriginally =
                     !IsTogglingActiveStance(targetStance.StanceType) ?
                     targetStance : null;
@@ -336,28 +326,48 @@ namespace StanceOverhaul.SubSystem.StanceInput
             ToggleStance(StanceControllerInstance.ShortStock);
         }
 
-        private void TogglePistolCompress()
-        {
-            ToggleStance(StanceControllerInstance.PistolCompress);
-        }
-
         private void ToggleActiveAim()
         {
-            bool activeAimActive =
-               _stanceState.ActiveStanceType == EStanceType.ActiveAiming;
+            bool activeAimActive = _stanceState.ActiveStanceType == EStanceType.ActiveAiming;
 
-            if (activeAimActive)
+            if (!activeAimActive)
             {
-                if (_stanceThatWasToggledOriginally != null)
-                    ToggleStance(_stanceThatWasToggledOriginally);
-                else
-                    ToggleStance(StanceControllerInstance.ActiveAim, forgetPrevious: true);
+                _stanceBeforeInterrupt = EffectiveRememberedStance;
+                RequestStance(StanceControllerInstance.ActiveAim);
             }
             else
             {
-                ToggleStance(StanceControllerInstance.ActiveAim);
-            }
+                var toRestore = _stanceBeforeInterrupt;
+                _stanceBeforeInterrupt = null;
 
+                if (toRestore != null)
+                    ToggleStance(toRestore);
+                else
+                    _stanceState.CancelAll();
+            }
+        }
+
+        private void OnActiveAimKeyDown()
+        {
+            if (_stanceState.ActiveStanceType == EStanceType.ActiveAiming)
+                return;
+
+            _stanceBeforeInterrupt = EffectiveRememberedStance;
+            RequestStance(StanceControllerInstance.ActiveAim);
+        }
+
+        private void OnActiveAimKeyUp()
+        {
+            var toRestore = _stanceBeforeInterrupt;
+            _stanceBeforeInterrupt = null;
+
+            if (_stanceState.ActiveStanceType != EStanceType.ActiveAiming)
+                return;
+
+            if (toRestore != null)
+                ToggleStance(toRestore);
+            else
+                _stanceState.CancelAll();
         }
 
         private void ToggleMelee()

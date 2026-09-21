@@ -1,6 +1,5 @@
 ﻿using EFT.Animations;
 using EFT;
-using StanceOverhaul.SpringAnimators;
 using StanceOverhaul.Stances;
 using System;
 using System.Collections.Generic;
@@ -8,7 +7,7 @@ using System.Text;
 using static EFT.Player;
 using UnityEngine;
 
-namespace StanceOverhaul.SubSystem
+namespace StanceOverhaul.SubSystem.Animator
 {
     internal class AdsAnimator
     {

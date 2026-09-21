@@ -8,6 +8,7 @@ using StanceOverhaul.SubSystem;
 using StanceOverhaul.Enums;
 using StanceOverhaul.SubSystem.Aiming;
 using StanceOverhaul.SubSystem.StanceInput;
+using StanceOverhaul.SubSystem.Animator;
 using StanceOverhaul.Stances;
 using StanceOverhaul.State;
 using System;
@@ -27,6 +28,8 @@ namespace StanceOverhaul.Controllers
         private EStanceType _targetStance = EStanceType.None;
 
         private static FieldInfo _pwaAimField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_aimingSpeed");
+
+        public bool AwakeRan { get; private set; } = false;
 
         //TODO: move to aim controller
         public float PwaAimSpeed
@@ -183,7 +186,7 @@ namespace StanceOverhaul.Controllers
         {
             get
             {
-                return _weaponOffsetSystem.BaseWeaponOffsetPosition;
+                return _weaponOffsetAnimator.BaseWeaponOffsetPosition;
             }
         }
 
@@ -191,7 +194,7 @@ namespace StanceOverhaul.Controllers
         {
             get
             {
-                return _weaponOffsetSystem.DetailsPositionOffset;
+                return _weaponOffsetAnimator.DetailsPositionOffset;
             }
         }
 
@@ -199,7 +202,53 @@ namespace StanceOverhaul.Controllers
         {
             get
             {
-                return _weaponOffsetSystem.DetailsRotationOffset;
+                return _weaponOffsetAnimator.DetailsRotationOffset;
+            }
+        }
+
+        /// <summary>
+        /// Local target that's applied to the left hand spring's zero. 
+        /// The output of the spring is then applied to the left hand marker transform.
+        /// </summary>
+        public Vector3 LeftHandOffsetTargetPosition
+        {
+            get
+            {
+                return _leftHandAnimator.LeftHandPositionTargetOffset;
+            }
+        }
+
+        /// <summary>
+        /// Local target that's applied to the left hand spring's zero. 
+        /// The output of the spring is then applied to the left hand marker transform.
+        /// </summary>
+        public Vector3 LeftHandOffsetTargetRotation
+        {
+            get
+            {
+                return _leftHandAnimator.LeftHandRotationTargetOffset;
+            }
+        }
+
+        /// <summary>
+        /// World-space position to set left hand IK to
+        /// </summary>
+        public Vector3 LeftHandTransformMarkerPosition
+        {
+            get
+            {
+                return _leftHandAnimator.LeftHandMarkerPosition;
+            }
+        }
+
+        /// <summary>
+        /// World-space rotation to set left hand IK to
+        /// </summary>
+        public Quaternion LeftHandTransformMarkerRotation
+        {
+            get
+            {
+                return _leftHandAnimator.LeftHandMarkerRotation;
             }
         }
 
@@ -215,12 +264,15 @@ namespace StanceOverhaul.Controllers
         private StanceState _stanceState;
         private StanceAudioSystem _stanceAudioSystem;
         private StanceReloadSpeedSystem _reloadSpeedSystem;
-        private WeaponOffsetSystem _weaponOffsetSystem;
+        private WeaponOffsetAnimator _weaponOffsetAnimator;
+        private LeftHandAnimaor _leftHandAnimator;
 
         public Spring StancePositionSpring { get; private set; }
         public Spring StanceRotationSpring { get; private set; }
         public Spring OffsetPositionSpring { get; private set; }
         public Spring OffsetRotationSpring { get; private set; }
+        public Spring LeftHandPositionSpring { get; private set; }
+        public Spring LeftHandRotationSpring { get; private set; }
 
         private List<StanceBase> _stances = new List<StanceBase>();
         public PatrolStance PatrolStance { get; private set; }
@@ -230,7 +282,6 @@ namespace StanceOverhaul.Controllers
         public ActiveAim ActiveAim { get; private set; }
         public ShortStock ShortStock { get; private set; }
         public PistolCompress PistolCompress { get; private set; }
-        public bool AwakeRan { get; private set; } = false;
 
         public EStanceReloadType CurrentReloadType => _reloadSpeedSystem.CurrentReloadType;
         public EStanceType CurrentStanceType => _stanceState.ActiveStanceType;
@@ -307,6 +358,9 @@ namespace StanceOverhaul.Controllers
 
             OffsetPositionSpring = Cloner.ShallowClone(PlayerStateInstance.PWA.HandsContainer.HandsPosition);
             OffsetRotationSpring = Cloner.ShallowClone(PlayerStateInstance.PWA.HandsContainer.HandsRotation);
+
+            LeftHandPositionSpring = Cloner.ShallowClone(PlayerStateInstance.PWA.HandsContainer.HandsPosition);
+            LeftHandRotationSpring = Cloner.ShallowClone(PlayerStateInstance.PWA.HandsContainer.HandsRotation);
         }
 
         private void InitStateControllers()
@@ -344,8 +398,11 @@ namespace StanceOverhaul.Controllers
             _reloadSpeedSystem =
                 InitStateController(() => new StanceReloadSpeedSystem());
 
-            _weaponOffsetSystem =
-                InitStateController(() => new WeaponOffsetSystem());
+            _weaponOffsetAnimator =
+                InitStateController(() => new WeaponOffsetAnimator());
+
+            _leftHandAnimator =
+               InitStateController(() => new LeftHandAnimaor());
 
             RunControllerAwake();
         }

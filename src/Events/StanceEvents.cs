@@ -11,10 +11,10 @@ public static class StanceEvents
     public static event Action<IStance>? OnStanceEntered;
 
     /// <summary>Raised when a stance's OnExit() fires. Handler should revert to idle behaviour.</summary>
+    public static event Action<IStance>? OnStanceExitedRef;
     public static event Action? OnStanceExited;
 
     public static event Action? OnTacSprintStarted;
-
     public static event Action? OnTacSprintEnded;
 
     public static event Action? OnStanceHitShoulder;
@@ -41,8 +41,9 @@ public static class StanceEvents
         BaseEventHandler.RaiseEvent(OnStanceEntered, stance);
     }
 
-    internal static void RaiseOnStanceExited()
+    internal static void RaiseOnStanceExited(IStance stance)
     {
+        BaseEventHandler.RaiseEvent(OnStanceExitedRef, stance);
         BaseEventHandler.RaiseEvent(OnStanceExited);
     }
 

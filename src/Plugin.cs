@@ -18,6 +18,10 @@ namespace StanceOverhaul
         public const string MOD_NAME = "Fontaine-StanceOverhaul";
         public const string MOD_VERSION = "0.0.1";
 
+
+        public static GameObject LeftHandMarkerGO;
+        public static GripPose LeftHandMarkerGrip;
+
         void Awake()
         {
             PluginConfig.InitConfigBindings(Config);
@@ -64,6 +68,7 @@ namespace StanceOverhaul
 
             new InitTransformsPatch().Enable();
 
+            new HandIKPatch().Enable();
 
 
             /*            new ShiftWeaponRootPatch().Enable();
@@ -105,12 +110,22 @@ namespace StanceOverhaul
 
         void SubscribeToEvents()
         {
-            RealismCommonLib.Events.PlayerEvents.OnPlayerInitArgs += AddStanceComponentsToPlayer;
+            RealismCommonLib.Events.PlayerEvents.OnPlayerInitRef += AddStanceComponentsToPlayer;
         }
 
         void AddStanceComponentsToPlayer(Player player)
         {
             player.gameObject.AddComponent<StanceController>();
+
+            LeftHandMarkerGO = new GameObject("ProceduralLeftHandTarget");
+            LeftHandMarkerGO.transform.SetParent(player.gameObject.transform, false); //
+
+            LeftHandMarkerGrip = LeftHandMarkerGO.AddComponent<GripPose>();
+            LeftHandMarkerGrip.Hand = GripPose.EHand.Left;
+            LeftHandMarkerGrip.GripType = GripPose.EGripType.Common;
+            LeftHandMarkerGrip.DontCache = true;
+            LeftHandMarkerGrip.transform.localPosition = Vector3.zero;
+            LeftHandMarkerGrip.transform.localRotation =  Quaternion.identity;
         }
     }
 }

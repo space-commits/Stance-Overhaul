@@ -114,5 +114,7 @@ public class PatrolStance : StanceBase
         _exitPistolPos = CurveDrawer.GetCurve("pistol_patrol_exit_position")!;
         _exitPistolRot = CurveDrawer.GetCurve("pistol_patrol_exit_rotation")!;
     }
+
+    
 }
 

@@ -9,11 +9,10 @@ using RealismCommonLib.Utils;
 using RealismCommonLib.ModifierHandlers;
 using static StanceOverhaul.Plugin;
 using static RealismCommonLib.Plugin;
-using System;
 
-namespace StanceOverhaul.SubSystem
+namespace StanceOverhaul.SubSystem.Animator
 {
-    internal class WeaponOffsetSystem : ISubSystem
+    internal class WeaponOffsetAnimator : ISubSystem
     {
         private const float StanceslessDamping = 0.82f;
         private const float StanceslessReturnSpeed = 0.06f;

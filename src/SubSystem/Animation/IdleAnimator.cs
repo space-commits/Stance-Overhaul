@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text;
 
-namespace StanceOverhaul.SpringAnimators
+namespace StanceOverhaul.SubSystem.Animator
 {
     internal class IdleAnimator
     {

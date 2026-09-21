@@ -281,14 +281,12 @@ namespace StanceOverhaul.SubSystem.StanceInput
 
             if (DefaultStance != null && _stanceState.ActiveStance != DefaultStance)
             {
-                ModLogger.LogWarning("toggle DefaultStance");
                 RequestStance(DefaultStance);
                 return;
             }
 
             if (targetStance.RememberStance)
             {
-                ModLogger.LogWarning("RememberStance");
                 _stanceThatWasToggledOriginally =
                     !IsTogglingActiveStance(targetStance.StanceType) ?
                     targetStance : null;

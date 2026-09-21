@@ -13,13 +13,53 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using MultiFlare;
+using RootMotion.FinalIK;
 using static EFT.Player;
 using static StanceOverhaul.Plugin;
 using static RealismCommonLib.Plugin;
 using ReloadClass = EFT.Player.FirearmController.GClass2037;
+using RealismCommonLib.Utils;
 
 namespace StanceOverhaul.Patches
 {
+
+    public class HandIKPatch : ModulePatch
+    {
+        private static FieldInfo _iKArrayField;
+        private static FieldInfo _iKPosField;
+        private static FieldInfo _iKRotField;
+
+        private static Vector3 _handPosTarget;
+        private static Quaternion _handRotTarget;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            _iKArrayField = AccessTools.Field(typeof(Player), "_limbs");
+            _iKPosField = AccessTools.Field(typeof(Player), "_ikPosition");
+            _iKRotField = AccessTools.Field(typeof(Player), "_ikRotation");
+            return AccessTools.Method(typeof(Player), nameof(Player.method_20));
+        }
+
+        [PatchPostfix]
+        private static void Postfix(Player __instance)
+        {
+            // if (!__instance.IsYourPlayer) return;
+
+            // LimbIK[] limbs = (LimbIK[])_iKArrayField.GetValue(__instance);
+            // Vector3 originalIkPosTarget = (Vector3)_iKPosField.GetValue(__instance);
+            // Quaternion originalIkRotTarget = (Quaternion)_iKRotField.GetValue(__instance);
+
+            // if (limbs == null)
+            //     return;
+
+            // var left = limbs[0];
+  
+            // left.solver.IKPosition += StanceControllerInstance.LeftHandTransformMarkerPosition;
+            // left.solver.IKRotation *= StanceControllerInstance.LeftHandTransformMarkerRotation;
+
+            //need to replicate method, and add my own grippose blending on top
+        }
+    }
 
     public class UpdateHipInaccuracyPatch : ModulePatch
     {
@@ -335,6 +375,7 @@ namespace StanceOverhaul.Patches
             {
                 StanceControllerInstance.StancePositionSpring.FixedUpdate(dt, nFixedFrames);
                 StanceControllerInstance.OffsetPositionSpring.FixedUpdate(dt, nFixedFrames);
+                StanceControllerInstance.LeftHandPositionSpring.FixedUpdate(dt, nFixedFrames);
             }
 
 
@@ -342,6 +383,7 @@ namespace StanceOverhaul.Patches
             {
                 StanceControllerInstance.StanceRotationSpring.FixedUpdate(dt, nFixedFrames);
                 StanceControllerInstance.OffsetRotationSpring.FixedUpdate(dt, nFixedFrames);
+                StanceControllerInstance.LeftHandRotationSpring.FixedUpdate(dt, nFixedFrames);
             }
         }
     }
@@ -439,6 +481,8 @@ namespace StanceOverhaul.Patches
                 StanceControllerInstance.StanceRotationSpring.Zero = StanceControllerInstance.StanceRotation;
                 StanceControllerInstance.OffsetPositionSpring.Zero = StanceControllerInstance.DetailsOffsetPosition;
                 StanceControllerInstance.OffsetRotationSpring.Zero = StanceControllerInstance.DetailsOffsetRotation;
+                // StanceControllerInstance.LeftHandPositionSpring.Zero = StanceControllerInstance.LeftHandOffsetTargetPosition;
+                // StanceControllerInstance.LeftHandRotationSpring.Zero = StanceControllerInstance.LeftHandOffsetTargetRotation;
             }
         }
     }

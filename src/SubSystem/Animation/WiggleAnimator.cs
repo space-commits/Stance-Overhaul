@@ -1,9 +1,8 @@
-﻿using StanceOverhaul.SpringAnimators;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace StanceOverhaul.SpringAnimators
+namespace StanceOverhaul.SubSystem.Animator
 {
     internal class WiggleAnimator
     {

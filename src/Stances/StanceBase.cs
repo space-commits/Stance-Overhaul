@@ -131,7 +131,7 @@ namespace StanceOverhaul.Stances
 
         public virtual void OnExit()
         {
-            StanceEvents.RaiseOnStanceExited();
+            StanceEvents.RaiseOnStanceExited(this);
         }
 
         public virtual void OnHoldUpdate(float deltaTime) { } //TODO: implement

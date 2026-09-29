@@ -5,6 +5,8 @@ using EFT;
 using Unity;
 using UnityEngine;
 using static RealismCommonLib.Plugin;
+using RootMotion.FinalIK;
+using StanceOverhaul.Events;
 
 namespace StanceOverhaul
 {
@@ -70,6 +72,8 @@ namespace StanceOverhaul
 
             new HandIKPatch().Enable();
 
+            new ElbowIKPatch().Enable();
+
 
             /*            new ShiftWeaponRootPatch().Enable();
                         new HeadPatch().Enable();*/
@@ -117,15 +121,7 @@ namespace StanceOverhaul
         {
             player.gameObject.AddComponent<StanceController>();
 
-            LeftHandMarkerGO = new GameObject("ProceduralLeftHandTarget");
-            LeftHandMarkerGO.transform.SetParent(player.gameObject.transform, false); //
-
-            LeftHandMarkerGrip = LeftHandMarkerGO.AddComponent<GripPose>();
-            LeftHandMarkerGrip.Hand = GripPose.EHand.Left;
-            LeftHandMarkerGrip.GripType = GripPose.EGripType.Common;
-            LeftHandMarkerGrip.DontCache = true;
-            LeftHandMarkerGrip.transform.localPosition = Vector3.zero;
-            LeftHandMarkerGrip.transform.localRotation =  Quaternion.identity;
+            StanceEvents.RaiseOnPlayerLoad(player);
         }
     }
 }

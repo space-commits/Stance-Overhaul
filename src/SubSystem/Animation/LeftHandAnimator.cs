@@ -17,12 +17,9 @@ namespace StanceOverhaul.SubSystem.Animator
 {
     internal class LeftHandAnimaor : ISubSystem
     {
-        private const float LeftHandDamping = 0.85f;
-        private const float LeftHandReturnSpeed = 0.06f;
-
-        //private bool _canRemoveLeftHandForStance;
-
-        private DelayTimer _leftHandResetTimer = new DelayTimer(0.5f);
+        private DelayTimer _leftHandTimer = new DelayTimer(0.8f);
+        private bool _overrideLeftHand = false;
+        private bool _updateOverride = false;
 
         public Vector3 LeftHandMarkerPosition
         {
@@ -42,8 +39,6 @@ namespace StanceOverhaul.SubSystem.Animator
         public Vector3 LeftHandPositionTargetOffset { get; private set; } = Vector3.zero;
         public Vector3 LeftHandRotationTargetOffset { get; private set; } = Vector3.zero;
 
-        public bool OverrideLeftHand { get; private set; }
-
         private bool DoOffsets
         {
             get
@@ -54,7 +49,6 @@ namespace StanceOverhaul.SubSystem.Animator
                     !PlayerStateInstance.IsMounting &&
                     !PlayerStateInstance.IsSprinting &&
                     !PlayerStateInstance.IsUsingStationaryWeapon;
-                //&& PlayerStateInstance.Player.LeftHandInteractionTarget == null;
             }
         }
 
@@ -63,20 +57,20 @@ namespace StanceOverhaul.SubSystem.Animator
         {
             StanceEvents.OnStanceEntered += StanceRemoveLeftHand;
             StanceEvents.OnStanceExitedRef += StanceAttachLeftHand;
+            StanceEvents.OnPlayerLoadRef += OnPlayerLoad;
             // PWAEvents.OnUpdateWeaponVariablesWithFc += InitTargets;
             // StanceEvents.OnStanceReloadReset += ResetTimers;
             // StanceEvents.OnStanceCheckAmmo += StartCheckAmmoTimer;
             // StanceEvents.OnStanceChamberCheck += StartChamberCheckTimer;
             // StanceEvents.OnStanceChamber += StartRechamberTimer;
             // StanceEvents.OnTransformsInitFC += SetBaseWeaponOffsetPosition;
-
-            SetSpringValues();
         }
 
         public void RunOnDestroy()
         {
             StanceEvents.OnStanceEntered -= StanceRemoveLeftHand;
             StanceEvents.OnStanceExitedRef -= StanceAttachLeftHand;
+            StanceEvents.OnPlayerLoadRef -= OnPlayerLoad;
             // PlayerEvents.OnPlayerInitRef -= InitTargets;
             // StanceEvents.OnStanceReloadReset -= ResetTimers;
             // StanceEvents.OnStanceCheckAmmo -= StartCheckAmmoTimer;
@@ -90,90 +84,50 @@ namespace StanceOverhaul.SubSystem.Animator
             if (LeftHandMarkerGO == null)
                 return;
 
-            UpdateTimers();
             UpdateLeftHandTargets();
             UpdateTransforms();
         }
 
-        private void UpdateTimers()
+        private void OnPlayerLoad(Player player)
         {
-            _leftHandResetTimer.Update();
-        }
+            LeftHandMarkerGO = new GameObject("ProceduralLeftHandTarget");
+            LeftHandMarkerGO.transform.SetParent(player.gameObject.transform, false);
 
-        private void ResetTimers()
-        {
-            _leftHandResetTimer.Stop();
-        }
-
-        private void StartLeftHandTimer()
-        {
-            _leftHandResetTimer.Start();
+            LeftHandMarkerGrip = LeftHandMarkerGO.AddComponent<GripPose>();
+            LeftHandMarkerGrip.Hand = GripPose.EHand.Left;
+            LeftHandMarkerGrip.GripType = GripPose.EGripType.Alternative;
+            LeftHandMarkerGrip.DontCache = true;
+            LeftHandMarkerGrip.transform.localPosition = Vector3.zero;
+            LeftHandMarkerGrip.transform.localRotation = Quaternion.identity;
         }
 
         private void StanceRemoveLeftHand(IStance stance)
         {
-            ModLogger.LogWarning("on");
-            if (stance.StanceType == EStanceType.PatrolStance)
+            if (stance.StanceType == EStanceType.PatrolStance && WeaponStateInstance.TreatAsPistol)
             {
-                // PlayerStateInstance.Player.LeftHandInteractionTarget = LeftHandMarkerGrip;
-                // PlayerStateInstance.Player.ThirdIkWeight.Target = 1f;
-
-                // PlayerStateInstance.Player.MovementContext.SetIKInteraction(LeftHandMarkerGrip);
-
-                //OverrideLeftHand = true;
-                PlayerStateInstance.Player.HandsAnimator.SetInventory(true);
+                PlayerStateInstance.Player.LeftHandInteractionTarget = LeftHandMarkerGrip;
+                _leftHandTimer.Start();
+                _overrideLeftHand = true;
+                _updateOverride = false;
             }
-
-            //_canRemoveLeftHandForStance = true;
         }
 
         private void StanceAttachLeftHand(IStance stance)
         {
-            ModLogger.LogWarning("off");
-            // if (PlayerStateInstance.Player.LeftHandInteractionTarget == LeftHandMarkerGrip)
-            // {
-            //     PlayerStateInstance.Player.MovementContext.SetIKInteraction(null);
-
-            //PlayerStateInstance.Player.LeftHandInteractionTarget = null;
-            if (stance.StanceType == EStanceType.PatrolStance)
+            if (stance.StanceType == EStanceType.PatrolStance && WeaponStateInstance.TreatAsPistol)
             {
-                PlayerStateInstance.Player.HandsAnimator.SetInventory(false);
-            }
-            //  PlayerStateInstance.Player.ThirdIkWeight.Target = 0f;
-
-            //     //OverrideLeftHand = true;
-            // }
-
-            //_canRemoveLeftHandForStance = false;
-        }
-
-        private void SetSpringValues()
-        {
-            StanceControllerInstance.OffsetPositionSpring.ReturnSpeed = StanceControllerInstance.StatsHandlerInstance.GetSpringReturnSpeed(LeftHandDamping);
-            StanceControllerInstance.OffsetRotationSpring.ReturnSpeed = StanceControllerInstance.StatsHandlerInstance.GetSpringReturnSpeed(LeftHandReturnSpeed);
-
-            StanceControllerInstance.OffsetPositionSpring.Damping = StanceControllerInstance.StatsHandlerInstance.GetSpringDamping(LeftHandDamping);
-            StanceControllerInstance.OffsetRotationSpring.Damping = StanceControllerInstance.StatsHandlerInstance.GetSpringDamping(LeftHandReturnSpeed);
-        }
-
-        // public void InitTargets(Player.FirearmController fc)
-        // {
-        //     ModLogger.LogWarning("=======player init");
-
-        //     LeftHandMarkerGO = new GameObject();
-        //     LeftHandMarkerGO.transform.SetParent(fc.Transform.Original);
-        // }
-
-        private void HandlePistolPatrolStanceOffset()
-        {
-            if (WeaponStateInstance.TreatAsPistol && StanceControllerInstance.CurrentStanceType == EStanceType.PatrolStance)
-            {
-                LeftHandPositionTargetOffset += new Vector3(PluginConfig.test1.Value, PluginConfig.test2.Value, PluginConfig.test3.Value);
-                LeftHandRotationTargetOffset += new Vector3(PluginConfig.test4.Value, PluginConfig.test5.Value, PluginConfig.test6.Value);
+                PlayerStateInstance.Player.HandsAnimator.ShowCompass(false);
+                _overrideLeftHand = false;
+                _updateOverride = true;
             }
         }
 
-        //non-stance related rotational and postion changes for immersion
+        private void SetDefaultPosition()
+        {
+            LeftHandPositionTargetOffset += new Vector3(PluginConfig.test1.Value, PluginConfig.test2.Value, PluginConfig.test3.Value);
+            LeftHandRotationTargetOffset += new Vector3(PluginConfig.test4.Value, PluginConfig.test5.Value, PluginConfig.test6.Value);
+        }
+
         private void UpdateLeftHandTargets()
         {
             LeftHandPositionTargetOffset = Vector3.zero;
@@ -181,19 +135,35 @@ namespace StanceOverhaul.SubSystem.Animator
 
             if (DoOffsets)
             {
-                HandlePistolPatrolStanceOffset();
-                PlayerStateInstance.Player.ThirdIkWeight.Speed = PluginConfig.test8.Value;
+                SetDefaultPosition();
             }
+
+            if (_leftHandTimer.Update())
+            {
+                _updateOverride = true;
+                PlayerStateInstance.Player.HandsAnimator.ShowCompass(true);
+            }
+
+            if (_updateOverride)
+            {
+                var speed = _overrideLeftHand ? PluginConfig.test7.Value : PluginConfig.test8.Value;
+                PlayerStateInstance.Player.ThirdIkWeight.Value = Mathf.MoveTowards(PlayerStateInstance.Player.ThirdIkWeight.Value, _overrideLeftHand ? 1f : 0f, speed * Time.deltaTime);
+            }
+
+            _leftHandTimer.Duration = PluginConfig.test10.Value;
+
         }
 
         private void UpdateTransforms()
         {
-            //should be lerped
-            // LeftHandMarkerGrip.transform.localPosition = LeftHandPositionTargetOffset;
-            // LeftHandMarkerGrip.transform.localRotation = Quaternion.Euler(LeftHandRotationTargetOffset);
+            LeftHandMarkerGrip.transform.localPosition = Vector3.Lerp(LeftHandMarkerGrip.transform.localPosition, LeftHandPositionTargetOffset, Time.deltaTime * PluginConfig.test9.Value);
+            LeftHandMarkerGrip.transform.localRotation = Quaternion.Lerp(LeftHandMarkerGrip.transform.localRotation, Quaternion.Euler(LeftHandRotationTargetOffset), Time.deltaTime * PluginConfig.test9.Value);
 
-            LeftHandMarkerGrip.transform.localPosition = Vector3.Lerp(LeftHandMarkerGrip.transform.localPosition, LeftHandPositionTargetOffset, Time.deltaTime * PluginConfig.test7.Value);
-            LeftHandMarkerGrip.transform.localRotation = Quaternion.Lerp(LeftHandMarkerGrip.transform.localRotation, Quaternion.Euler(LeftHandRotationTargetOffset), Time.deltaTime * PluginConfig.test7.Value);
+            if (PlayerStateInstance.PWA.HandsContainer.WeaponRoot != LeftHandMarkerGO.transform.parent)
+            {
+                LeftHandMarkerGO.transform.SetParent(PlayerStateInstance.PWA.HandsContainer.TrackingTransform, false);
+            }
+
         }
     }
 }

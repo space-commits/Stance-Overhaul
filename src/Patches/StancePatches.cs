@@ -53,11 +53,59 @@ namespace StanceOverhaul.Patches
             //     return;
 
             // var left = limbs[0];
-  
+
             // left.solver.IKPosition += StanceControllerInstance.LeftHandTransformMarkerPosition;
             // left.solver.IKRotation *= StanceControllerInstance.LeftHandTransformMarkerRotation;
 
             //need to replicate method, and add my own grippose blending on top
+        }
+    }
+
+    public class ElbowIKPatch : ModulePatch
+    {
+        private static FieldInfo _iKArrayField;
+        private static FieldInfo _iKPosField;
+        private static FieldInfo _iKRotField;
+
+        private static Vector3 _handPosTarget;
+        private static Quaternion _handRotTarget;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            _iKArrayField = AccessTools.Field(typeof(Player), "_limbs");
+            _iKPosField = AccessTools.Field(typeof(Player), "_ikPosition");
+            _iKRotField = AccessTools.Field(typeof(Player), "_ikRotation");
+            return AccessTools.Method(typeof(Player), nameof(Player.method_24));
+        }
+
+        [PatchPostfix]
+        private static void Postfix(Player __instance)
+        {
+            //if (!StanceControllerInstance.OverrideLeftHand) return;
+
+             LimbIK[] limbs = (LimbIK[])_iKArrayField.GetValue(__instance);
+
+            var solver = limbs[0].solver; // IKSolverLimb
+            Transform shoulder = solver.bone1.transform;
+            Vector3 shoulderPos = shoulder.position;
+            Vector3 targetPos = solver.IKPosition;
+
+            Vector3 toTarget = targetPos - shoulderPos;
+            if (toTarget.sqrMagnitude < 0.0001f) return;
+            toTarget.Normalize();
+
+            // Reference frame for "natural" elbow direction. Chest/spine bone is better
+            // than root if the upper body can lean/twist independently of the hips.
+            Transform torso = __instance.ProceduralWeaponAnimation.HandsContainer.TrackingTransform; // swap for a spine/chest bone if you have one
+
+            // Elbow points down, outward (left, for the left arm), slightly forward.
+            Vector3 elbowDir = (torso.up * -0.6f + (-torso.right) * 0.5f + torso.forward * 0.25f).normalized;
+
+            // Guard against collinearity with the target direction (the degenerate case above)
+            if (Mathf.Abs(Vector3.Dot(elbowDir, toTarget)) > 0.9f)
+                elbowDir = Vector3.Slerp(elbowDir, torso.forward, 0.5f).normalized;
+
+            solver.bendGoal.position = shoulderPos + elbowDir; // direction matters, magnitude doesn't
         }
     }
 
@@ -375,7 +423,6 @@ namespace StanceOverhaul.Patches
             {
                 StanceControllerInstance.StancePositionSpring.FixedUpdate(dt, nFixedFrames);
                 StanceControllerInstance.OffsetPositionSpring.FixedUpdate(dt, nFixedFrames);
-                StanceControllerInstance.LeftHandPositionSpring.FixedUpdate(dt, nFixedFrames);
             }
 
 
@@ -383,7 +430,6 @@ namespace StanceOverhaul.Patches
             {
                 StanceControllerInstance.StanceRotationSpring.FixedUpdate(dt, nFixedFrames);
                 StanceControllerInstance.OffsetRotationSpring.FixedUpdate(dt, nFixedFrames);
-                StanceControllerInstance.LeftHandRotationSpring.FixedUpdate(dt, nFixedFrames);
             }
         }
     }

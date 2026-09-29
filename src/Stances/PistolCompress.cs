@@ -55,10 +55,10 @@ public class PistolCompress : StanceBase
             case EStanceType.ActiveAiming: return 0.25f;
             case EStanceType.HighReady: return 0.25f;
             case EStanceType.LeftShoulder: return 0.25f;
-            case EStanceType.PatrolStance: return 0.25f;
+            case EStanceType.PatrolStance: return PluginConfig.PistolPatrolBlendModifier.Value;
             case EStanceType.ShortStock: return 0.25f;
             case EStanceType.LowReady: return 0.25f;
-            default: return 0.25f;
+            default: return 0f;
         }
     }
 
@@ -72,7 +72,7 @@ public class PistolCompress : StanceBase
             case EStanceType.HighReady: speed *= 5f; return speed;
             case EStanceType.LowReady: speed *= 5f; return speed;
             case EStanceType.ShortStock: speed *= 5f; return speed;
-            case EStanceType.PatrolStance: speed *= PluginConfig.PistolTransitionFromIdle.Value; return speed;
+            case EStanceType.PatrolStance: speed *= PluginConfig.PistolTransitionFromPatrol.Value; return speed;
             case EStanceType.LeftShoulder: speed *= 5f; return speed;
             default: return speed;
         }
@@ -88,7 +88,7 @@ public class PistolCompress : StanceBase
             case EStanceType.HighReady: speed *= 5f; return speed;
             case EStanceType.LowReady: speed *= 5f; return speed;
             case EStanceType.ShortStock: speed *= 5f; return speed;
-            case EStanceType.PatrolStance: speed *= PluginConfig.PistolTransitionToIdle.Value; return speed;
+            case EStanceType.PatrolStance: speed *= PluginConfig.PistolTransitionToPatrol.Value; return speed;
             case EStanceType.LeftShoulder: speed *= 5f; return speed;
             default: return speed;
         }

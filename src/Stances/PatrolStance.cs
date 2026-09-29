@@ -53,6 +53,7 @@ public class PatrolStance : StanceBase
             case EStanceType.LowReady: return PluginConfig.PatrolBlendThresholdLowReady.Value;
             case EStanceType.LeftShoulder: return PluginConfig.PatrolBlendThresholdLeftShoulder.Value;
             case EStanceType.ShortStock: return PluginConfig.PatrolBlendThresholdShortStock.Value;
+            case EStanceType.PistolCompress: return PluginConfig.PatrolBlendThresholdPistol.Value;
             default: return 0.2f;
         }
     }
@@ -67,6 +68,7 @@ public class PatrolStance : StanceBase
             case EStanceType.LowReady: speed *= PluginConfig.PatrolTransitionFromLowReady.Value; return speed;
             case EStanceType.LeftShoulder: speed *= PluginConfig.PatrolTransitionFromLeftShoulder.Value; return speed;
             case EStanceType.ShortStock: speed *= PluginConfig.PatrolTransitionFromShortStock.Value; return speed;
+            case EStanceType.PistolCompress: speed *= PluginConfig.PatrolTransitionFromPistol.Value; return speed;
             case EStanceType.None: speed *= PluginConfig.PatrolTransitionFromIdle.Value; return speed;
             default: return speed;
         }
@@ -82,6 +84,7 @@ public class PatrolStance : StanceBase
             case EStanceType.LowReady: speed *= PluginConfig.PatrolTransitionToLowReady.Value; return speed;
             case EStanceType.LeftShoulder: speed *= PluginConfig.PatrolTransitionToLeftShoulder.Value; return speed;
             case EStanceType.ShortStock: speed *= PluginConfig.PatrolTransitionToShortStock.Value; return speed;
+            case EStanceType.PistolCompress: speed *= PluginConfig.PatrolTransitionToPistol.Value; return speed;
             case EStanceType.None: speed *= PluginConfig.PatrolTransitionToIdle.Value; return speed;
             default: return speed;
         }
@@ -115,6 +118,6 @@ public class PatrolStance : StanceBase
         _exitPistolRot = CurveDrawer.GetCurve("pistol_patrol_exit_rotation")!;
     }
 
-    
+
 }
 

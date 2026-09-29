@@ -271,8 +271,6 @@ namespace StanceOverhaul.Controllers
         public Spring StanceRotationSpring { get; private set; }
         public Spring OffsetPositionSpring { get; private set; }
         public Spring OffsetRotationSpring { get; private set; }
-        public Spring LeftHandPositionSpring { get; private set; }
-        public Spring LeftHandRotationSpring { get; private set; }
 
         private List<StanceBase> _stances = new List<StanceBase>();
         public PatrolStance PatrolStance { get; private set; }
@@ -358,9 +356,6 @@ namespace StanceOverhaul.Controllers
 
             OffsetPositionSpring = Cloner.ShallowClone(PlayerStateInstance.PWA.HandsContainer.HandsPosition);
             OffsetRotationSpring = Cloner.ShallowClone(PlayerStateInstance.PWA.HandsContainer.HandsRotation);
-
-            LeftHandPositionSpring = Cloner.ShallowClone(PlayerStateInstance.PWA.HandsContainer.HandsPosition);
-            LeftHandRotationSpring = Cloner.ShallowClone(PlayerStateInstance.PWA.HandsContainer.HandsRotation);
         }
 
         private void InitStateControllers()

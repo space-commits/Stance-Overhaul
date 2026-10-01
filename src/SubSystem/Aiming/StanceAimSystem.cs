@@ -1,10 +1,5 @@
 ﻿using RealismCommonLib.ModifierHandlers;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using RealismCommonLib.StateControllers;
 using static RealismCommonLib.Plugin;
-using StanceOverhaul.SubSystem;
 
 namespace StanceOverhaul.SubSystem.Aiming
 {

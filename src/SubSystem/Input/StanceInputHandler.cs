@@ -277,8 +277,6 @@ namespace StanceOverhaul.SubSystem.StanceInput
         {
             if (targetStance == null || _interruptType != EStanceInterruptType.None) return;
 
-            ModLogger.LogWarning("toggle stance");
-
             if (DefaultStance != null && _stanceState.ActiveStance != DefaultStance)
             {
                 RequestStance(DefaultStance);
@@ -326,9 +324,9 @@ namespace StanceOverhaul.SubSystem.StanceInput
 
         private void ToggleActiveAim()
         {
-            bool activeAimActive = _stanceState.ActiveStanceType == EStanceType.ActiveAiming;
+            bool activeAimIsActive = _stanceState.ActiveStanceType == EStanceType.ActiveAiming;
 
-            if (!activeAimActive)
+            if (!activeAimIsActive)
             {
                 _stanceBeforeInterrupt = EffectiveRememberedStance;
                 RequestStance(StanceControllerInstance.ActiveAim);
@@ -339,7 +337,9 @@ namespace StanceOverhaul.SubSystem.StanceInput
                 _stanceBeforeInterrupt = null;
 
                 if (toRestore != null)
+                {
                     ToggleStance(toRestore);
+                }
                 else
                     _stanceState.CancelAll();
             }

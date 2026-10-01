@@ -194,8 +194,6 @@ namespace StanceOverhaul.State
             // no active stance: simple enter
             if (_primary == null && _incoming == null)
             {
-                ModLogger.LogWarning("enter stance ");
-
                 var transition = new StanceTransitionContext(EStanceType.None, stance.StanceType);
 
                 _primary = new StanceSlot(stance, ECurveType.Enter, 0f, +1, transition);

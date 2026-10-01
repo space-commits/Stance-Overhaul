@@ -26,7 +26,7 @@ public class PatrolStance : StanceBase
     public override float WalkSpeedBonus => PluginConfig.PatrolWalkSpeedBonus.Value;
     public override float SprintAccelBonus => PluginConfig.PatrolSprintAccelBonus.Value;
 
-    public override bool BlocksFiring => false;
+    public override bool BlocksFiring => true;
 
     public override EStanceReloadType[] ReloadTypesThatPauseStance => new EStanceReloadType[]
     {

@@ -17,8 +17,7 @@ using RootMotion.FinalIK;
 using static EFT.Player;
 using static StanceOverhaul.Plugin;
 using static RealismCommonLib.Plugin;
-using ReloadClass = EFT.Player.FirearmController.GClass2037;
-using RealismCommonLib.Utils;
+using ReloadClass = EFT.Player.FirearmController.Idling;
 
 namespace StanceOverhaul.Patches
 {
@@ -37,7 +36,7 @@ namespace StanceOverhaul.Patches
             _iKArrayField = AccessTools.Field(typeof(Player), "_limbs");
             _iKPosField = AccessTools.Field(typeof(Player), "_ikPosition");
             _iKRotField = AccessTools.Field(typeof(Player), "_ikRotation");
-            return AccessTools.Method(typeof(Player), nameof(Player.method_20));
+            return AccessTools.Method(typeof(Player), nameof(Player.IkProcess));
         }
 
         [PatchPostfix]
@@ -75,15 +74,15 @@ namespace StanceOverhaul.Patches
             _iKArrayField = AccessTools.Field(typeof(Player), "_limbs");
             _iKPosField = AccessTools.Field(typeof(Player), "_ikPosition");
             _iKRotField = AccessTools.Field(typeof(Player), "_ikRotation");
-            return AccessTools.Method(typeof(Player), nameof(Player.method_24));
+            return AccessTools.Method(typeof(Player), nameof(Player.AdjustElbows));
         }
 
         [PatchPostfix]
         private static void Postfix(Player __instance)
         {
-            //if (!StanceControllerInstance.OverrideLeftHand) return;
+            if (!WeaponStateInstance.TreatAsPistol) return;
 
-             LimbIK[] limbs = (LimbIK[])_iKArrayField.GetValue(__instance);
+            LimbIK[] limbs = (LimbIK[])_iKArrayField.GetValue(__instance);
 
             var solver = limbs[0].solver; // IKSolverLimb
             Transform shoulder = solver.bone1.transform;
@@ -106,6 +105,37 @@ namespace StanceOverhaul.Patches
                 elbowDir = Vector3.Slerp(elbowDir, torso.forward, 0.5f).normalized;
 
             solver.bendGoal.position = shoulderPos + elbowDir; // direction matters, magnitude doesn't
+        }
+    }
+    public class PropSoundPatch : ModulePatch
+    {
+        private static FieldInfo _playerBridgeField;
+        protected override MethodBase GetTargetMethod()
+        {
+            _playerBridgeField = AccessTools.Field(typeof(BaseSoundPlayer), "playersBridge");
+            return AccessTools.Method(typeof(BaseSoundPlayer), nameof(BaseSoundPlayer.PlayRandomClip));
+
+            // _playerBridgeField = AccessTools.Field(typeof(BaseSoundPlayer), "playersBridge");
+
+            // Type soundPlayer = typeof(BaseSoundPlayer);
+            // Type iface = soundPlayer.GetInterfaces().First(i => i.Name == "IEventsConsumer");
+            // InterfaceMapping map = soundPlayer.GetInterfaceMap(iface);
+
+            // int index = Array.FindIndex(map.InterfaceMethods, m => m.Name == "OnUseProp");
+            // return map.TargetMethods[index];
+        }
+
+        [PatchPrefix]
+        private static bool Prefix(BaseSoundPlayer __instance, BaseSoundPlayer.SoundElement soundElement)
+        {
+            BaseSoundPlayer.IObserverToPlayerBridge player = (BaseSoundPlayer.IObserverToPlayerBridge)_playerBridgeField.GetValue(__instance);
+            var clipMathces = soundElement == player.PropIn || soundElement == player.PropOut;
+            if (player.iPlayer.IsYourPlayer && StanceControllerInstance.LeftHandOverrideActive && clipMathces)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 
@@ -350,9 +380,9 @@ namespace StanceOverhaul.Patches
 
         protected override MethodBase GetTargetMethod()
         {
-            _ergoField = AccessTools.Field(typeof(FirearmController), "gclass849_1");
+            _ergoField = AccessTools.Field(typeof(FirearmController), "_deferredErgonomic");
             _playerField = AccessTools.Field(typeof(FirearmController), "_player");
-            _tacticalModesField = AccessTools.Field(typeof(TacticalComboVisualController), "list_0");
+            _tacticalModesField = AccessTools.Field(typeof(TacticalComboVisualController), "_ligthbeamsTransforms");
             return AccessTools.Method(typeof(FirearmController), nameof(FirearmController.UpdateHipInaccuracy));
         }
 
@@ -371,7 +401,7 @@ namespace StanceOverhaul.Patches
 
             //Logger.LogWarning($"Device Bonus: {_deviceBonus}, White Light: {_whiteLightActive}, IR Light: {_irLightActive}, IR Laser: {_irLaserActive}, Visible Laser: {_laserActive}");
 
-            GClass849<float> ergo = (GClass849<float>)_ergoField.GetValue(__instance);
+            Deferred<float> ergo = (Deferred<float>)_ergoField.GetValue(__instance);
 
             __instance.HipInaccuracy = 1f - Mathf.Clamp01(ergo.Value / 250f - 0.15f);
             player.ProceduralWeaponAnimation.Breath.HipPenalty = __instance.HipInaccuracy;
@@ -614,18 +644,16 @@ namespace StanceOverhaul.Patches
 
     public class DisableAimOnReloadPatch : ModulePatch
     {
-        private static FieldInfo _playerField;
         protected override MethodBase GetTargetMethod()
         {
-            _playerField = AccessTools.Field(typeof(ReloadClass), "Player_0");
             return typeof(ReloadClass).GetMethod("DisableAimingOnReload");
         }
 
         [PatchPrefix]
         private static bool PatchPreFix(ReloadClass __instance)
         {
-            Player player = (Player)_playerField.GetValue(__instance);
-            /*           if (player.IsYourPlayer && StanceControllerInstance.IsMounting)
+
+            /*           if (__instance.Player && StanceControllerInstance.IsMounting)
                        {
                            return false;
                        }*/
@@ -1059,10 +1087,10 @@ namespace StanceOverhaul.Patches
         {
             __instance.ResetLeftHand();
             skipAnimation = StanceControllerInstance.CurrentStanceType == EStanceType.HighReady && PlayerStateInstance.IsSprinting ? true : skipAnimation;
-            WeaponAnimationSpeedControllerClass.SetFireMode(__instance.Animator, (float)fireMode);
+            AnimationControllerParametersTable.SetFireMode(__instance.Animator, (float)fireMode);
             if (!skipAnimation)
             {
-                WeaponAnimationSpeedControllerClass.TriggerFiremodeSwitch(__instance.Animator);
+                AnimationControllerParametersTable.TriggerFiremodeSwitch(__instance.Animator);
             }
             return false;
         }
@@ -1114,9 +1142,9 @@ namespace StanceOverhaul.Patches
         protected override MethodBase GetTargetMethod()
         {
             _playerField = AccessTools.Field(typeof(EFT.Player.FirearmController), "_player");
-            _hitIgnoreField = AccessTools.Field(typeof(EFT.Player.FirearmController), "func_2");
+            _hitIgnoreField = AccessTools.Field(typeof(EFT.Player.FirearmController), "_isOverlapHitIgnoredTest");
 
-            return typeof(Player.FirearmController).GetMethod("method_11", BindingFlags.Instance | BindingFlags.Public);
+            return typeof(Player.FirearmController).GetMethod("OverlapLn", BindingFlags.Instance | BindingFlags.Public);
         }
 
         /*       private static void SetMountingStatus(EBracingDirection coverDir)

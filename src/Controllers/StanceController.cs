@@ -210,45 +210,11 @@ namespace StanceOverhaul.Controllers
         /// Local target that's applied to the left hand spring's zero. 
         /// The output of the spring is then applied to the left hand marker transform.
         /// </summary>
-        public Vector3 LeftHandOffsetTargetPosition
+        public bool LeftHandOverrideActive
         {
             get
             {
-                return _leftHandAnimator.LeftHandPositionTargetOffset;
-            }
-        }
-
-        /// <summary>
-        /// Local target that's applied to the left hand spring's zero. 
-        /// The output of the spring is then applied to the left hand marker transform.
-        /// </summary>
-        public Vector3 LeftHandOffsetTargetRotation
-        {
-            get
-            {
-                return _leftHandAnimator.LeftHandRotationTargetOffset;
-            }
-        }
-
-        /// <summary>
-        /// World-space position to set left hand IK to
-        /// </summary>
-        public Vector3 LeftHandTransformMarkerPosition
-        {
-            get
-            {
-                return _leftHandAnimator.LeftHandMarkerPosition;
-            }
-        }
-
-        /// <summary>
-        /// World-space rotation to set left hand IK to
-        /// </summary>
-        public Quaternion LeftHandTransformMarkerRotation
-        {
-            get
-            {
-                return _leftHandAnimator.LeftHandMarkerRotation;
+                return _leftHandAnimator.BlockLeftHandSFX;
             }
         }
 

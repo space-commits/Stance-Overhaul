@@ -1,14 +1,9 @@
-﻿using EFT;
-using EFT.Animations;
-using EFT.InputSystem;
+﻿using EFT.InputSystem;
 using RealismCommonLib.PatchPipeline;
-using StanceOverhaul.Enums;
 using StanceOverhaul.SubSystem;
 using StanceOverhaul.SubSystem.StanceInput;
 using System;
 using UnityEngine;
-using static EFT.Player;
-using static RealismCommonLib.Plugin;
 using static StanceOverhaul.Plugin;
 
 namespace StanceOverhaul.Controllers.PatchHooks

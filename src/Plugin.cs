@@ -18,11 +18,7 @@ namespace StanceOverhaul
 
         public const string MOD_GUID = "com.fontaine.stanceoverhaul";
         public const string MOD_NAME = "Fontaine-StanceOverhaul";
-        public const string MOD_VERSION = "0.0.1";
-
-
-        public static GameObject LeftHandMarkerGO;
-        public static GripPose LeftHandMarkerGrip;
+        public const string MOD_VERSION = "0.0.2";
 
         void Awake()
         {
@@ -35,14 +31,33 @@ namespace StanceOverhaul
 
         void EnablePatches()
         {
-            //new TacticalReloadPatch().Enable();
+            //Spring
+            new ZeroAdjustmentsPatch().Enable();
+            new SpringResetPatch().Enable();
+            new SpringGetPatch().Enable();
+            new SpringUpdatePatch().Enable();
+
+            //Animation
+            new SetFireModePatch().Enable();
+            new InitTransformsPatch().Enable();
+            new ComplexRotationsPatch().Enable();
+            new ShouldMoveWeapCloserPatch().Enable();
+            new HandIKPatch().Enable();
+            new ElbowIKPatch().Enable();
+            new PropSoundPatch().Enable();
+
+            //State & Stats
+            new OperateStationaryWeaponPatch().Enable();
+            new UpdateWeaponVariablesPatch().Enable();
+            new UpdateHipInaccuracyPatch().Enable();
+
+                        //new TacticalReloadPatch().Enable();
             /*            new SprintPatch().Enable();
                         new DisableAimOnReloadPatch().Enable();*/
             /*            new ChangeScopePatch().Enable();*/
             /*        new MountingAndCollisionPatch().Enable();
                     new CollisionPatch().Enable();*/
-            new SetFireModePatch().Enable();
-            new OperateStationaryWeaponPatch().Enable();
+
             /*            new WeaponOverlapViewPatch().Enable();
                         new WeaponOverlappingPatch().Enable();*/
             /*            new ShouldMoveWeapCloserPatch().Enable();*/
@@ -53,27 +68,7 @@ namespace StanceOverhaul
 
             //new ProcessEffectorsPatch().Enable();
 
-
-            new ZeroAdjustmentsPatch().Enable();
-            new SpringResetPatch().Enable();
-
-            new SpringGetPatch().Enable();
             //new SpringGetRelativePatch().Enable();
-
-            new UpdateWeaponVariablesPatch().Enable();
-
-            new UpdateHipInaccuracyPatch().Enable();
-
-            new ShouldMoveWeapCloserPatch().Enable();
-
-            new ComplexRotationsPatch().Enable();
-
-            new InitTransformsPatch().Enable();
-
-            new HandIKPatch().Enable();
-
-            new ElbowIKPatch().Enable();
-
 
             /*            new ShiftWeaponRootPatch().Enable();
                         new HeadPatch().Enable();*/
@@ -98,7 +93,7 @@ namespace StanceOverhaul
 
 
             //new ApplyPositionPatch().Enable();
-            new SpringUpdatePatch().Enable();
+
             //new TacticalReloadMethodPatch().Enable();
             /*           new FOVPatch().Enable();
                        new IsAimingPatch().Enable();

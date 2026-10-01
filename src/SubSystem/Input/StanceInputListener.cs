@@ -213,7 +213,10 @@ namespace StanceOverhaul.SubSystem.StanceInput
             else
             {
                 if (!_activeAimHoldInProgress && anyHeld)
+                {
                     StanceInputEvents.RaiseToggleActiveAim();
+                }
+
                 _activeAimHoldInProgress = anyHeld;
             }
         }

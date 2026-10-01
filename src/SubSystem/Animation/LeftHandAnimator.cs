@@ -1,41 +1,47 @@
-using EFT.Animations;
 using EFT;
-using EFT.InventoryLogic;
 using UnityEngine;
-using System.Collections.Generic;
 using StanceOverhaul.Enums;
 using StanceOverhaul.Events;
 using RealismCommonLib.Utils;
-using RealismCommonLib.ModifierHandlers;
 using static StanceOverhaul.Plugin;
 using static RealismCommonLib.Plugin;
-using System;
 using StanceOverhaul.Stances;
-using RealismCommonLib.Events;
 
 namespace StanceOverhaul.SubSystem.Animator
 {
     internal class LeftHandAnimaor : ISubSystem
     {
         private DelayTimer _leftHandTimer = new DelayTimer(0.8f);
+        private DelayTimer _propSoundBlockTimer = new DelayTimer(2f);
         private bool _overrideLeftHand = false;
+        private bool _blockSoundEffect = false;
         private bool _updateOverride = false;
+
+        private GameObject _leftHandMarkerGO;
+        private GripPose _leftHandMarkerGrip;
+
+        public bool BlockLeftHandSFX
+        {
+            get
+            {
+                return _blockSoundEffect;
+            }
+        }
 
         public Vector3 LeftHandMarkerPosition
         {
             get
             {
-                return LeftHandMarkerGrip.transform.position;
+                return _leftHandMarkerGrip.transform.position;
             }
         }
         public Quaternion LeftHandMarkerRotation
         {
             get
             {
-                return LeftHandMarkerGrip.transform.rotation;
+                return _leftHandMarkerGrip.transform.rotation;
             }
         }
-
         public Vector3 LeftHandPositionTargetOffset { get; private set; } = Vector3.zero;
         public Vector3 LeftHandRotationTargetOffset { get; private set; } = Vector3.zero;
 
@@ -81,7 +87,7 @@ namespace StanceOverhaul.SubSystem.Animator
 
         public void RunOnUpdate(float deltaTime)
         {
-            if (LeftHandMarkerGO == null)
+            if (_leftHandMarkerGO == null)
                 return;
 
             UpdateLeftHandTargets();
@@ -90,23 +96,24 @@ namespace StanceOverhaul.SubSystem.Animator
 
         private void OnPlayerLoad(Player player)
         {
-            LeftHandMarkerGO = new GameObject("ProceduralLeftHandTarget");
-            LeftHandMarkerGO.transform.SetParent(player.gameObject.transform, false);
+            _leftHandMarkerGO = new GameObject("ProceduralLeftHandTarget");
+            _leftHandMarkerGO.transform.SetParent(player.gameObject.transform, false);
 
-            LeftHandMarkerGrip = LeftHandMarkerGO.AddComponent<GripPose>();
-            LeftHandMarkerGrip.Hand = GripPose.EHand.Left;
-            LeftHandMarkerGrip.GripType = GripPose.EGripType.Alternative;
-            LeftHandMarkerGrip.DontCache = true;
-            LeftHandMarkerGrip.transform.localPosition = Vector3.zero;
-            LeftHandMarkerGrip.transform.localRotation = Quaternion.identity;
+            _leftHandMarkerGrip = _leftHandMarkerGO.AddComponent<GripPose>();
+            _leftHandMarkerGrip.Hand = GripPose.EHand.Left;
+            _leftHandMarkerGrip.GripType = GripPose.EGripType.Common;
+            _leftHandMarkerGrip.DontCache = true;
+            _leftHandMarkerGrip.transform.localPosition = Vector3.zero;
+            _leftHandMarkerGrip.transform.localRotation = Quaternion.identity;
         }
 
         private void StanceRemoveLeftHand(IStance stance)
         {
             if (stance.StanceType == EStanceType.PatrolStance && WeaponStateInstance.TreatAsPistol)
             {
-                PlayerStateInstance.Player.LeftHandInteractionTarget = LeftHandMarkerGrip;
+                PlayerStateInstance.Player.LeftHandInteractionTarget = _leftHandMarkerGrip;
                 _leftHandTimer.Start();
+                _propSoundBlockTimer.Start();
                 _overrideLeftHand = true;
                 _updateOverride = false;
             }
@@ -117,6 +124,7 @@ namespace StanceOverhaul.SubSystem.Animator
             if (stance.StanceType == EStanceType.PatrolStance && WeaponStateInstance.TreatAsPistol)
             {
                 PlayerStateInstance.Player.HandsAnimator.ShowCompass(false);
+                _propSoundBlockTimer.Start();
                 _overrideLeftHand = false;
                 _updateOverride = true;
             }
@@ -144,6 +152,15 @@ namespace StanceOverhaul.SubSystem.Animator
                 PlayerStateInstance.Player.HandsAnimator.ShowCompass(true);
             }
 
+            if (!_propSoundBlockTimer.Update())
+            {
+                _blockSoundEffect = true;
+            }
+            else
+            {
+                _blockSoundEffect = false;
+            }
+
             if (_updateOverride)
             {
                 var speed = _overrideLeftHand ? PluginConfig.test7.Value : PluginConfig.test8.Value;
@@ -156,12 +173,12 @@ namespace StanceOverhaul.SubSystem.Animator
 
         private void UpdateTransforms()
         {
-            LeftHandMarkerGrip.transform.localPosition = Vector3.Lerp(LeftHandMarkerGrip.transform.localPosition, LeftHandPositionTargetOffset, Time.deltaTime * PluginConfig.test9.Value);
-            LeftHandMarkerGrip.transform.localRotation = Quaternion.Lerp(LeftHandMarkerGrip.transform.localRotation, Quaternion.Euler(LeftHandRotationTargetOffset), Time.deltaTime * PluginConfig.test9.Value);
+            _leftHandMarkerGrip.transform.localPosition = Vector3.Lerp(_leftHandMarkerGrip.transform.localPosition, LeftHandPositionTargetOffset, Time.deltaTime * PluginConfig.test9.Value);
+            _leftHandMarkerGrip.transform.localRotation = Quaternion.Lerp(_leftHandMarkerGrip.transform.localRotation, Quaternion.Euler(LeftHandRotationTargetOffset), Time.deltaTime * PluginConfig.test9.Value);
 
-            if (PlayerStateInstance.PWA.HandsContainer.WeaponRoot != LeftHandMarkerGO.transform.parent)
+            if (PlayerStateInstance.PWA.HandsContainer.WeaponRoot != _leftHandMarkerGO.transform.parent)
             {
-                LeftHandMarkerGO.transform.SetParent(PlayerStateInstance.PWA.HandsContainer.TrackingTransform, false);
+                _leftHandMarkerGO.transform.SetParent(PlayerStateInstance.PWA.HandsContainer.TrackingTransform, false);
             }
 
         }

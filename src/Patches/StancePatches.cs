@@ -406,8 +406,8 @@ namespace StanceOverhaul.Patches
             __instance.HipInaccuracy = 1f - Mathf.Clamp01(ergo.Value / 250f - 0.15f);
             player.ProceduralWeaponAnimation.Breath.HipPenalty = __instance.HipInaccuracy;
 
-            __instance.HipInaccuracy *= _deviceBonus * StanceControllerInstance.StanceHipfireBonus;
-            player.ProceduralWeaponAnimation.Breath.HipPenalty *= _deviceBonus * StanceControllerInstance.StanceHipfireBonus;
+            __instance.HipInaccuracy *= _deviceBonus * StanceControllerInstance.StanceHipfireBonus * PluginConfig.test1.Value;
+            player.ProceduralWeaponAnimation.Breath.HipPenalty *= _deviceBonus * StanceControllerInstance.StanceHipfireBonus  * PluginConfig.test2.Value;
 
             return false;
         }

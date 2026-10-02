@@ -31,6 +31,13 @@ public static class StanceEvents
     public static event Action<Player>? OnPlayerLoadRef;
     public static event Action<Player.FirearmController>? OnTransformsInitFC;
 
+    public static event Action? OnPrimaryStanceChanged;
+
+    internal static void RaiseOnPrimaryStanceChanged()
+    {
+        BaseEventHandler.RaiseEvent(OnPrimaryStanceChanged);
+    }
+
     internal static void RaiseOnPlayerLoad(Player player)
     {
         BaseEventHandler.RaiseEvent(OnPlayerLoadRef, player);

@@ -22,6 +22,8 @@ public class HighReady : StanceBase
     public override float SprintAccelBonus => PluginConfig.HighReadySprintAccelBonus.Value;
     public override bool CanDoTacSprint => true;
     public override bool RememberStance => true;
+    public override bool BlocksFiring => true;
+
     public override float MagazineReloadSpeedModifier => PluginConfig.HighReadyMagazineReloadSpeedModifier.Value;
     public override float TubeReloadSpeedModifier => PluginConfig.HighReadyTubeReloadSpeedModifier.Value;
     public override float TopReloadSpeedModifier => PluginConfig.HighReadyTopReloadSpeedModifier.Value;

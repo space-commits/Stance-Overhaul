@@ -11,6 +11,7 @@ using StanceOverhaul.SubSystem.StanceInput;
 using StanceOverhaul.SubSystem.Animator;
 using StanceOverhaul.Stances;
 using StanceOverhaul.State;
+using StanceOverhaul.Events;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -62,20 +63,6 @@ namespace StanceOverhaul.Controllers
             }
         }
 
-        //TODO: move ResetProceduralState to sub to StanceState events
-        public EStanceType TargetStances
-        {
-            get { return _targetStance; }
-            set
-            {
-                if (value != _targetStance)
-                {
-                    _targetStance = value;
-                    if (!AimStateInstance.IsAiming) PlayerStateInstance.ResetProceduralState();
-                }
-            }
-        }
-
         //TODO: move to low ready stance class if force low ready will be a thing
         //TODO: move to stance health controller
         public bool CanDoHighReadyInjuredAnim
@@ -86,6 +73,7 @@ namespace StanceOverhaul.Controllers
             }
         }
 
+        //TODO move to aim subsystem
         public bool AdsIsBlocked
         {
             get
@@ -262,6 +250,7 @@ namespace StanceOverhaul.Controllers
             InitSprings();
             InitStateControllers();
             SubscribeToInputEvents();
+            SubscribeToStanceEvents();
             InitStances();
 
             AwakeRan = true;
@@ -281,6 +270,7 @@ namespace StanceOverhaul.Controllers
             RunStanceDispose();
             RunControllerOnDestroy();
             UnsubscribeFromInputEvents();
+            UnsubscribeFromStanceEvents();
         }
 
         private void InitStances()
@@ -405,6 +395,21 @@ namespace StanceOverhaul.Controllers
             {
                 stance.Dispose();
             }
+        }
+
+        private void SubscribeToStanceEvents()
+        {
+            StanceEvents.OnPrimaryStanceChanged += UpdatePlayerStateOnStanceChange;
+        }
+
+        private void UnsubscribeFromStanceEvents()
+        {
+            StanceEvents.OnPrimaryStanceChanged -= UpdatePlayerStateOnStanceChange;
+        }
+
+        private void UpdatePlayerStateOnStanceChange()
+        {
+             PlayerStateInstance.ResetProceduralState();
         }
 
         private void SubscribeToInputEvents()

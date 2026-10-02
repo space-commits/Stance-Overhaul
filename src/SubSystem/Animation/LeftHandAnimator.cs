@@ -1,9 +1,9 @@
 using EFT;
 using UnityEngine;
 using StanceOverhaul.Enums;
+using RealismCommonLib.Events;
 using StanceOverhaul.Events;
 using RealismCommonLib.Utils;
-using static StanceOverhaul.Plugin;
 using static RealismCommonLib.Plugin;
 using StanceOverhaul.Stances;
 
@@ -64,12 +64,10 @@ namespace StanceOverhaul.SubSystem.Animator
             StanceEvents.OnStanceEntered += StanceRemoveLeftHand;
             StanceEvents.OnStanceExitedRef += StanceAttachLeftHand;
             StanceEvents.OnPlayerLoadRef += OnPlayerLoad;
-            // PWAEvents.OnUpdateWeaponVariablesWithFc += InitTargets;
-            // StanceEvents.OnStanceReloadReset += ResetTimers;
-            // StanceEvents.OnStanceCheckAmmo += StartCheckAmmoTimer;
-            // StanceEvents.OnStanceChamberCheck += StartChamberCheckTimer;
-            // StanceEvents.OnStanceChamber += StartRechamberTimer;
-            // StanceEvents.OnTransformsInitFC += SetBaseWeaponOffsetPosition;
+            PlayerEvents.OnWeaponSwap += ResetLeftHand;
+            PlayerEvents.OnSwappedFromItemToGun += ResetLeftHand;
+            PlayerEvents.OnSwappedFromGunToItem += ResetLeftHand;
+            StanceEvents.OnTransformsInit += ResetLeftHand;
         }
 
         public void RunOnDestroy()
@@ -77,12 +75,9 @@ namespace StanceOverhaul.SubSystem.Animator
             StanceEvents.OnStanceEntered -= StanceRemoveLeftHand;
             StanceEvents.OnStanceExitedRef -= StanceAttachLeftHand;
             StanceEvents.OnPlayerLoadRef -= OnPlayerLoad;
-            // PlayerEvents.OnPlayerInitRef -= InitTargets;
-            // StanceEvents.OnStanceReloadReset -= ResetTimers;
-            // StanceEvents.OnStanceCheckAmmo -= StartCheckAmmoTimer;
-            // StanceEvents.OnStanceChamberCheck -= StartChamberCheckTimer;
-            // StanceEvents.OnStanceChamber -= StartRechamberTimer;
-            // StanceEvents.OnTransformsInitFC -= SetBaseWeaponOffsetPosition;
+            PlayerEvents.OnSwappedFromItemToGun -= ResetLeftHand;
+            PlayerEvents.OnSwappedFromGunToItem -= ResetLeftHand;
+            StanceEvents.OnTransformsInit -= ResetLeftHand;
         }
 
         public void RunOnUpdate(float deltaTime)
@@ -119,9 +114,9 @@ namespace StanceOverhaul.SubSystem.Animator
             }
         }
 
-        private void StanceAttachLeftHand(IStance stance)
+        private void ResetLeftHand()
         {
-            if (stance.StanceType == EStanceType.PatrolStance && WeaponStateInstance.TreatAsPistol)
+            if (_overrideLeftHand == true)
             {
                 PlayerStateInstance.Player.HandsAnimator.ShowCompass(false);
                 _propSoundBlockTimer.Start();
@@ -130,10 +125,18 @@ namespace StanceOverhaul.SubSystem.Animator
             }
         }
 
+        private void StanceAttachLeftHand(IStance stance)
+        {
+            if (stance.StanceType == EStanceType.PatrolStance && WeaponStateInstance.TreatAsPistol)
+            {
+                ResetLeftHand();
+            }
+        }
+
         private void SetDefaultPosition()
         {
-            LeftHandPositionTargetOffset += new Vector3(PluginConfig.test1.Value, PluginConfig.test2.Value, PluginConfig.test3.Value);
-            LeftHandRotationTargetOffset += new Vector3(PluginConfig.test4.Value, PluginConfig.test5.Value, PluginConfig.test6.Value);
+            LeftHandPositionTargetOffset += new Vector3(-0.13f, -0.18f, 0.2f);
+            LeftHandRotationTargetOffset += new Vector3(-60f, 190f, -20f);
         }
 
         private void UpdateLeftHandTargets()
@@ -163,18 +166,18 @@ namespace StanceOverhaul.SubSystem.Animator
 
             if (_updateOverride)
             {
-                var speed = _overrideLeftHand ? PluginConfig.test7.Value : PluginConfig.test8.Value;
+                var speed = _overrideLeftHand ? 1.5f : 2f;
                 PlayerStateInstance.Player.ThirdIkWeight.Value = Mathf.MoveTowards(PlayerStateInstance.Player.ThirdIkWeight.Value, _overrideLeftHand ? 1f : 0f, speed * Time.deltaTime);
             }
 
-            _leftHandTimer.Duration = PluginConfig.test10.Value;
+            _leftHandTimer.Duration = 0.2f;
 
         }
 
         private void UpdateTransforms()
         {
-            _leftHandMarkerGrip.transform.localPosition = Vector3.Lerp(_leftHandMarkerGrip.transform.localPosition, LeftHandPositionTargetOffset, Time.deltaTime * PluginConfig.test9.Value);
-            _leftHandMarkerGrip.transform.localRotation = Quaternion.Lerp(_leftHandMarkerGrip.transform.localRotation, Quaternion.Euler(LeftHandRotationTargetOffset), Time.deltaTime * PluginConfig.test9.Value);
+            _leftHandMarkerGrip.transform.localPosition = Vector3.Lerp(_leftHandMarkerGrip.transform.localPosition, LeftHandPositionTargetOffset, Time.deltaTime * 3f);
+            _leftHandMarkerGrip.transform.localRotation = Quaternion.Lerp(_leftHandMarkerGrip.transform.localRotation, Quaternion.Euler(LeftHandRotationTargetOffset), Time.deltaTime * 3f);
 
             if (PlayerStateInstance.PWA.HandsContainer.WeaponRoot != _leftHandMarkerGO.transform.parent)
             {

@@ -935,7 +935,7 @@
           },
           {
             "time": 1.0,
-            "value": -0.04,
+            "value": -0.035,
             "inTangent": 0.0,
             "outTangent": 0.0
           }
@@ -1025,13 +1025,13 @@
           },
           {
             "time": 0.9,
-            "value": -22.0,
+            "value": -19.0,
             "inTangent": 0.0,
             "outTangent": 0.0
           },
           {
             "time": 1.0,
-            "value": -21.0,
+            "value": -18.0,
             "inTangent": 0.0,
             "outTangent": 0.0
           }
@@ -1065,7 +1065,7 @@
         "keys": [
           {
             "time": 0.0,
-            "value": -0.04,
+            "value": -0.035,
             "inTangent": 0.0,
             "outTangent": 0.0
           },
@@ -1155,7 +1155,7 @@
         "keys": [
           {
             "time": 0.0,
-            "value": -20.0,
+            "value": -18.0,
             "inTangent": 0.0,
             "outTangent": 0.0
           },

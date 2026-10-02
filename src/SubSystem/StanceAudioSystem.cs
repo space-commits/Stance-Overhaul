@@ -21,7 +21,7 @@ public class StanceAudioSystem : ISubSystem
 
         private void OnShoulderHit()
         {
-            AudioControllerInstance.PlayADSSound(PluginConfig.StanceSfxModifier.Value, false);
+            AudioControllerInstance.PlayADSSound(PlayerStateInstance.Player, PluginConfig.StanceSfxModifier.Value);
         }
 
 }

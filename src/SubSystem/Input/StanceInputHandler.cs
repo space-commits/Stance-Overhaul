@@ -23,7 +23,7 @@ namespace StanceOverhaul.SubSystem.StanceInput
     {
         // After ADS ends, wait this long before bringing the stance back. If the aim state flickers while the
         // ADS transition settles, the stance is never re-requested, so it can't flash on screen.
-        private const float RestoreAfterADSDelay = 0.1f;
+        private const float RestoreAfterADSDelay = 0.0001f;
 
         private IStance? _stanceThatWasToggledOriginally;
         private IStance? _stanceBeforeInterrupt;
@@ -38,7 +38,7 @@ namespace StanceOverhaul.SubSystem.StanceInput
         private IStance? EffectiveRememberedStance =>
             DefaultStance ?? _stanceThatWasToggledOriginally;
 
-        // The stance the player is "in", including one that ADS has put away.
+        //the stance the player is in, including one that ADS has cancelled.
         // ADS cancels the active stance, so ActiveStance on its own is null while aiming.
         private IStance? StanceInEffect =>
             _stanceState.ActiveStance ?? EffectiveRememberedStance;
@@ -185,11 +185,13 @@ namespace StanceOverhaul.SubSystem.StanceInput
         {
             if (WeaponStateInstance.TreatAsPistol)
                 TryInitializePisolStance();
+
+            ModLogger.LogWarning($"OnWeaponInit: ActiveStance={_stanceState?.ActiveStance?.StanceType}, weapon is pistol={WeaponStateInstance.TreatAsPistol}");    
         }
 
         private void TryInitializePisolStance()
         {
-            if (_stanceState.ActiveStanceType != EStanceType.PistolCompress && !IsInterrupted && _stanceBeforeInterrupt is null)
+            if (_stanceState.ActiveStanceType != EStanceType.PistolCompress) //&& !IsInterrupted && _stanceBeforeInterrupt is null
             {
                 ToggleStance(StanceControllerInstance.PistolCompress);
             }
@@ -342,6 +344,9 @@ namespace StanceOverhaul.SubSystem.StanceInput
 
         private void ToggleLeftShoulder()
         {
+            if (WeaponStateInstance.TreatAsPistol)
+                return;
+
             ToggleStance(StanceControllerInstance.LeftShoulder, forgetPrevious: true);
         }
 

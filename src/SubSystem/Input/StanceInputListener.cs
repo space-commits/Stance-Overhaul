@@ -107,29 +107,24 @@ namespace StanceOverhaul.SubSystem.StanceInput
 
             if (direction < 0)
             {
-                // LowReady → no-op
                 if (current == EStanceType.LowReady)
                     return;
 
-                // HighReady → toggle off (back to idle)
                 if (current == EStanceType.HighReady)
                 {
                     StanceInputEvents.RaiseToggleHighReady();
                     return;
                 }
 
-                // Idle or any other stance → LowReady
                 StanceInputEvents.RaiseToggleLowReady();
                 return;
             }
 
             if (direction > 0)
             {
-                // HighReady → no-op
                 if (current == EStanceType.HighReady)
                     return;
 
-                // LowReady → toggle off (back to idle)
                 if (current == EStanceType.LowReady)
                 {
                     StanceInputEvents.RaiseToggleLowReady();

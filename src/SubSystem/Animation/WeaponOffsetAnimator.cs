@@ -1,6 +1,7 @@
 ﻿using EFT.Animations;
 using EFT;
 using EFT.InventoryLogic;
+using EFT.CameraControl;
 using UnityEngine;
 using System.Collections.Generic;
 using StanceOverhaul.Enums;
@@ -20,6 +21,9 @@ namespace StanceOverhaul.SubSystem.Animator
         private Vector3 _targetPosOffest = Vector3.zero;
         private Vector3 _targetRotOffest = Vector3.zero;
         private Vector3 _baseWeaponOffsetPosition = Vector3.zero;
+
+
+        private Vector3 _originalPos = Vector3.zero;
 
         /// <summary>
         /// The base offset for weapon root position + weapon-specific base offsets if present. Used as the baseline for weapon offsets.
@@ -83,7 +87,7 @@ namespace StanceOverhaul.SubSystem.Animator
         {
             get
             {
-                return (GearStateInstance.HasGasMask || (GearStateInstance.FaceShieldIsActive && GearStateInstance.GearBlocksMouth));
+                return GearStateInstance.HasGasMask || (GearStateInstance.FaceShieldIsActive && GearStateInstance.GearBlocksMouth);
             }
         }
 
@@ -269,7 +273,7 @@ namespace StanceOverhaul.SubSystem.Animator
         private void UpdateSpringValues()
         {
             var damping = StanceControllerInstance.StatsHandlerInstance.GetSpringDamping(StanceControllerInstance.CurrentStance?.StanceDampingModifier * 1.025f ?? StanceslessDamping);
-            var returnSpeed = StanceControllerInstance.StatsHandlerInstance.GetSpringReturnSpeed(StanceControllerInstance.CurrentStance?.StanceReturnSpeedModifier  * 0.6f  ?? StanceslessReturnSpeed);
+            var returnSpeed = StanceControllerInstance.StatsHandlerInstance.GetSpringReturnSpeed(StanceControllerInstance.CurrentStance?.StanceReturnSpeedModifier * 0.6f ?? StanceslessReturnSpeed);
 
             StanceControllerInstance.OffsetPositionSpring.ReturnSpeed = StanceControllerInstance.StatsHandlerInstance.GetSpringReturnSpeed(returnSpeed);
             StanceControllerInstance.OffsetRotationSpring.ReturnSpeed = StanceControllerInstance.StatsHandlerInstance.GetSpringReturnSpeed(returnSpeed);

@@ -50,6 +50,7 @@ namespace StanceOverhaul
             new OperateStationaryWeaponPatch().Enable();
             new UpdateWeaponVariablesPatch().Enable();
             new UpdateHipInaccuracyPatch().Enable();
+            new ApplyTransformsPatch().Enable();
 
                         //new TacticalReloadPatch().Enable();
             /*            new SprintPatch().Enable();

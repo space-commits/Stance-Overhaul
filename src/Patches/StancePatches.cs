@@ -407,7 +407,7 @@ namespace StanceOverhaul.Patches
             player.ProceduralWeaponAnimation.Breath.HipPenalty = __instance.HipInaccuracy;
 
             __instance.HipInaccuracy *= _deviceBonus * StanceControllerInstance.StanceHipfireBonus * PluginConfig.test1.Value;
-            player.ProceduralWeaponAnimation.Breath.HipPenalty *= _deviceBonus * StanceControllerInstance.StanceHipfireBonus  * PluginConfig.test2.Value;
+            player.ProceduralWeaponAnimation.Breath.HipPenalty *= _deviceBonus * StanceControllerInstance.StanceHipfireBonus * PluginConfig.test2.Value;
 
             return false;
         }
@@ -1544,6 +1544,104 @@ namespace StanceOverhaul.Patches
             {
                 StanceEvents.RaiseOnTransformsInit(firearmController);
                 //if (!Plugin.FOVFixPresent) __instance.HandsContainer.CameraOffset = new Vector3(0.04f, 0.04f, 0.025f);
+            }
+        }
+    }
+
+    public class ApplyTransformsPatch : ModulePatch
+    {
+        private static Vector3 _smoothedOffset;
+
+        private static FieldInfo _playerField;
+        private static FieldInfo _fcField;
+
+        protected override MethodBase GetTargetMethod()
+        {
+            _playerField = AccessTools.Field(typeof(EFT.Player.FirearmController), "_player");
+            _fcField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_firearmController");
+            return typeof(FirstPersonStrategy).GetMethod("ApplyTransformations", BindingFlags.Instance | BindingFlags.Public);
+        }
+
+        [PatchPostfix]
+        private static void PatchPostfix(FirstPersonStrategy __instance, ProceduralWeaponAnimation pwa, float dt)
+        {
+            FirearmController firearmController = (FirearmController)_fcField.GetValue(pwa);
+            if (firearmController == null) return;
+            Player player = (Player)_playerField.GetValue(firearmController);
+            if (player != null && player.MovementContext.CurrentState.Name != EPlayerState.Stationary && player.IsYourPlayer)
+            {
+
+                Transform root = pwa.HandsContainer.WeaponRootAnim;
+                Transform camera = pwa.HandsContainer.CameraTransform;
+                var scope = pwa.CurrentScope;
+
+                if (root == null || root.parent == null ||
+                    camera == null ||
+                    scope == null || scope.Bone == null)
+                    return;
+
+
+                var correction = Vector3.zero;
+
+                if (pwa.IsAiming)
+                {
+
+                    Transform parent = root.parent;
+                    Transform sight = scope.Bone;
+
+                    // Put both points into the SAME coordinate space.
+                    Vector3 cameraInParent = parent.InverseTransformPoint(camera.position);
+
+                    Vector3 sightInParent = parent.InverseTransformPoint(sight.position);
+
+                    // Move the weapon so the sight meets the fixed camera.
+                    correction = cameraInParent - sightInParent;
+
+                    Logger.LogWarning($"=====");
+
+                    Logger.LogWarning($"camera correction x: {correction.x}, y: {correction.y}, z: {correction.z}");
+
+
+                    // Reproduce the additional offsets used by EFT's
+                    // CalculateCameraPosition().
+
+                    Vector3 eftShiftInCameraSpace = new Vector3(
+                        0f,
+                        pwa._cameraShiftToLineOfSight.y,
+                        pwa._cameraShiftToLineOfSight.x
+                    );
+
+                    Vector3 eftShiftWorld = camera.parent.TransformDirection(eftShiftInCameraSpace);
+
+                    Vector3 eftShiftInWeaponParent = parent.InverseTransformDirection(eftShiftWorld);
+
+                    correction -= eftShiftInWeaponParent;
+
+                    // X = left/right
+                    // Y = forward/back
+                    // Z = up/down
+                    // Ignore depth.
+                    correction.y = 0f;
+                }
+
+                correction += new Vector3(PluginConfig.test11.Value, PluginConfig.test12.Value, PluginConfig.test13.Value);
+
+
+                // How quickly the weapon catches up.
+                // float speed = PluginConfig.test3.Value;
+                // float t = 1f - Mathf.Exp(-speed * dt);
+
+                float speed = pwa.IsAiming ? PluginConfig.test3.Value : PluginConfig.test4.Value;
+
+                _smoothedOffset = Vector3.Lerp(
+                    _smoothedOffset,
+                    correction,
+                    speed * dt * StanceControllerInstance.PwaAimSpeed
+                );
+
+                // EFT has already finished positioning the weapon,
+                // so add our current interpolated offset.
+                root.localPosition += _smoothedOffset;
             }
         }
     }

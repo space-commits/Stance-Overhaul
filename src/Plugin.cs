@@ -40,17 +40,20 @@ namespace StanceOverhaul
             //Animation
             new SetFireModePatch().Enable();
             new InitTransformsPatch().Enable();
-            new ComplexRotationsPatch().Enable();
+            //new ComplexRotationsPatch().Enable();
             new ShouldMoveWeapCloserPatch().Enable();
             new HandIKPatch().Enable();
             new ElbowIKPatch().Enable();
             new PropSoundPatch().Enable();
+            new LerpCameraPatch().Enable();
+            new VisualPassPatch().Enable();
 
             //State & Stats
-            new OperateStationaryWeaponPatch().Enable();
+            //new OperateStationaryWeaponPatch().Enable();
             new UpdateWeaponVariablesPatch().Enable();
             new UpdateHipInaccuracyPatch().Enable();
             new ApplyTransformsPatch().Enable();
+            new ComplexRotationsPatch().Enable();
 
                         //new TacticalReloadPatch().Enable();
             /*            new SprintPatch().Enable();

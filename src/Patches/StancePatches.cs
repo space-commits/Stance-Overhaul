@@ -39,10 +39,13 @@ namespace StanceOverhaul.Patches
             return AccessTools.Method(typeof(Player), nameof(Player.IkProcess));
         }
 
-        [PatchPostfix]
+        [PatchPrefix]
         private static void Postfix(Player __instance)
         {
-            // if (!__instance.IsYourPlayer) return;
+
+            if (!__instance.IsYourPlayer) return;
+
+            StanceControllerInstance.RunAfterEFTTransformsSet(__instance.ProceduralWeaponAnimation, Time.deltaTime);
 
             // LimbIK[] limbs = (LimbIK[])_iKArrayField.GetValue(__instance);
             // Vector3 originalIkPosTarget = (Vector3)_iKPosField.GetValue(__instance);
@@ -57,6 +60,8 @@ namespace StanceOverhaul.Patches
             // left.solver.IKRotation *= StanceControllerInstance.LeftHandTransformMarkerRotation;
 
             //need to replicate method, and add my own grippose blending on top
+
+
         }
     }
 
@@ -114,15 +119,6 @@ namespace StanceOverhaul.Patches
         {
             _playerBridgeField = AccessTools.Field(typeof(BaseSoundPlayer), "playersBridge");
             return AccessTools.Method(typeof(BaseSoundPlayer), nameof(BaseSoundPlayer.PlayRandomClip));
-
-            // _playerBridgeField = AccessTools.Field(typeof(BaseSoundPlayer), "playersBridge");
-
-            // Type soundPlayer = typeof(BaseSoundPlayer);
-            // Type iface = soundPlayer.GetInterfaces().First(i => i.Name == "IEventsConsumer");
-            // InterfaceMapping map = soundPlayer.GetInterfaceMap(iface);
-
-            // int index = Array.FindIndex(map.InterfaceMethods, m => m.Name == "OnUseProp");
-            // return map.TargetMethods[index];
         }
 
         [PatchPrefix]
@@ -553,12 +549,10 @@ namespace StanceOverhaul.Patches
         {
             if (PlayerStateInstance.PWA == __instance)
             {
-                StanceControllerInstance.StancePositionSpring.Zero = StanceControllerInstance.StancePosition + StanceControllerInstance.BaseWeaponOffsetPosition; // + StanceControllerInstance.BaseWeaponOffsetPosition not sure if should be applied to stance zero or not
+                StanceControllerInstance.StancePositionSpring.Zero = StanceControllerInstance.StancePosition + StanceControllerInstance.BaseWeaponOffsetPosition; //  not sure if should be applied to stance zero or not
                 StanceControllerInstance.StanceRotationSpring.Zero = StanceControllerInstance.StanceRotation;
                 StanceControllerInstance.OffsetPositionSpring.Zero = StanceControllerInstance.DetailsOffsetPosition;
                 StanceControllerInstance.OffsetRotationSpring.Zero = StanceControllerInstance.DetailsOffsetRotation;
-                // StanceControllerInstance.LeftHandPositionSpring.Zero = StanceControllerInstance.LeftHandOffsetTargetPosition;
-                // StanceControllerInstance.LeftHandRotationSpring.Zero = StanceControllerInstance.LeftHandOffsetTargetRotation;
             }
         }
     }
@@ -576,14 +570,14 @@ namespace StanceOverhaul.Patches
         }
 
         [PatchPostfix]
-        private static void PatchPostfix(ProceduralWeaponAnimation __instance)
+        private static void PatchPostfix(ProceduralWeaponAnimation __instance, float dt)
         {
             FirearmController firearmController = (FirearmController)_fcField.GetValue(__instance);
             if (firearmController == null) return;
             Player player = (Player)_playerField.GetValue(firearmController);
             if (player != null && player.IsYourPlayer)
             {
-
+                //StanceControllerInstance.RunAfterEFTTransformsSet(__instance, dt);
             }
         }
     }
@@ -1086,7 +1080,7 @@ namespace StanceOverhaul.Patches
         private static bool Prefix(FirearmsAnimator __instance, Weapon.EFireMode fireMode, bool skipAnimation = false)
         {
             __instance.ResetLeftHand();
-            skipAnimation = StanceControllerInstance.CurrentStanceType == EStanceType.HighReady && PlayerStateInstance.IsSprinting ? true : skipAnimation;
+            skipAnimation = StanceControllerInstance.IsDoingTacSprint ? true : skipAnimation;
             AnimationControllerParametersTable.SetFireMode(__instance.Animator, (float)fireMode);
             if (!skipAnimation)
             {
@@ -1109,12 +1103,10 @@ namespace StanceOverhaul.Patches
         [PatchPostfix]
         private static void PatchPostfix(Player __instance)
         {
-            /*    if (__instance.IsYourPlayer)
-                {
-                    StanceControllerInstance.CancelAllStances();
-                    StanceControllerInstance.StanceCurrentPosition = Vector3.zero;
-
-                }*/
+            if (__instance.IsYourPlayer)
+            {
+                StanceEvents.RaiseOnStationaryWeaponOperated();
+            }
         }
     }
 
@@ -1548,10 +1540,25 @@ namespace StanceOverhaul.Patches
         }
     }
 
+    public class VisualPassPatch : ModulePatch
+    {
+        protected override MethodBase GetTargetMethod()
+        {
+            return typeof(Player).GetMethod("VisualPass", BindingFlags.Instance | BindingFlags.Public);
+        }
+
+        [PatchPostfix]
+        private static void PatchPostfix(Player __instance)
+        {
+            if (__instance.IsYourPlayer && __instance.MovementContext.CurrentState.Name != EPlayerState.Stationary)
+            {
+                //StanceControllerInstance.RunAfterEFTTransformsSet(__instance.ProceduralWeaponAnimation, Time.deltaTime);
+            }
+        }
+    }
+
     public class ApplyTransformsPatch : ModulePatch
     {
-        private static Vector3 _smoothedOffset;
-
         private static FieldInfo _playerField;
         private static FieldInfo _fcField;
 
@@ -1570,78 +1577,38 @@ namespace StanceOverhaul.Patches
             Player player = (Player)_playerField.GetValue(firearmController);
             if (player != null && player.MovementContext.CurrentState.Name != EPlayerState.Stationary && player.IsYourPlayer)
             {
+                //StanceControllerInstance.RunAfterEFTTransformsSet(pwa, dt);
+            }
+        }
+    }
 
-                Transform root = pwa.HandsContainer.WeaponRootAnim;
-                Transform camera = pwa.HandsContainer.CameraTransform;
-                var scope = pwa.CurrentScope;
+    public class LerpCameraPatch : ModulePatch
+    {
+        private static FieldInfo _playerField;
+        private static FieldInfo _fcField;
 
-                if (root == null || root.parent == null ||
-                    camera == null ||
-                    scope == null || scope.Bone == null)
-                    return;
+        protected override MethodBase GetTargetMethod()
+        {
+            _playerField = AccessTools.Field(typeof(FirearmController), "_player");
+            _fcField = AccessTools.Field(typeof(ProceduralWeaponAnimation), "_firearmController");
+            return typeof(EFT.Animations.ProceduralWeaponAnimation).GetMethod("LerpCamera", BindingFlags.Instance | BindingFlags.Public);
+        }
 
+        [PatchPostfix]
+        private static void Postfix(EFT.Animations.ProceduralWeaponAnimation __instance, float dt, float ____overweightAimingMultiplier,
+            float ____aimingSpeed, float ____aimSwayStrength, Player.ValueBlender
+            ____aimSwayBlender, Vector3 ____aimSwayDirection, Vector3 ____headRotationVec,
+            Vector3 ____vCameraTarget, Player.ValueBlenderDelay ____tacticalReload,
+            Quaternion ____cameraIdenity, Quaternion ____rotationOffset, Vector2 ____cameraShiftToLineOfSight,
+            float ____lineOfSightDeltaAngle, Vector3 ____shotDirection, bool ____adjustCollimatorsToTrajectory,
+            Transform ____bone0, Transform ____bone1)
+        {
+            FirearmController firearmController = (FirearmController)_fcField.GetValue(__instance);
+            if (firearmController == null) return;
+            Player player = (Player)_playerField.GetValue(firearmController);
+            if (player != null && player.IsYourPlayer && firearmController.Weapon != null)
+            {
 
-                var correction = Vector3.zero;
-
-                if (pwa.IsAiming)
-                {
-
-                    Transform parent = root.parent;
-                    Transform sight = scope.Bone;
-
-                    // Put both points into the SAME coordinate space.
-                    Vector3 cameraInParent = parent.InverseTransformPoint(camera.position);
-
-                    Vector3 sightInParent = parent.InverseTransformPoint(sight.position);
-
-                    // Move the weapon so the sight meets the fixed camera.
-                    correction = cameraInParent - sightInParent;
-
-                    Logger.LogWarning($"=====");
-
-                    Logger.LogWarning($"camera correction x: {correction.x}, y: {correction.y}, z: {correction.z}");
-
-
-                    // Reproduce the additional offsets used by EFT's
-                    // CalculateCameraPosition().
-
-                    Vector3 eftShiftInCameraSpace = new Vector3(
-                        0f,
-                        pwa._cameraShiftToLineOfSight.y,
-                        pwa._cameraShiftToLineOfSight.x
-                    );
-
-                    Vector3 eftShiftWorld = camera.parent.TransformDirection(eftShiftInCameraSpace);
-
-                    Vector3 eftShiftInWeaponParent = parent.InverseTransformDirection(eftShiftWorld);
-
-                    correction -= eftShiftInWeaponParent;
-
-                    // X = left/right
-                    // Y = forward/back
-                    // Z = up/down
-                    // Ignore depth.
-                    correction.y = 0f;
-                }
-
-                correction += new Vector3(PluginConfig.test11.Value, PluginConfig.test12.Value, PluginConfig.test13.Value);
-
-
-                // How quickly the weapon catches up.
-                // float speed = PluginConfig.test3.Value;
-                // float t = 1f - Mathf.Exp(-speed * dt);
-
-                float speed = pwa.IsAiming ? PluginConfig.test3.Value : PluginConfig.test4.Value;
-
-                _smoothedOffset = Vector3.Lerp(
-                    _smoothedOffset,
-                    correction,
-                    speed * dt * StanceControllerInstance.PwaAimSpeed
-                );
-
-                // EFT has already finished positioning the weapon,
-                // so add our current interpolated offset.
-                root.localPosition += _smoothedOffset;
             }
         }
     }

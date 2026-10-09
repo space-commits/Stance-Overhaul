@@ -29,6 +29,10 @@ public class ActiveAim : StanceBase
 
     public override bool BlocksFiring => false;
 
+    public override AnimationCurve ExitAimSpeedCurve => CurveDrawer.GetCurve("active_exit_aim_speed", CurveAxis.X)!;
+
+    public override AnimationCurve EnterAimSpeedCurve => CurveDrawer.GetCurve("active_enter_aim_speed", CurveAxis.X)!;
+
     public override EStanceReloadType[] ReloadTypesThatPauseStance => new EStanceReloadType[]
     {
         EStanceReloadType.Top,
@@ -102,4 +106,3 @@ public class ActiveAim : StanceBase
         _exitPos = StanceUtils.NormalizeXPositionCurve(_exitPos);
     }
 }
-

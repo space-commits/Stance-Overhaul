@@ -23,7 +23,7 @@ namespace StanceOverhaul.SubSystem.StanceInput
     {
         // After ADS ends, wait this long before bringing the stance back. If the aim state flickers while the
         // ADS transition settles, the stance is never re-requested, so it can't flash on screen.
-        private const float RestoreAfterADSDelay = 0.0001f;
+        private const float RestoreAfterADSDelay = 0.1f;
 
         private IStance? _stanceThatWasToggledOriginally;
         private IStance? _stanceBeforeInterrupt;
@@ -99,6 +99,7 @@ namespace StanceOverhaul.SubSystem.StanceInput
             StanceEvents.OnStanceReloadReset += ResetReloadState;
             StanceEvents.OnStanceReload += CheckIfReloadInterruptsStance;
             StanceEvents.OnTransformsInit += OnWeaponInit;
+            StanceEvents.OnStationaryWeaponOperated += CancelStancesAndResetState;
             //StanceInputEvents.ToggleMounting += ToggleMounting; TODO: decide if will override BSG mounting
         }
 
@@ -122,6 +123,7 @@ namespace StanceOverhaul.SubSystem.StanceInput
             StanceEvents.OnStanceReloadReset -= ResetReloadState;
             StanceEvents.OnStanceReload -= CheckIfReloadInterruptsStance;
             StanceEvents.OnTransformsInit -= OnWeaponInit;
+            StanceEvents.OnStationaryWeaponOperated -= CancelStancesAndResetState;
         }
 
         private void RequestStance(IStance stance)
@@ -160,9 +162,16 @@ namespace StanceOverhaul.SubSystem.StanceInput
         private void OnWeaponSwap()
         {
             if (WeaponStateInstance.TreatAsPistol)
-                return;
+            {
+                TryInitializePisolStance();
+            }
+            else
+            {
+                CancelStancesAndResetState();
+            }
 
-            CancelStancesAndResetState();
+            ModLogger.LogWarning($"OnWeaponSwap: ActiveStance={_stanceState?.ActiveStance?.StanceType}, weapon is pistol={WeaponStateInstance.TreatAsPistol}");
+
         }
 
         private void OnSwappedToItem()
@@ -185,14 +194,18 @@ namespace StanceOverhaul.SubSystem.StanceInput
         {
             if (WeaponStateInstance.TreatAsPistol)
                 TryInitializePisolStance();
+            else if (_stanceState.ActiveStanceType == EStanceType.PistolCompress)
+                CancelAndForgetStances();
 
-            ModLogger.LogWarning($"OnWeaponInit: ActiveStance={_stanceState?.ActiveStance?.StanceType}, weapon is pistol={WeaponStateInstance.TreatAsPistol}");    
+            ModLogger.LogWarning($"OnWeaponInit: ActiveStance={_stanceState?.ActiveStance?.StanceType}, weapon is pistol={WeaponStateInstance.TreatAsPistol}");
         }
 
         private void TryInitializePisolStance()
         {
             if (_stanceState.ActiveStanceType != EStanceType.PistolCompress) //&& !IsInterrupted && _stanceBeforeInterrupt is null
             {
+                ModLogger.LogWarning($"toggle pistol");
+
                 ToggleStance(StanceControllerInstance.PistolCompress);
             }
         }
@@ -301,7 +314,7 @@ namespace StanceOverhaul.SubSystem.StanceInput
             _interruptType &= ~EStanceInterruptType.ADS;
 
             // Restore is deferred to RunOnUpdate so a flicker in the aim state can't re-request the stance
-            _restoreCountdown = RestoreAfterADSDelay;
+            _restoreCountdown = _stanceState.IsTransitioning ? 0f : RestoreAfterADSDelay;
         }
 
         private bool IsTogglingActiveStance(EStanceType stance)

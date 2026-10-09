@@ -1,12 +1,21 @@
-﻿using RealismCommonLib.ModifierHandlers;
+﻿using EFT;
+using EFT.Animations;
+using UnityEngine;
+using RealismCommonLib.ModifierHandlers;
 using static RealismCommonLib.Plugin;
+using static StanceOverhaul.Plugin;
 
 namespace StanceOverhaul.SubSystem.Aiming
 {
     public class StanceAimSystem : ISubSystem
     {
+        private const float StanceslessDamping = 0.82f;
+        private const float StanceslessReturnSpeed = 0.06f;
+
         private BoolGateHandle _canAim;
         private bool _blockerInterruptedAim;
+        private static Vector3 _smoothedOffset;
+        private static Vector3 _offsetVelocity;
 
         public void RunOnAwake()
         {
@@ -30,7 +39,6 @@ namespace StanceOverhaul.SubSystem.Aiming
         {
         }
 
-        //TODO: make event-based on aim
         private void CheckForAimBlockers()
         {
             bool nvgBlocksAds =
@@ -63,6 +71,64 @@ namespace StanceOverhaul.SubSystem.Aiming
             {
                 _blockerInterruptedAim = false;
             }
+        }
+
+        public void MoveGunToCamera(ProceduralWeaponAnimation pwa, float dt)
+        {
+            if (!PlayerStateInstance.WeaponIsReady
+                  || PlayerStateInstance.IsUsingStationaryWeapon
+                  || pwa == null || pwa.HandsContainer == null
+                  || pwa.HandsContainer.WeaponRootAnim == null
+                  || pwa.HandsContainer.CameraTransform == null)
+                return;
+
+            Transform root = pwa.HandsContainer.WeaponRootAnim;
+            Transform camera = pwa.HandsContainer.CameraTransform;
+            var scope = pwa?.CurrentScope;
+
+            if (scope == null || scope?.Bone == null)
+                return;
+
+            var correction = Vector3.zero;
+
+            if (pwa.IsAiming)
+            {
+                Transform parent = root.parent;
+                Transform sight = scope.Bone;
+
+                //put both points into the same coordinate space
+                Vector3 cameraInParent = parent.InverseTransformPoint(camera.position);
+
+                Vector3 sightInParent = parent.InverseTransformPoint(sight.position);
+
+                //correct = offset from where the weapon is to where it should be
+                correction = cameraInParent - sightInParent;
+
+                // reproduce the additional offsets used by games's CalculateCameraPosition() in world space, then convert to weapon parent space
+
+                Vector3 shiftInCameraSpace = new Vector3(0f, pwa._cameraShiftToLineOfSight.y, pwa._cameraShiftToLineOfSight.x);
+                Vector3 shiftWorld = camera.parent.TransformDirection(shiftInCameraSpace);
+                Vector3 shiftInWeaponParent = parent.InverseTransformDirection(shiftWorld);
+
+                correction -= shiftInWeaponParent;
+
+                // X = left/right
+                // Y = forward/back
+                // Z = up/down
+                // Ignore forward/back, let camera handle it
+                correction.y = 0f;
+            }
+
+            float speed = pwa.IsAiming ? PluginConfig.test3.Value : PluginConfig.test4.Value;
+            float t = 1f - Mathf.Exp(-speed * dt);
+            _smoothedOffset = Vector3.Lerp(_smoothedOffset, correction, t);
+
+            // float smoothTime = pwa.IsAiming ? PluginConfig.test3.Value : PluginConfig.test4.Value;
+            // smoothTime /= Mathf.Max(StanceControllerInstance.PwaAimSpeed, 0.01f);
+            // _smoothedOffset = Vector3.SmoothDamp(_smoothedOffset, correction, ref _offsetVelocity, smoothTime, Mathf.Infinity, dt);
+
+            Vector3 basePosition = root.localPosition;
+            root.localPosition = basePosition + _smoothedOffset;
         }
     }
 }

@@ -47,7 +47,6 @@ namespace StanceOverhaul.State
             {
                 _primarySlot = value;
                 StanceEvents.RaiseOnPrimaryStanceChanged();
-
             }
 
         }
@@ -88,16 +87,11 @@ namespace StanceOverhaul.State
             }
         }
 
-        /// <summary>
-        /// The stance that is currently active, but can be heading to idle or belding to another stance.
-        /// Do not use this for checking if a stance is active, use ActiveStance instead. 
-        /// Use this if you need to know the stance that is currently being blended out of or heading to idle.
-        /// </summary>
-        public IStance? PrimaryStance
+        public bool IsTransitioning
         {
             get
             {
-                return PrimarySlot?.Stance;
+                return (_incoming != null && !_incomingPaused) || (PrimarySlot != null && !PrimarySlot.IsAtIdle);
             }
         }
 

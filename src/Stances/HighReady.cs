@@ -34,25 +34,9 @@ public class HighReady : StanceBase
         EStanceReloadType.PumpBolt,
     };
 
-    public override AnimationCurve ExitAimSpeedCurve { get; } = new AnimationCurve
-        (
-            new Keyframe { time = 0f, value = 0f },
-            new Keyframe { time = 0.15f, value = 0.0f },
-            new Keyframe { time = 0.25f, value = 0.05f },
-            new Keyframe { time = 0.5f, value = 0.15f },
-            new Keyframe { time = 0.85f, value = 0.5f },
-            new Keyframe { time = 1f, value = 1f }
-        );
+    public override AnimationCurve ExitAimSpeedCurve => CurveDrawer.GetCurve("high_ready_exit_aim_speed", CurveAxis.X)!;
 
-    public override AnimationCurve EnterAimSpeedCurve { get; } = new AnimationCurve
-        (
-            new Keyframe { time = 0f, value = 0f },
-            new Keyframe { time = 0.15f, value = 0.0f },
-            new Keyframe { time = 0.25f, value = 0.05f },
-            new Keyframe { time = 0.5f, value = 0.15f },
-            new Keyframe { time = 0.85f, value = 0.5f },
-            new Keyframe { time = 1f, value = 1f }
-        );
+    public override AnimationCurve EnterAimSpeedCurve => CurveDrawer.GetCurve("high_ready_enter_aim_speed", CurveAxis.X)!;
 
     public override float BlendIntoThreshold(EStanceType nextStance)
     {
@@ -105,10 +89,10 @@ public class HighReady : StanceBase
 
     public HighReady()
     {
-        _enterPos = RealismCommonLib.Utils.CurveDrawer.GetCurve("high_ready_enter_position")!;
-        _enterRot = RealismCommonLib.Utils.CurveDrawer.GetCurve("high_ready_enter_rotation")!;
+        _enterPos = CurveDrawer.GetCurve("high_ready_enter_position")!;
+        _enterRot = CurveDrawer.GetCurve("high_ready_enter_rotation")!;
 
-        _exitPos = RealismCommonLib.Utils.CurveDrawer.GetCurve("high_ready_exit_position")!;
-        _exitRot = RealismCommonLib.Utils.CurveDrawer.GetCurve("high_ready_exit_rotation")!;
+        _exitPos = CurveDrawer.GetCurve("high_ready_exit_position")!;
+        _exitRot = CurveDrawer.GetCurve("high_ready_exit_rotation")!;
     }
 }

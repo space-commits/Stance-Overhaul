@@ -28,6 +28,10 @@ public class PatrolStance : StanceBase
 
     public override bool BlocksFiring => true;
 
+    public override AnimationCurve ExitAimSpeedCurve => CurveDrawer.GetCurve("patrol_exit_aim_speed", CurveAxis.X)!;
+
+    public override AnimationCurve EnterAimSpeedCurve => CurveDrawer.GetCurve("patrol_enter_aim_speed", CurveAxis.X)!;
+
     public override EStanceReloadType[] ReloadTypesThatPauseStance => new EStanceReloadType[]
     {
         EStanceReloadType.Magazine,
@@ -120,4 +124,3 @@ public class PatrolStance : StanceBase
 
 
 }
-

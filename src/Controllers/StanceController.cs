@@ -397,6 +397,11 @@ namespace StanceOverhaul.Controllers
             }
         }
 
+        public void RunAfterEFTTransformsSet(ProceduralWeaponAnimation pwa, float dt)
+        {
+            _aimSystem.MoveGunToCamera(pwa, dt);
+        }
+
         private void SubscribeToStanceEvents()
         {
             StanceEvents.OnPrimaryStanceChanged += UpdatePlayerStateOnStanceChange;
@@ -409,7 +414,7 @@ namespace StanceOverhaul.Controllers
 
         private void UpdatePlayerStateOnStanceChange()
         {
-             PlayerStateInstance.ResetProceduralState();
+            PlayerStateInstance.ResetProceduralState();
         }
 
         private void SubscribeToInputEvents()
